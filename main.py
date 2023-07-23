@@ -3,6 +3,7 @@ from src.core import Marketplace, Market
 from src.core import Dialogue
 import time
 import random
+import h5py
 
 
 class MyAgent(Agent):
@@ -16,7 +17,7 @@ class MyAgent(Agent):
         self.action_queue.append(action)
 
 
-if __name__ == '__main__':
+def main():
     env = Environment()
     agent = MyAgent()
     agent2 = MyAgent()
@@ -36,14 +37,30 @@ if __name__ == '__main__':
     env.max_steps = 10
     start = time.time()
 
-    #RL
+    # RL
     env.reset()
     for step in range(env.max_steps):
         agent.select_action()
         should_continue = env.step()  # executing next action and gives agents the
         observation = agent.view_observation()
-        print(should_continue)
-        print(observation)
 
     end = time.time()
+
     print(end - start)
+
+
+def print_items():
+    def print_attrs(name, obj):
+        print(name)
+        for key, val in obj.attrs.items():
+            print("    %s: %s" % (key, val))
+        if isinstance(obj, h5py.Dataset):  # check if the object is a dataset
+            print("    value:", obj[()])
+
+    with h5py.File("env_record.hdf5", "r") as f:
+        f.visititems(print_attrs)
+
+
+if __name__ == '__main__':
+    main()
+
