@@ -26,6 +26,7 @@ class Environment:
         # agent attributes
         self.agents = []
         self.n_agents = 0
+        self.agent_idx = 0
         self.agent_name_lookup = {}
         self.agent_id_lookup = {}
 
@@ -37,15 +38,21 @@ class Environment:
         if isinstance(item, Artifact):
             self.artifact_controller.add_artifact(item)
         elif isinstance(item, Agent):
+            item.id = self.agent_idx
+            self.agent_idx += 1
             self.agents.append(item)
             self.n_agents = len(self.agents)
+        elif isinstance(item, list):
+            for it in item:
+                self.add(it)
         else:
-            self.agents.extend(item)
-            self.n_agents = len(self.agents)
+            raise TypeError(
+                "items should be either an Agent or Artifact"
+            )
 
     def reset(self) -> [np.ndarray, dict]:
         """
-        Resets the environment - including agents and gridworld
+        Resets the environment
         """
         if not self.agents:
             raise ValueError("agents must be passed through the <set_agents> function before the environment"
@@ -56,6 +63,10 @@ class Environment:
         # reset each agent
         for agent in self.agents:
             agent.reset()
+
+        # reset artifacts
+        self.artifact_controller.reset()
+
         return 0
 
     def step(self) -> [np.ndarray, list, list]:
@@ -68,10 +79,10 @@ class Environment:
         for agent in self.agents:
             agent.step()
 
-        # CODE THAT HAPPENS AFTER ALL EVENTS ARE PROCESSED
-        dones = [self.current_step >= self.max_steps for _ in self.agents]
+        #
+        should_continue = self.artifact_controller.should_continue()
         self.current_step += 1
-        return 0
+        return should_continue
 
     def run(self):
         for episode in range(self.max_episodes):

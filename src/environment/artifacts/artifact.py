@@ -4,7 +4,6 @@ from src.agents.base_agent import Agent
 class Artifact:
     def __init__(self, name):
         self.name = name
-        self.interaction_map: dict
 
     def execute(self, agent, action_details):
         pass
@@ -13,6 +12,12 @@ class Artifact:
         return {agent.name: "Observation" for agent in agents}
 
     def describe_actions(self):
+        pass
+
+    def should_continue(self):
+        return True
+
+    def reset(self):
         pass
 
 
@@ -32,9 +37,12 @@ class ArtifactController:
 
     def execute(self, agents):
         for idx, agent in enumerate(agents):
-            action = agent.execute_next_action()
             if not isinstance(agent, Agent):
                 raise TypeError("The first element in the action tuple must be of type <BaseAgent>")
+
+            if len(agent.action_queue) == 0:
+                agent.select_action()
+            action = agent.execute_next_action()
             self.execute_action(agent, action)
         return 0
 
@@ -50,6 +58,13 @@ class ArtifactController:
 
         for agent in agents:
             agent.update(agent_observations_per_artifact[agent.name])
+
+    def should_continue(self):
+        return all(artifact.should_continue() for artifact in self.artifacts.values())
+
+    def reset(self):
+        for artifact in self.artifacts.values():
+            artifact.reset()
 
     def __repr__(self):
         return str(self.artifacts)

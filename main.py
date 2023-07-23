@@ -21,23 +21,29 @@ if __name__ == '__main__':
     agent = MyAgent()
     agent2 = MyAgent()
 
-    market_artifact = Market("socks")
+    # add a market to the environment
+    market = Market("socks")
+
+    # add the ability for agents to speak to each other to the environment through messages
     dialogue = Dialogue()
 
-    env.add(market_artifact)
-    env.add(dialogue)
-    env.add(agent)
+    things = [agent, agent2, market, dialogue]
+
+    # anything that is an <Agent> or <Artifact> class can be added to the environment
+    env.add(things)
 
     env.max_episodes = 10
     env.max_steps = 10
     start = time.time()
+
+    #RL
     env.reset()
     for step in range(env.max_steps):
         agent.select_action()
-        env.step()  # executing next action and gives agents the
+        should_continue = env.step()  # executing next action and gives agents the
         observation = agent.view_observation()
+        print(should_continue)
         print(observation)
-
 
     end = time.time()
     print(end - start)
