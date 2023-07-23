@@ -27,13 +27,14 @@ class Agent:
 
     def execute_next_action(self):
         action = self.action_queue.pop(0)
+        self.observations = []
         return action
 
     def view_next_action(self):
         return str(self.action_queue[0])
 
     def view_observation(self):
-        return str(self.observations)
+        return str(self.observations[0])
 
     def select_action(self):
         pass

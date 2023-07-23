@@ -1,8 +1,7 @@
 import numpy as np
 import logging
-
 from src.agents.base_agent import Agent
-from src.environment.artifacts.artifact import Artifact
+from src.environment.artifacts.artifact import Artifact, ArtifactController
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -57,29 +56,27 @@ class Environment:
         # reset each agent
         for agent in self.agents:
             agent.reset()
-
         return 0
 
     def step(self) -> [np.ndarray, list, list]:
-        # after all actions are processed, generate observations for the agents
-        observations = self.artifact_controller.step(self.agents)
+        # after all actions are processed
+        self.artifact_controller.execute(self.agents)
 
-        for artifact_name, artifact_observations in observations.items():
-            for agent in self.agents:
-                if agent.name in artifact_observations:
-                    pass
+        # insert observations for the agents
+        self.artifact_controller.insert_observations(self.agents)
 
         for agent in self.agents:
             agent.step()
+
         # CODE THAT HAPPENS AFTER ALL EVENTS ARE PROCESSED
         dones = [self.current_step >= self.max_steps for _ in self.agents]
         self.current_step += 1
         return 0
 
     def run(self):
-        for episode in range(10):
+        for episode in range(self.max_episodes):
             self.reset()
-            for step in range(10):
+            for step in range(self.max_steps):
                 pass
 
     def __repr__(self):
@@ -95,35 +92,4 @@ Step: {self.current_step} / {self.max_steps}
 {newline.join([f"{idx}. "+ str(agent.name) for idx, agent in enumerate(self.agents)])}
 """
 
-
-class ArtifactController:
-    def __init__(self):
-        self.artifacts: dict[str, Artifact] = {}
-
-    def add_artifact(self, artifact: Artifact):
-        self.artifacts[artifact.name] = artifact
-
-    def handle_action(self, agent, action):
-        artifact_name, action_details = action
-        artifact = self.artifacts[artifact_name]
-        artifact.execute(agent, action_details)
-
-    def step(self, agents):
-        for idx, agent in enumerate(agents):
-            action = agent.execute_next_action()
-            if not isinstance(agent, Agent):
-                raise TypeError("The first element in the action tuple must be of type <BaseAgent>")
-            self.handle_action(agent, action)
-
-        return self.generate_observations()
-
-    def generate_observations(self):
-        observations = {}
-        for artifact_name, artifact in self.artifacts.items():
-            observations[artifact_name] = artifact.generate_observations()
-
-        return observations
-
-    def __repr__(self):
-        return str(self.artifacts)
 

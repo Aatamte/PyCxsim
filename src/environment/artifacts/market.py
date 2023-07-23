@@ -166,23 +166,42 @@ f"""===================================
 ==================================="""
 
 
+class Market(Artifact):
+    def __init__(self, market_name):
+        super(Market, self).__init__("Market")
+        self.market_name = market_name
+        self.market = OrderBook(self.market_name)
+
+    def execute(self, agent, action: tuple):
+        self.market.add(Order(action[1], action[2], agent))
+
+    def generate_observations(self, agents):
+        observations = {agent.name: (self.market.product_name, self.market.get_full_orderbook()) for agent in agents}
+        return observations
+
+    def reset(self):
+        self.market.reset()
+
+    def __repr__(self):
+        newline = '\n'
+        return \
+            f"""
+    MarketPlace
+    {newline.join([str(orderbook) for market, orderbook in self.markets.items()])}
+    """
+
+
 class Marketplace(Artifact):
     def __init__(self, market_names: list = None):
         super(Marketplace, self).__init__("Marketplace")
         self.markets: Dict[str, OrderBook] = {market_name: OrderBook(market_name) for market_name in market_names} if market_names else None
 
     def execute(self, agent, action: tuple):
-        market_name = action[0]
-        price = action[1]
-        quantity = action[2]
+        self.markets[action[0]].add(Order(action[1], action[2], agent))
 
-        self.markets[market_name].add(Order(price, quantity, agent))
-
-    def generate_observations(self):
-        return [m.get_full_orderbook for m in self.markets.values()]
-
-    def describe(self):
-        print("Actions take the form of ('market name', order)")
+    def generate_observations(self, agents):
+        observations = {agent.name: [(m.product_name, m.get_full_orderbook()) for m in self.markets.values()] for agent in agents}
+        return observations
 
     def reset(self):
         for market in self.markets.values():
