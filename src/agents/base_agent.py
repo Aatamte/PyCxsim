@@ -1,43 +1,42 @@
 import pickle
 
 
-class BaseAgent:
+class Agent:
     def __init__(self, name: str = "default"):
         self.name = name
         self.id = None
-        # location information
+        self.observations = []
+        self.action_queue = []
 
         # for environment and rendering
-        self.num_steps = 0
+        self.current_step = 0
 
         # for the environment
-        self.xp = 0
-        self.xps = [0]
         self.inventory = Inventory(self)
-        self.state_space = None
         self.logger = None
 
     def reset(self):
-        self.num_steps = 0
-        self.xp = 0
-
-        self.xps.clear()
-        self.xps = [0]
         self.inventory.reset()
-
-    def get_reward(self):
-        return self.xps[-1] - self.xps[-2]
 
     def step(self):
         self.inventory.step()
-        self.xps.append(sum(self.inventory.values()))
-        self.num_steps += 1
 
-    def save(self, path = None):
-        if path:
-            pickle.dump()
-        else:
-            pass
+    def update(self, observation):
+        # update the state depending on the observation
+        self.observations.append(observation)
+
+    def execute_next_action(self):
+        action = self.action_queue.pop(0)
+        return action
+
+    def view_next_action(self):
+        return str(self.action_queue[0])
+
+    def view_observation(self):
+        return str(self.observations)
+
+    def select_action(self):
+        pass
 
     @property
     def capital(self):

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from src.core import BaseAgent
+from src.core import Agent
 from src.environment.artifacts.artifact import Artifact
 
 
@@ -11,23 +11,21 @@ from src.environment.artifacts.artifact import Artifact
 class Order:
     price: int
     quantity: int
-    agent: BaseAgent
+    agent: Agent
     id: int = None
     duration: int = None
 
 
-class OrderBook(Artifact):
+class OrderBook():
     """
     OrderBook is a class that allows agents to trade with each other
     """
-
     def __init__(self, product_name):
-        super().__init__()
         self.product_name = product_name
         self.sell_orders = []
         self.buy_orders = []
-        self.highest_bid_order: Order = Order(-np.inf, 1, BaseAgent())
-        self.lowest_offer_order: Order = Order(np.inf, -1, BaseAgent())
+        self.highest_bid_order: Order = Order(-np.inf, 1, Agent())
+        self.lowest_offer_order: Order = Order(np.inf, -1, Agent())
         self.order_count = 0
         self.num_transactions = 0
         self.history = pd.DataFrame(columns=["transaction_id", "price", "quantity", "buying_agent", "selling_agent"])
@@ -35,8 +33,8 @@ class OrderBook(Artifact):
     def reset(self):
         self.sell_orders = []
         self.buy_orders = []
-        self.highest_bid_order: Order = Order(-np.inf, 1, BaseAgent())
-        self.lowest_offer_order: Order = Order(np.inf, -1, BaseAgent())
+        self.highest_bid_order: Order = Order(-np.inf, 1, Agent())
+        self.lowest_offer_order: Order = Order(np.inf, -1, Agent())
         self.order_count = 0
         self.num_transactions = 0
         self.history = pd.DataFrame(
@@ -168,19 +166,20 @@ f"""===================================
 ==================================="""
 
 
-class Marketplace:
+class Marketplace(Artifact):
     def __init__(self, market_names: list = None):
-        self.name = "MarketPlace"
+        super(Marketplace, self).__init__("Marketplace")
         self.markets: Dict[str, OrderBook] = {market_name: OrderBook(market_name) for market_name in market_names} if market_names else None
 
-    def step(self, agent, action: tuple):
+    def execute(self, agent, action: tuple):
         market_name = action[0]
         price = action[1]
         quantity = action[2]
-        print(action)
 
         self.markets[market_name].add(Order(price, quantity, agent))
-        print(self.markets)
+
+    def generate_observations(self):
+        return [m.get_full_orderbook for m in self.markets.values()]
 
     def describe(self):
         print("Actions take the form of ('market name', order)")
@@ -198,12 +197,9 @@ MarketPlace
 """
 
 
-
-
-
 if __name__ == '__main__':
-    buy_agent = BaseAgent("John")
-    sell_agent = BaseAgent("Gary")
+    buy_agent = Agent("John")
+    sell_agent = Agent("Gary")
 
     buy_agent.inventory.starting_capital = 1000
     sell_agent.inventory.starting_capital = 1000

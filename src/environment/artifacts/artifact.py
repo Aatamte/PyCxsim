@@ -1,18 +1,15 @@
-from src.agents.base_agent import BaseAgent
+from src.agents.base_agent import Agent
 
 
 class Artifact:
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
         self.interaction_map: dict
-        self.name = "default"
 
-    def say_hello(self):
-        print("hello")
-
-    def one_to_one_interaction(self, agent_from: BaseAgent, agent_to: BaseAgent):
+    def execute(self, agent, action_details):
         pass
 
-    def step(self, agent, action):
+    def generate_observations(self):
         pass
 
 
