@@ -7,41 +7,70 @@ from src.core import Agent
 from src.environment.artifacts.artifact import Artifact
 
 
+# An Order is represented as a dataclass for simplicity and ease of use
 @dataclass
 class Order:
+    """
+    Represents a single order in the order book.
+
+    Attributes:
+    price: The price of the order.
+    quantity: The quantity of the order.
+    agent: The agent placing the order.
+    id: The order id, None by default.
+    duration: The order duration, None by default.
+    """
     price: int
     quantity: int
     agent: Agent
     id: int = None
-    duration: int = None
 
 
+# The OrderBook class represents the order book in a market
 class OrderBook():
     """
-    OrderBook is a class that allows agents to trade with each other
+    Represents the order book in a market.
+
+    Attributes:
+    product_name: The name of the product being traded in this order book.
+    sell_orders: List of all current sell orders.
+    buy_orders: List of all current buy orders.
+    highest_bid_order: Order with the highest bid.
+    lowest_offer_order: Order with the lowest offer.
+    order_count: Counts the total number of orders.
+    num_transactions: Counts the total number of transactions.
+    history: A DataFrame to store history of transactions.
     """
-    def __init__(self, product_name):
+    def __init__(self, product_name: str):
         self.product_name = product_name
+        # Initialize lists to hold buy and sell orders
         self.sell_orders = []
         self.buy_orders = []
         self.highest_bid_order: Order = Order(-np.inf, 1, Agent())
         self.lowest_offer_order: Order = Order(np.inf, -1, Agent())
         self.order_count = 0
         self.num_transactions = 0
+        # store transaction history in a pandas DataFrame for easy data manipulation and analysis
         self.history = pd.DataFrame(columns=["transaction_id", "price", "quantity", "buying_agent", "selling_agent"])
 
     def reset(self):
+        # Clear orders
         self.sell_orders = []
         self.buy_orders = []
+        # Reset bid/offer orders
         self.highest_bid_order: Order = Order(-np.inf, 1, Agent())
         self.lowest_offer_order: Order = Order(np.inf, -1, Agent())
+        # Reset counters
         self.order_count = 0
         self.num_transactions = 0
+        # Reset history DataFrame
         self.history = pd.DataFrame(
             columns=["transaction_id", "price", "quantity", "buying_agent", "selling_agent"]
         )
 
     def _can_order_be_executed(self, order: Order, is_buy_order: bool) -> bool:
+        if not isinstance(order, Order):
+            raise TypeError("order should be of type <Order>")
         # no matching order exists in the order book
         if (is_buy_order and len(self.sell_orders) == 0) or (not is_buy_order and len(self.buy_orders) == 0):
             return False
@@ -167,19 +196,32 @@ f"""===================================
 
 
 class Market(Artifact):
+    """
+    Represents a market in the simulation. Inherits from Artifact.
+
+    Attributes:
+    market_name: The name of the market.
+    market: An OrderBook object representing the order book for this market.
+    """
     def __init__(self, market_name):
         super(Market, self).__init__("Market")
         self.market_name = market_name
         self.market = OrderBook(self.market_name)
 
+    # The execute method adds an order to the market's order book
     def execute(self, agent, action: tuple):
         self.market.add(Order(action[1], action[2], agent))
 
+    # The generate_observations method prepares the current market state for all agents
     def generate_observations(self, agents):
         observations = {agent.name: (self.market.product_name, self.market.get_full_orderbook()) for agent in agents}
         return observations
 
+    # Reset the market by resetting its order book
     def reset(self):
+        """
+        Resets the order book. Clears all orders, resets bid/offer orders and resets counters.
+        """
         self.market.reset()
 
     def __repr__(self):
@@ -187,7 +229,7 @@ class Market(Artifact):
         return \
             f"""
     MarketPlace
-    {newline.join([str(orderbook) for market, orderbook in self.markets.items()])}
+    {newline.join(str(self.market))}
     """
 
 

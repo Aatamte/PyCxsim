@@ -1,25 +1,33 @@
-import pickle
-
 
 class Agent:
-    def __init__(self, name: str = "default"):
+    """
+    Agent represents the lowest-level abstraction in Agent Based Modeling (ABM)
+
+    :param name: name of the agent
+    """
+    def __init__(
+            self, name: str = "default",
+            starting_capital: int = 0,
+            starting_inventory: dict = None
+    ):
         self.name = name
-        self.id = None
+        self.id = None  # None, initialized before the first episode by the environment class
+
+        # holds the observations for each artifact
         self.observations = []
+
+        # holds the next action that the agent would take
         self.action_queue = []
 
-        # for environment and rendering
-        self.current_step = 0
-
-        # for the environment
-        self.inventory = Inventory(self)
-        self.logger = None
+        # inventory
+        self.starting_capital = starting_capital
+        self.starting_inventory = {} if starting_inventory is None else starting_inventory
+        self.inventory = {}
+        self.capital = None
 
     def reset(self):
-        self.inventory.reset()
-
-    def step(self):
-        self.inventory.step()
+        self.capital = self.starting_capital
+        self.inventory.clear()
 
     def update(self, observation):
         # update the state depending on the observation
@@ -39,9 +47,32 @@ class Agent:
     def select_action(self):
         pass
 
-    @property
-    def capital(self):
-        return self.inventory["capital"]
+    def __getitem__(self, item):
+        if item in self.inventory.keys():
+            return self.inventory[item]
+
+        # if item does not exist, assume they 0 of it
+        return 0
+
+    def __setitem__(self, key, value):
+        if key == "capital":
+            self.capital = value
+        elif key in self.inventory.keys():
+            self.inventory[key] = value
+        else:
+            self.inventory[key] = value
+
+    def values(self):
+        return self.inventory.values()
+
+    def __repr__(self):
+        return \
+            f"""
+-----------------------------
+Agent: {self.name} 
+capital {self.capital}
+{self.inventory}
+-----------------------------"""
 
 
 class Inventory:
@@ -64,6 +95,8 @@ class Inventory:
     def __getitem__(self, item):
         if item in self.inventory.keys():
             return self.inventory[item]
+
+        # if item does not exist, assume they 0 of it
         return 0
 
     def __setitem__(self, key, value):

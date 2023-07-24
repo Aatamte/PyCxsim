@@ -10,8 +10,28 @@ console_handler = logging.StreamHandler()
 console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 
 
+class UnsupportedItemType(Exception):
+    """Exception raised when an unsupported item is added to the environment."""
+
+
 class Environment:
-    def __init__(self, record_environment: bool = False, verbose: int = 0, seed: int = None):
+    def __init__(
+        self,
+        name: str = "default environment",
+        record_environment: bool = False,
+        verbose: int = 0,
+        seed: int = None
+    ):
+        """
+        Initialize the environment.
+
+        :param name: Name of the environment
+        :param record_environment: Whether to record the environment
+        :param verbose: Verbosity level
+        :param seed: Seed for random number generation
+        :param filename: Name of the file to record the environment
+        """
+        self.name = name
         self.verbose = verbose
         self.seed = seed
 
@@ -34,23 +54,46 @@ class Environment:
         # logger
         console_handler.setLevel(logging.CRITICAL)
         logger.addHandler(console_handler)
-        self.recorder = RecordedEnvironment("env_record.hdf5")
+
+        self.should_record = record_environment
+
+        if self.should_record:
+            self.recorder = RecordedEnvironment("env_record.hdf5")
+
+    def add_agent(self, agent: Agent):
+        """
+        Add a new agent to the environment.
+
+        :param agent: An Agent object
+        """
+        agent.id = self.agent_idx
+        self.agent_idx += 1
+        self.agents.append(agent)
+        self.n_agents = len(self.agents)
+
+    def add_artifact(self, artifact: Artifact):
+        """
+        Add a new artifact to the environment.
+
+        :param artifact: An Artifact object
+        """
+        self.artifact_controller.add_artifact(artifact)
 
     def add(self, item):
+        """
+        Add a new item (agent, artifact, or list) to the environment.
+
+        :param item: Item to be added
+        """
         if isinstance(item, Artifact):
-            self.artifact_controller.add_artifact(item)
+            self.add_artifact(item)
         elif isinstance(item, Agent):
-            item.id = self.agent_idx
-            self.agent_idx += 1
-            self.agents.append(item)
-            self.n_agents = len(self.agents)
+            self.add_agent(item)
         elif isinstance(item, list):
             for it in item:
                 self.add(it)
         else:
-            raise TypeError(
-                "items should be either an Agent or Artifact"
-            )
+            raise UnsupportedItemType()
 
     def reset(self) -> [np.ndarray, dict]:
         """
@@ -141,7 +184,6 @@ class RecordedEnvironment:
             f'{agent.name}_{len(agent_group)}',
             data=np.array(list(agent.inventory.values())))
         action_ds.attrs['action'] = agent.action_queue
-        #action_ds.attrs['inventory'] = agent.observations
         for idx, item in enumerate(agent.inventory.inventory.keys()):
             action_ds.attrs[f'item_{idx}'] = item
 
@@ -161,3 +203,13 @@ class RecordedEnvironment:
     def close(self):
         self.file.close()
 
+    def print_items(self):
+        def print_attrs(name, obj):
+            print(name)
+            for key, val in obj.attrs.items():
+                print("    %s: %s" % (key, val))
+            if isinstance(obj, h5py.Dataset):  # check if the object is a dataset
+                print("    value:", obj[()])
+
+        with h5py.File("env_record.hdf5", "r") as f:
+            f.visititems(print_attrs)
