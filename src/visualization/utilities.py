@@ -1,9 +1,70 @@
+import pandas as pd
 import pygame
+import math
 
 
-class VisualizerTab:
+class Tab:
     def __init__(self, parent_visualizer):
         self.parent_visualizer = parent_visualizer
+        self.background_color = "black"
+        self.color_dict = {
+                'red': (255, 0, 0),
+                'green': (0, 255, 0),
+                'blue': (0, 0, 255),
+                'yellow': (255, 255, 0),
+                'orange': (255, 165, 0),
+                'purple': (128, 0, 128),
+                'pink': (255, 192, 203),
+                'brown': (165, 42, 42),
+                'gray': (128, 128, 128),
+                'black': (0, 0, 0),
+                'white': (255, 255, 255),
+        }
+        self._top_position = 60
+        self._left_side_position = (self.parent_visualizer.SCREEN_WIDTH / 2) + 5
+        self.background_color = self.background_color.lower()
+
+    def write_text(self, text: str, font_size: int = 20, color: str = "black"):
+        self._left_side_position = (self.parent_visualizer.SCREEN_WIDTH / 2) + 5
+        self._is_valid_color(color)
+        self.parent_visualizer.display.blit(
+            pygame.font.Font(None, font_size).render(text, True, color),
+            (self._left_side_position, self._top_position)
+        )
+
+    def write_dataframe(self, df: pd.DataFrame):
+        self._left_side_position = (self.parent_visualizer.SCREEN_WIDTH / 2) + 5
+        DataFrameVisualizer(self.parent_visualizer.display, (self._left_side_position, self._top_position), df, df.shape[0]).draw()
+
+    def _is_valid_color(self, color: str):
+        if color not in self.color_dict.keys():
+            raise KeyError(f"The color {self.background_color} is not included, please try a color in: {list(self.color_dict.keys())}")
+        return True
+
+    def create_background(self):
+        self._is_valid_color(self.background_color)
+        # Draw the right grey area
+        pygame.draw.rect(self.parent_visualizer.display, self.color_dict[self.background_color],
+                         pygame.Rect(self.parent_visualizer.SCREEN_WIDTH / 2, 50,
+                                     self.parent_visualizer.SCREEN_WIDTH / 2,
+                                     self.parent_visualizer.SCREEN_HEIGHT - 50))
+
+    def draw_interaction_matrix(self, adjacency_matrix):
+        num_agents = len(adjacency_matrix)
+        for i in range(num_agents):
+            for j in range(i + 1, num_agents):  # We start from i+1 to avoid drawing lines twice
+                if adjacency_matrix[i][j] > 0:
+                    angle_i = 2 * math.pi * i / num_agents
+                    x_i = self.parent_visualizer.SCREEN_WIDTH / 4 + self.parent_visualizer.agent_radius * math.cos(angle_i)
+                    y_i = self.parent_visualizer.SCREEN_HEIGHT / 2 + self.parent_visualizer.agent_radius * math.sin(angle_i)
+
+                    angle_j = 2 * math.pi * j / num_agents
+                    x_j = self.parent_visualizer.SCREEN_WIDTH / 4 + self.parent_visualizer.agent_radius * math.cos(angle_j)
+                    y_j = self.parent_visualizer.SCREEN_HEIGHT / 2 + self.parent_visualizer.agent_radius * math.sin(angle_j)
+
+                    thickness = adjacency_matrix[i][j]
+                    pygame.draw.line(self.parent_visualizer.display, (255, 255, 255), (int(x_i), int(y_i)), (int(x_j), int(y_j)),
+                                     thickness)
 
 
 class Plotter:

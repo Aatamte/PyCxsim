@@ -1,96 +1,65 @@
 import pygame
-import numpy as np
-import asyncio
 import math
-import random
-import pandas as pd
 
-from src.visualization.utilities import DataFrameVisualizer, Plotter, VisualizerTab
+from src.visualization.tabs.market_visualizer import MarketVisualizer
+from src.visualization.tabs.environment_visualizer import EnvironmentTab
 
-df = pd.DataFrame({
-    'Column1': ['A', 'B', 'C', 'D', 'E'],
-    'Column2': [1, 2, 3, 4, 5],
-    'Column3': [1.1, 2.2, 3.3, 4.4, 5.5],
-})
-
-
-class MarketVisualizer:
-    def __init__(self, parent_visualizer):
-        self.parent_visualizer = parent_visualizer
-        self.graph_font = pygame.font.Font(None, 20)
-
-    def draw_market(self, env):
-        # Draw the right grey area
-        pygame.draw.rect(self.parent_visualizer.display, (169, 169, 169),
-                         pygame.Rect(self.parent_visualizer.SCREEN_WIDTH / 2, 50,
-                                     self.parent_visualizer.SCREEN_WIDTH / 2,
-                                     self.parent_visualizer.SCREEN_HEIGHT - 50))
-
-        # Draw market data and graph
-        self.draw_bid_ask_data(env)
-        #self.draw_bid_ask_graph(env)
-
-    def draw_bid_ask_data(self, env):
-        combined = []
-        for idx in range(len(env.bids)):
-            combined.append([env.bids[idx], env.asks[idx]])
-        # Draw the sorted bid and ask data
-        env.bid_ask_history = combined.copy()
-        for i, bid in enumerate(sorted(combined, key=lambda x: x[0])):
-            bid_text = self.graph_font.render(f'Bid: {bid[0]} Ask: {bid[1]}', True, (0, 0, 0))
-            self.parent_visualizer.display.blit(bid_text, (self.parent_visualizer.SCREEN_WIDTH / 2 + 10, 60 + i * 20))
-
-    def draw_bid_ask_graph(self, env):
-        # Plot bid/ask history
-        for i in range(1, len(env.bid_ask_history)):
-            pygame.draw.line(self.parent_visualizer.display, (255, 0, 0),
-                             (self.parent_visualizer.SCREEN_WIDTH / 2 + i, env.bid_ask_history[i - 1][0]),
-                             (self.parent_visualizer.SCREEN_WIDTH / 2 + i + 1, env.bid_ask_history[i][0]), 2)
-            pygame.draw.line(self.parent_visualizer.display, (0, 255, 0),
-                             (self.parent_visualizer.SCREEN_WIDTH / 2 + i, env.bid_ask_history[i - 1][1]),
-                             (self.parent_visualizer.SCREEN_WIDTH / 2 + i + 1, env.bid_ask_history[i][1]), 2)
-
-
-class EnvironmentInfo(VisualizerTab):
-    def __init__(self, parent_visualizer):
-        super(EnvironmentInfo, self).__init__(parent_visualizer)
-        self.graph_font = pygame.font.Font(None, 20)
-
-    def draw_info(self, env):
-        # Draw the right grey area
-        pygame.draw.rect(self.parent_visualizer.display, (169, 169, 169),
-                         pygame.Rect(self.parent_visualizer.SCREEN_WIDTH / 2, 50,
-                                     self.parent_visualizer.SCREEN_WIDTH / 2,
-                                     self.parent_visualizer.SCREEN_HEIGHT - 50))
-        text = self.graph_font.render(f'Number of agents: {len(env.agent_names)}', True, (0, 0, 0))
-        self.parent_visualizer.display.blit(text, (self.parent_visualizer.SCREEN_WIDTH / 2 + 10, 50))
-        DataFrameVisualizer(self.parent_visualizer.display, (self.parent_visualizer.SCREEN_WIDTH / 2, 50), df, 5).draw()
+valid_visualizers = {
+    "Market": MarketVisualizer
+}
 
 
 class Visualizer:
     def __init__(self, environment):
         pygame.init()
         self.environment = environment
-
+        self.color_dict = {
+                'red': (255, 0, 0),
+                'green': (0, 255, 0),
+                'blue': (0, 0, 255),
+                'yellow': (255, 255, 0),
+                'orange': (255, 165, 0),
+                'purple': (128, 0, 128),
+                'pink': (255, 192, 203),
+                'brown': (165, 42, 42),
+                'gray': (128, 128, 128),
+                'black': (0, 0, 0),
+                'white': (255, 255, 255),
+        }
         self.paused = False
         self.pause_button = pygame.Rect(50, 50, 100, 50)
         self.clock = pygame.time.Clock()
         # Set up some constants
-        self.SCREEN_WIDTH, self.SCREEN_HEIGHT = 1200, 800
+        self.SCREEN_WIDTH = 1200
+        self.SCREEN_HEIGHT = 800
+
         # Set up the display
         self.display = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT),  pygame.RESIZABLE)
         # Set up the fonts
         self.font_big = pygame.font.Font(None, 24)
-        self.font_small = pygame.font.Font(None, 18) # Smaller font for bids/asks
+        self.font_small = pygame.font.Font(None, 18)    # Smaller font for bids/asks
         # Number of agents to display
-        self.num_agents = 10
+        self.num_agents = len(self.environment.agent_names)
+
         # Radius of the agent circle
-        self.agent_radius = 150
+        self.agent_radius = self.num_agents * 10
         self.max_line_thickness = 5
-        self.market_visualizer = MarketVisualizer(self)
-        self.info_visualizer = EnvironmentInfo(self)
-        self.tabs = ["Market", "Dialogue", "info"]
-        self.current_tab = self.tabs[0]
+        self.tab_map = {
+            "EnvironmentTab": EnvironmentTab(self)
+        }
+        self.tab_names = list(self.tab_map.keys())
+        self.current_tab = self.tab_names[0]
+
+    def reset(self):
+        self.tab_map = {
+            "EnvironmentTab": EnvironmentTab(self)
+        }
+        for artifact in self.environment.artifact_controller.artifacts.keys():
+            if artifact in valid_visualizers.keys():
+                self.tab_map[artifact] = valid_visualizers[artifact](self)
+
+        self.tab_names = list(self.tab_map.keys())
+        self.current_tab = self.tab_names[0]
 
     def draw_agent_connections(self, adjacency_matrix):
         num_agents = len(adjacency_matrix)
@@ -116,22 +85,28 @@ class Visualizer:
         title_text = self.font_big.render("Complex Adaptive Economic Simulator", True, (255, 255, 255))
         self.display.blit(title_text, (10, 10))
         # Draw the tabs
-        for i, tab in enumerate(self.tabs):
-            pygame.draw.rect(self.display, (150, 150, 150), pygame.Rect(self.SCREEN_WIDTH / 2 + i * 100, 0, 100, 50))
+        for i, tab in enumerate(self.tab_names):
+            name_length = len(tab)
+            pygame.draw.rect(self.display, (150, 150, 150), pygame.Rect(self.SCREEN_WIDTH / 2 + i * 120, 0, 11 * name_length, 100))
             tab_text = self.font_big.render(tab, True, (0, 0, 0))
-            self.display.blit(tab_text, (self.SCREEN_WIDTH / 2 + i * 100 + 10, 10))
+            self.display.blit(tab_text, (self.SCREEN_WIDTH / 2 + i * 150 + 10, 10))
 
     def draw_green_area_and_agents(self):
-        pygame.draw.rect(self.display, (0, 100, 0), pygame.Rect(0, 50, self.SCREEN_WIDTH/2, self.SCREEN_HEIGHT-50))
+        pygame.draw.rect(self.display, self.color_dict["black"], pygame.Rect(0, 50, self.SCREEN_WIDTH/2, self.SCREEN_HEIGHT-50))
         # Draw the agents in a circle formation
         num_agents = len(self.environment.agent_names)
-        for i in range(num_agents):
+        self.agent_radius = num_agents * 10
+        for i, agent in enumerate(self.environment.agents):
             angle = 2 * math.pi * i / num_agents
             x = self.SCREEN_WIDTH/4 + self.agent_radius * math.cos(angle)
             y = self.SCREEN_HEIGHT/2 + self.agent_radius * math.sin(angle)
-            pygame.draw.circle(self.display, (0, 0, 255), (int(x), int(y)), 20)
+            if agent.is_buyer:
+                color = self.color_dict["green"]
+            else:
+                color = self.color_dict["red"]
+            pygame.draw.circle(self.display, color, (int(x), int(y)), 15)
             # Draw the names
-            name_text = self.font_small.render(self.environment.agent_names[i], True, (255, 255, 255))
+            name_text = self.font_small.render(str(agent.inventory) + str(agent.capital), True, (255, 255, 255))
             self.display.blit(name_text, (int(x)+20, int(y)))
 
     def draw_dialogue_screen(self):
@@ -158,13 +133,11 @@ class Visualizer:
         self.clear_screen()
         self.draw_menu_bar()
         self.draw_pause_button()
-
         self.draw_green_area_and_agents()
-        self.draw_agent_connections(env.adjacency_matrix)
-        if self.current_tab == 'Market':
-            self.market_visualizer.draw_market(self.environment)
-        elif self.current_tab == "info":
-            self.info_visualizer.draw_info(self.environment)
+
+        self.tab_map[self.current_tab].create_background()
+        self.tab_map[self.current_tab].draw(self.environment)
+
         self.draw_titles_and_labels()
         self.draw_pause_button()
 
@@ -183,7 +156,7 @@ class Visualizer:
                 else:
                     x, y = event.pos
                     if y < 50:
-                        for i, tab in enumerate(self.tabs):
+                        for i, tab in enumerate(self.tab_names):
                             if x > self.SCREEN_WIDTH / 2 + i * 100 and x < self.SCREEN_WIDTH / 2 + (i + 1) * 100:
                                 self.current_tab = tab
         return True
@@ -191,67 +164,8 @@ class Visualizer:
     async def game_loop(self, env):
         while self.handle_events():
             if not self.paused:
-                await env.simulate_step()
+                await env.visualize_step()
             self.visualize()
             # Update the display
             pygame.display.flip()
             self.clock.tick(60)
-
-
-def generate_random_adjacency_matrix(size):
-    # Generate a random adjacency matrix with values from 0 to max_line_thickness
-    adjacency_matrix = [[random.randint(0, 1) for _ in range(size)] for _ in range(size)]
-
-    # Since adjacency matrix is symmetric, we copy the lower triangle to the upper triangle
-    for i in range(size):
-        for j in range(i+1, size):
-            adjacency_matrix[i][j] = adjacency_matrix[j][i]
-
-    return adjacency_matrix
-
-
-class Environment:
-    def __init__(self, enable_visualization):
-        self.enable_visualization = enable_visualization
-        self.visualizer = Visualizer(self) if enable_visualization else None
-        # Graph history
-        self.bid_history = []
-        self.ask_history = []
-        self.bid_ask_history = []
-        self.graph_history_size = 100
-        self.agent_names = ["Alice", "Bob", "Charlie", "John", "Aaron", "Sophia"]
-        self.adjacency_matrix = generate_random_adjacency_matrix(len(self.agent_names))
-
-    async def step(self):
-        # Simulate a time-consuming calculation
-        await asyncio.sleep(0.01)
-        # Simple simulation that generates random bids and asks
-        self.bids = np.random.rand(10)
-        self.asks = np.random.rand(10)
-        self.adjacency_matrix = generate_random_adjacency_matrix(len(self.agent_names))
-        return self.bids, self.asks, self.adjacency_matrix
-
-    async def simulate_step(self):
-        self.bids, self.asks, self.adjacency_matrix = await self.step()
-        # Update graph history
-        self.bid_history.append(np.average(self.bids))
-        self.ask_history.append(np.average(self.asks))
-
-        # If the graph history is too long, remove the oldest elements
-        #if len(self.bid_history) > self.graph_history_size:
-         #   self.bid_history.pop(0)
-        #if len(self.ask_history) > self.graph_history_size:
-        #    self.ask_history.pop(0)
-
-        if self.enable_visualization:
-            self.visualizer.visualize()
-
-    def run(self):
-        asyncio.run(self.visualizer.game_loop(self))
-
-
-if __name__ == '__main__':
-    # Initialize environment
-    env = Environment(enable_visualization=True)
-
-    env.run()

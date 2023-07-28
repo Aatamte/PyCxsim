@@ -17,7 +17,7 @@ class Artifact:
     def should_continue(self):
         return True
 
-    def reset(self):
+    def reset(self, environment):
         pass
 
 
@@ -31,7 +31,7 @@ class ArtifactController:
     def execute_action(self, agent, action):
         artifact_name, action_details = action
         if artifact_name not in self.artifacts.keys():
-            raise KeyError(f"The artifact name that you supplied ({artifact_name}) does not exist in: {list(self.artifacts.keys())}")
+            raise KeyError(f"The artifact name that you supplied in the agents actions ({artifact_name}) does not exist in: {list(self.artifacts.keys())}")
         artifact = self.artifacts[artifact_name]
         artifact.execute(agent, action_details)
 
@@ -62,10 +62,18 @@ class ArtifactController:
     def should_continue(self):
         return all(artifact.should_continue() for artifact in self.artifacts.values())
 
-    def reset(self):
+    def reset(self, environment):
         for artifact in self.artifacts.values():
-            artifact.reset()
+            artifact.reset(environment)
 
     def __repr__(self):
         return str(self.artifacts)
 
+
+class AdjacencyMatrix:
+    def __init__(self, agents):
+        self.AdjacencyNameMatrix = [[]]
+
+    def __getitem__(self, item):
+        if isinstance(item, str):
+            pass

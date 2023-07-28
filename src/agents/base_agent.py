@@ -28,6 +28,7 @@ class Agent:
     def reset(self):
         self.capital = self.starting_capital
         self.inventory.clear()
+        self.inventory = self.starting_inventory
 
     def update(self, observation):
         # update the state depending on the observation
@@ -45,6 +46,9 @@ class Agent:
         return str(self.observations[0])
 
     def select_action(self):
+        pass
+
+    def step(self):
         pass
 
     def __getitem__(self, item):

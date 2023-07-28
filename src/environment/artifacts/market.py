@@ -2,9 +2,10 @@ from typing import Dict
 from dataclasses import dataclass
 import numpy as np
 import pandas as pd
+import random
 
 from src.core import Agent
-from src.environment.artifacts.artifact import Artifact
+from src.environment.artifacts.artifact import Artifact, AdjacencyMatrix
 
 
 # An Order is represented as a dataclass for simplicity and ease of use
@@ -27,7 +28,7 @@ class Order:
 
 
 # The OrderBook class represents the order book in a market
-class OrderBook():
+class OrderBook:
     """
     Represents the order book in a market.
 
@@ -65,7 +66,7 @@ class OrderBook():
         self.num_transactions = 0
         # Reset history DataFrame
         self.history = pd.DataFrame(
-            columns=["transaction_id", "price", "quantity", "buying_agent", "selling_agent"]
+            columns=["transaction_id", "price", "quantity", "buyer", "seller"]
         )
 
     def _can_order_be_executed(self, order: Order, is_buy_order: bool) -> bool:
@@ -86,7 +87,7 @@ class OrderBook():
         if order.quantity == 0:
             return False
         # if agent is buying,
-        if is_buy_order and order.agent.inventory.capital >= order.price:
+        if is_buy_order and order.agent.capital >= order.price:
             return True
         if not is_buy_order and order.agent.inventory[self.product_name] >= abs(order.quantity):
             return True
@@ -136,8 +137,8 @@ class OrderBook():
             incoming_order.agent.inventory[self.product_name] += transaction_quantity
             book_order.agent.inventory[self.product_name] -= transaction_quantity
 
-            incoming_order.agent.inventory.capital -= transaction_price
-            book_order.agent.inventory.capital += transaction_price
+            incoming_order.agent.capital -= transaction_price
+            book_order.agent.capital += transaction_price
 
             # modify orders to reflect transaction
             incoming_order.quantity -= transaction_quantity
@@ -150,8 +151,8 @@ class OrderBook():
             incoming_order.agent.inventory[self.product_name] -= transaction_quantity
             book_order.agent.inventory[self.product_name] += transaction_quantity
 
-            incoming_order.agent.inventory.capital += transaction_price
-            book_order.agent.inventory.capital -= transaction_price
+            incoming_order.agent.capital += transaction_price
+            book_order.agent.capital -= transaction_price
 
             # modify orders to reflect transaction
             incoming_order.quantity += transaction_quantity
@@ -165,8 +166,8 @@ class OrderBook():
                 "transaction_id": [self.num_transactions],
                 "price": [transaction_price],
                 "quantity": [transaction_quantity],
-                "buying_agent": [incoming_order.agent.name if is_incoming_buy_order else book_order.agent.name],
-                "selling_agent": [incoming_order.agent.name if not is_incoming_buy_order else book_order.agent.name]
+                "buyer": [incoming_order.agent.name if is_incoming_buy_order else book_order.agent.name],
+                "seller": [incoming_order.agent.name if not is_incoming_buy_order else book_order.agent.name]
             })]
                                             )
         self.num_transactions += 1
@@ -207,6 +208,9 @@ class Market(Artifact):
         super(Market, self).__init__("Market")
         self.market_name = market_name
         self.market = OrderBook(self.market_name)
+        self.agents = []
+        self.transaction_adjacency_matrix = None
+        self.agent_name_lookup = None
 
     # The execute method adds an order to the market's order book
     def execute(self, agent, action: tuple):
@@ -214,23 +218,35 @@ class Market(Artifact):
 
     # The generate_observations method prepares the current market state for all agents
     def generate_observations(self, agents):
+        self.agents = agents
         observations = {agent.name: (self.market.product_name, self.market.get_full_orderbook()) for agent in agents}
         return observations
 
     # Reset the market by resetting its order book
-    def reset(self):
+    def reset(self, environment):
         """
         Resets the order book. Clears all orders, resets bid/offer orders and resets counters.
         """
         self.market.reset()
+        self.agents = environment.agents
+        self.agent_name_lookup = environment.agent_name_lookup
+        self.transaction_adjacency_matrix = AdjacencyMatrix(self.agents)
+
+    def get_adjacency_matrix(self):
+        size = len(self.agents)
+        mat = [[random.randint(0, 0) for _ in range(size)] for _ in range(size)]
+        for link in self.market.history[["buyer", "seller"]].values[-10:]:
+            source_idx = self.agent_name_lookup[link[0]].id
+            sink_idx = self.agent_name_lookup[link[1]].id
+            mat[source_idx][sink_idx] = 1
+            #mat[sink_idx][source_idx] = 1
+        return mat
+
+    def history(self):
+        return self.market.history
 
     def __repr__(self):
-        newline = '\n'
-        return \
-            f"""
-    MarketPlace
-    {newline.join(str(self.market))}
-    """
+        return str(self.market)
 
 
 class Marketplace(Artifact):

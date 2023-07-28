@@ -1,32 +1,32 @@
 from src.core import Agent, Environment
-from src.core import Marketplace
+from src.core import Market
+import numpy as np
 
 
 class MyAgent(Agent):
     def __init__(self):
         super(MyAgent, self).__init__()
-        self.inventory.starting_capital = 1000
+        self.starting_capital = 500000
+        self.starting_inventory = {
+            "socks": 100000
+        }
+        self.is_buyer = True if np.random.randint(0, 100) > 50 else False
+        self.quantity = 1 if self.is_buyer else -1
 
     def select_action(self):
-        return self, "MarketPlace", ["socks", 100, 1]
+        if self.is_buyer:
+            price = np.random.randint(85, 100)
+        else:
+            price = np.random.randint(90, 105)
+        self.action_queue.append(("Market", ["socks", price, self.quantity]))
 
 
 if __name__ == '__main__':
-    env = Environment()
-    agent = MyAgent()
+    env = Environment(enable_visualization=True)
+    market = Market("socks")
+    env.add(market)
 
-    marketplace_artifact = Marketplace(["socks", "bananas"])
-    env.add(marketplace_artifact)
+    env.add([MyAgent() for _ in range(40)])
 
-    max_episodes = 10
-    max_steps = 2
-
-    env.add(agent)
-
-    env.reset()
-    for step in range(max_steps):
-        actions = [agent.select_action()]
-        env.step(actions)
-        #print(env)
-
+    env.run()
 

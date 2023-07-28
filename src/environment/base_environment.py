@@ -1,8 +1,15 @@
+import time
+
 import numpy as np
 import logging
 from src.agents.base_agent import Agent
 from src.environment.artifacts.artifact import Artifact, ArtifactController
+from src.visualization.app import Visualizer
 import h5py
+import names
+import asyncio
+import random
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -14,11 +21,24 @@ class UnsupportedItemType(Exception):
     """Exception raised when an unsupported item is added to the environment."""
 
 
+def generate_random_adjacency_matrix(size):
+    # Generate a random adjacency matrix with values from 0 to max_line_thickness
+    adjacency_matrix = [[random.randint(0, 1) for _ in range(size)] for _ in range(size)]
+
+    # Since adjacency matrix is symmetric, we copy the lower triangle to the upper triangle
+    for i in range(size):
+        for j in range(i+1, size):
+            adjacency_matrix[i][j] = adjacency_matrix[j][i]
+
+    return adjacency_matrix
+
+
 class Environment:
     def __init__(
         self,
         name: str = "default environment",
         record_environment: bool = False,
+        enable_visualization: bool = False,
         verbose: int = 0,
         seed: int = None
     ):
@@ -34,18 +54,20 @@ class Environment:
         self.name = name
         self.verbose = verbose
         self.seed = seed
+        self.enable_visualization = enable_visualization
 
         self.current_step = 0
-        self.max_steps = np.inf
+        self.max_steps = 100
 
         self.current_episode = 0
-        self.max_episodes = np.inf
+        self.max_episodes = 1
 
         # artifacts
         self.artifact_controller = ArtifactController()
 
         # agent attributes
         self.agents = []
+        self.agent_names = []
         self.n_agents = 0
         self.agent_idx = 0
         self.agent_name_lookup = {}
@@ -60,6 +82,9 @@ class Environment:
         if self.should_record:
             self.recorder = RecordedEnvironment("env_record.hdf5")
 
+        if self.enable_visualization:
+            self.visualizer = Visualizer(self)
+
     def add_agent(self, agent: Agent):
         """
         Add a new agent to the environment.
@@ -68,7 +93,11 @@ class Environment:
         """
         agent.id = self.agent_idx
         self.agent_idx += 1
+        if agent.name in [a.name for a in self.agents]:
+            agent.name = names.get_first_name() + str(self.agent_idx)
+        self.agent_names.append(agent.name)
         self.agents.append(agent)
+        self.agent_name_lookup[agent.name] = agent
         self.n_agents = len(self.agents)
 
     def add_artifact(self, artifact: Artifact):
@@ -95,12 +124,15 @@ class Environment:
         else:
             raise UnsupportedItemType()
 
+    def _initialize(self):
+        pass
+
     def reset(self) -> [np.ndarray, dict]:
         """
         Resets the environment
         """
         if not self.agents:
-            raise ValueError("agents must be passed through the <set_agents> function before the environment"
+            raise ValueError("agents must be passed through the <set_agents> function before  "
                              "the first episode is run")
         self.current_step = 0
         self.current_episode += 1
@@ -110,7 +142,10 @@ class Environment:
             agent.reset()
 
         # reset artifacts
-        self.artifact_controller.reset()
+        self.artifact_controller.reset(self)
+
+        if self.enable_visualization:
+            self.visualizer.reset()
 
         return 0
 
@@ -121,7 +156,6 @@ class Environment:
             return result
         return wrapper
 
-    @record_step
     def step(self) -> [np.ndarray, list, list]:
         # after all actions are processed
         self.artifact_controller.execute(self.agents)
@@ -137,11 +171,24 @@ class Environment:
         self.current_step += 1
         return should_continue
 
+    async def async_step(self):
+        self.step()
+        self.adjacency_matrix = generate_random_adjacency_matrix(len(self.agent_names))
+        await asyncio.sleep(0.01)
+        return True
+
     def run(self):
-        for episode in range(self.max_episodes):
+        if self.enable_visualization:
             self.reset()
-            for step in range(self.max_steps):
-                pass
+            asyncio.run(self.visualizer.game_loop(self))
+        else:
+            for episode in range(self.max_episodes):
+                self.reset()
+                for step in range(self.max_steps):
+                    pass
+
+    async def visualize_step(self):
+        ret = await self.async_step()
 
     def close(self):
         self.recorder.close()
@@ -213,3 +260,10 @@ class RecordedEnvironment:
 
         with h5py.File("env_record.hdf5", "r") as f:
             f.visititems(print_attrs)
+
+
+if __name__ == '__main__':
+    # Initialize environment
+    env = Environment(enable_visualization=False)
+
+    env.run()
