@@ -1,14 +1,14 @@
-import time
-
 import numpy as np
 import logging
 from src.agents.base_agent import Agent
 from src.environment.artifacts.artifact import Artifact, ArtifactController
-from src.visualization.app import Visualizer
+#from src.visualization.app import Visualizer
+from src.new_visualization.visualizer import Visualizer
 import h5py
 import names
 import asyncio
 import random
+import dearpygui.dearpygui as dpg
 
 
 logger = logging.getLogger(__name__)
@@ -145,7 +145,7 @@ class Environment:
         self.artifact_controller.reset(self)
 
         if self.enable_visualization:
-            self.visualizer.reset()
+            self.visualizer.reset(self)
 
         return 0
 
@@ -165,6 +165,9 @@ class Environment:
 
         for agent in self.agents:
             agent.step()
+
+        if self.enable_visualization:
+            self.visualizer.step()
 
         #
         should_continue = self.artifact_controller.should_continue()
@@ -186,6 +189,19 @@ class Environment:
                 self.reset()
                 for step in range(self.max_steps):
                     pass
+
+    def __enter__(self):
+        return self.visualizer.__enter__()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.visualizer.__exit__(exc_type, exc_val, exc_tb)
+
+    def start_visualization(self):
+        with self.visualizer:
+            return self
+
+    def is_running(self):
+        return dpg.is_dearpygui_running()
 
     async def visualize_step(self):
         ret = await self.async_step()

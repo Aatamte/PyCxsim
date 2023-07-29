@@ -12,6 +12,8 @@ class Agent:
     ):
         self.name = name
         self.id = None  # None, initialized before the first episode by the environment class
+        self.x_pos = None
+        self.y_pos = None
 
         # holds the observations for each artifact
         self.observations = []

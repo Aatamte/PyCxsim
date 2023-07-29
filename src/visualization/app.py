@@ -1,4 +1,5 @@
 import pygame
+import pygame_menu
 import math
 
 from src.visualization.tabs.market_visualizer import MarketVisualizer
@@ -50,6 +51,7 @@ class Visualizer:
         self.tab_names = list(self.tab_map.keys())
         self.current_tab = self.tab_names[0]
 
+
     def reset(self):
         self.tab_map = {
             "EnvironmentTab": EnvironmentTab(self)
@@ -60,6 +62,8 @@ class Visualizer:
 
         self.tab_names = list(self.tab_map.keys())
         self.current_tab = self.tab_names[0]
+
+
 
     def draw_agent_connections(self, adjacency_matrix):
         num_agents = len(adjacency_matrix)
