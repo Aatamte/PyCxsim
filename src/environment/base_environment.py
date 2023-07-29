@@ -56,6 +56,9 @@ class Environment:
         self.seed = seed
         self.enable_visualization = enable_visualization
 
+        self.should_stop_simulation = False
+        self.is_first_step = True
+
         self.current_step = 0
         self.max_steps = 100
 
@@ -94,7 +97,7 @@ class Environment:
         agent.id = self.agent_idx
         self.agent_idx += 1
         if agent.name in [a.name for a in self.agents]:
-            agent.name = names.get_first_name() + str(self.agent_idx)
+            agent.name = names.get_first_name()
         self.agent_names.append(agent.name)
         self.agents.append(agent)
         self.agent_name_lookup[agent.name] = agent
@@ -156,6 +159,14 @@ class Environment:
             return result
         return wrapper
 
+    def update_simulation_state(self):
+        self.current_step += 1
+        if self.current_step >= self.max_steps:
+            self.current_episode += 1
+            self.current_step = 0
+        if self.current_episode >= self.max_episodes:
+            self.should_stop_simulation = True
+
     def step(self) -> [np.ndarray, list, list]:
         # after all actions are processed
         self.artifact_controller.execute(self.agents)
@@ -169,16 +180,10 @@ class Environment:
         if self.enable_visualization:
             self.visualizer.step()
 
-        #
+        # logic for steps
         should_continue = self.artifact_controller.should_continue()
-        self.current_step += 1
+        self.update_simulation_state()
         return should_continue
-
-    async def async_step(self):
-        self.step()
-        self.adjacency_matrix = generate_random_adjacency_matrix(len(self.agent_names))
-        await asyncio.sleep(0.01)
-        return True
 
     def run(self):
         if self.enable_visualization:
@@ -190,21 +195,20 @@ class Environment:
                 for step in range(self.max_steps):
                     pass
 
-    def __enter__(self):
-        return self.visualizer.__enter__()
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.visualizer.__exit__(exc_type, exc_val, exc_tb)
-
-    def start_visualization(self):
-        with self.visualizer:
-            return self
+    def action_logs(self):
+        return self.artifact_controller.action_logs
 
     def is_running(self):
+        if self.should_stop_simulation:
+            del self.visualizer
+            return False
         return dpg.is_dearpygui_running()
 
-    async def visualize_step(self):
-        ret = await self.async_step()
+    def iter_steps(self):
+        return range(0, self.max_steps)
+
+    def iter_episodes(self):
+        return range(0, self.max_episodes)
 
     def close(self):
         self.recorder.close()

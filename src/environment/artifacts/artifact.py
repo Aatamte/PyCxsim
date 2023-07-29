@@ -24,11 +24,13 @@ class Artifact:
 class ArtifactController:
     def __init__(self):
         self.artifacts: dict[str, Artifact] = {}
+        self.action_logs = []
 
     def add_artifact(self, artifact: Artifact):
         self.artifacts[artifact.name] = artifact
 
     def execute_action(self, agent, action):
+        self.action_logs.append(action)
         artifact_name, action_details = action
         if artifact_name not in self.artifacts.keys():
             raise KeyError(f"The artifact name that you supplied in the agents actions ({artifact_name}) does not exist in: {list(self.artifacts.keys())}")

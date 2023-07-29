@@ -1,5 +1,5 @@
 from src.core import Agent, Environment
-from src.core import Market
+from src.core import Market, Order
 import numpy as np
 from src.new_visualization.visualizer import Visualizer
 import dearpygui.dearpygui as dpg
@@ -29,12 +29,13 @@ if __name__ == '__main__':
     env.add(market)
     env.add([MyAgent() for _ in range(10)])
 
-    env.reset()
+    env.max_episodes = 100000
+    env.max_steps = 100000
 
-    with env:
-        while env.is_running():
-            print("this will run every frame")
-            for step in range(env.max_steps):
-                print(env.current_step)
-                env.step()
+    env.reset()
+    while env.is_running():
+        for step in env.iter_steps():
+            current_episode = env.current_episode
+            env.step()
+
 

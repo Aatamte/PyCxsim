@@ -52,11 +52,12 @@ color_dict = {
                 'white': (255, 255, 255),
         }
 
+
 class Visualizer:
     def __init__(self, environment):
 
         self.environment = environment
-        self.WIDTH = 1200
+        self.WIDTH = 1400
         self.HEIGHT = 1000
 
         self.world_height = 120
@@ -80,6 +81,8 @@ class Visualizer:
         self.agent_information_text = dpg.generate_uuid()
         self.agent_information_table = {}
         self.agent_interaction_table = {}
+        self.action_log_size = 30
+        self.action_logs = [["N/A" for _ in range(3)] for _ in range(self.action_log_size)]
 
     def draw_interaction(self, source_agent, target_agent, color, tag: str = None):
         if tag is None:
@@ -93,13 +96,14 @@ class Visualizer:
         for agent in self.environment.agents:
             agent_str = f"capital: {agent.capital}\ninventory: {agent.inventory}"
             dpg.set_value(self.agent_information_table[agent.name], agent_str)
-            random_agent = random.choice(self.environment.agents)
-            if random_agent != agent:
-                pass
-                #self.draw_interaction(agent, random_agent, "red")
+
+        for idx, action in enumerate(self.environment.action_logs()[-self.action_log_size:]):
+            dpg.set_value(self.action_logs[idx][0], str(self.environment.current_step))
+            dpg.set_value(self.action_logs[idx][1], str("agent"))
+            dpg.set_value(self.action_logs[idx][2], str(action))
 
     def step(self):
-        dpg.set_value(self.environment_overview_text, f"current episode: {self.environment.current_episode} \nmax episodes: {self.environment.max_episodes}\ncurrent step: {self.environment.current_step} \nmax steps {self.environment.max_steps}")
+        dpg.set_value(self.environment_overview_text, f"current episode: {self.environment.current_episode} / {self.environment.max_episodes}\ncurrent step: {self.environment.current_step} / {self.environment.max_steps}")
         self.update_agent_overview()
 
         dpg.render_dearpygui_frame()
@@ -130,16 +134,32 @@ class Visualizer:
                 dpg.add_menu_item(label="Market", callback=print_me)
                 dpg.add_menu_item(label="Environment", callback=print_me)
 
+    def draw_action_logs(self):
+
+        with dpg.collapsing_header(label="Action Logs", default_open=True):
+            with dpg.table(header_row=True):
+                # use add_table_column to add columns to the table,
+                # table columns use child slot 0
+                dpg.add_table_column(label="step")
+                dpg.add_table_column(label="agent")
+                dpg.add_table_column(label="action")
+                for i in range(self.action_log_size):
+                    with dpg.table_row():
+                        for j in range(0, 3):
+                            self.action_logs[i][j] = dpg.add_text(self.action_logs[i][j], wrap=110)
+
     def draw_environment_overview(self):
         with dpg.collapsing_header(label="Environment Overview", default_open=True):
             self.environment_overview_text = dpg.add_text("", wrap=300)
+            self.draw_agent_overview()
 
     def draw_agent_overview(self):
-        with dpg.collapsing_header(label="Agent Overview", default_open=True):
+        with dpg.collapsing_header(label="Agent Overview", default_open=False):
             self.agent_overview_text = dpg.add_text("", wrap=300)
+            self.add_agent_information_table()
 
     def add_agent_information_table(self):
-        with dpg.collapsing_header(label="Agent information", default_open=True):
+        with dpg.collapsing_header(label="Agent information", default_open=False):
             self.agent_information_text = dpg.add_text("", wrap=300)
             for agent in self.environment.agents:
                 self.agent_information_table[agent.name] = dpg.generate_uuid()
@@ -154,39 +174,35 @@ class Visualizer:
                   #      self.agent_interaction_table[source_agent.name][target_agent.name] = dpg.generate_uuid()
                    #     self.draw_interaction(source_agent, target_agent, "gray")
 
-    def create_environment_info_window(self):
-        with dpg.window(label="Information", tag="Info", width=self.info_tab_width, height=self.info_tab_height, pos=(self.agent_world_width, 0), no_close=True, no_move=True, no_scrollbar=True, no_collapse=True, autosize=True, no_resize=True):
+    def create_information_window(self):
+        with dpg.window(label="Information", tag="Info", width=self.info_tab_width, height=self.info_tab_height, pos=(self.agent_world_width + int(self.WIDTH * 0.01), 0), no_close=True, no_move=True, no_scrollbar=True, no_collapse=True, no_resize=True):
             self.draw_environment_overview()
-            self.draw_agent_overview()
-            self.add_agent_information_table()
+            self.draw_action_logs()
 
     def create_world_window(self):
-        with dpg.window(label="Agent World", tag="World", width=self.agent_world_width, height=self.agent_world_height, no_close=True, no_move=True, no_scrollbar=True, no_collapse=True, autosize=True, no_resize=True):
+        with dpg.window(label="Agent World", tag="World", width=self.agent_world_width, height=self.agent_world_height, no_close=True, no_move=True, menubar=True, no_scrollbar=True, no_collapse=True, autosize=True, no_resize=True):
             dpg.add_spacer(height=self.top_position)
             self.draw_world()
 
     def reset(self, environment):
         self.environment = environment
+        self.start()
 
-    def __enter__(self):
-        dpg.create_context()
+    def start(self):
         self.create_world_window()
-        self.create_environment_info_window()
+        self.create_information_window()
 
         with dpg.handler_registry():
             pass
             #dpg.add_mouse_move_handler(callback=self.update_plot_data, user_data=self.plot_data)
 
+        self.add_menu_bar()
+
         dpg.create_viewport(title='Complex Adaptive Economic Simulator', width=self.WIDTH, height=self.HEIGHT)
         dpg.setup_dearpygui()
         dpg.show_viewport()
 
-        self.add_menu_bar()
-
-        #dpg.set_primary_window("Example Window", True)
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __del__(self):
         dpg.destroy_context()
 
 
