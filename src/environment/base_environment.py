@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import logging
 from src.agents.base_agent import Agent
@@ -58,6 +60,7 @@ class Environment:
 
         self.should_stop_simulation = False
         self.is_first_step = True
+        self.step_delay = 1
 
         self.current_step = 0
         self.max_steps = 100
@@ -87,6 +90,9 @@ class Environment:
 
         if self.enable_visualization:
             self.visualizer = Visualizer(self)
+
+        self._current_time = time.perf_counter()
+        self._past_time = time.perf_counter()
 
     def add_agent(self, agent: Agent):
         """
@@ -168,6 +174,11 @@ class Environment:
             self.should_stop_simulation = True
 
     def step(self) -> [np.ndarray, list, list]:
+        if self.enable_visualization:
+            self.visualizer.step()
+            if time.perf_counter() - self._current_time <= self.step_delay:
+                return None
+        self._current_time = time.perf_counter()
         # after all actions are processed
         self.artifact_controller.execute(self.agents)
 
@@ -177,23 +188,10 @@ class Environment:
         for agent in self.agents:
             agent.step()
 
-        if self.enable_visualization:
-            self.visualizer.step()
-
         # logic for steps
         should_continue = self.artifact_controller.should_continue()
         self.update_simulation_state()
         return should_continue
-
-    def run(self):
-        if self.enable_visualization:
-            self.reset()
-            asyncio.run(self.visualizer.game_loop(self))
-        else:
-            for episode in range(self.max_episodes):
-                self.reset()
-                for step in range(self.max_steps):
-                    pass
 
     def action_logs(self):
         return self.artifact_controller.action_logs

@@ -29,6 +29,8 @@ if __name__ == '__main__':
     env.add(market)
     env.add([MyAgent() for _ in range(10)])
 
+    env.step_delay = 0.4
+
     env.max_episodes = 100000
     env.max_steps = 100000
 
