@@ -1,4 +1,4 @@
-from src.agents.base_agent import Agent
+from src.agents.agent import Agent
 
 
 class Artifact:
@@ -11,13 +11,18 @@ class Artifact:
     def generate_observations(self, agents):
         return {agent.name: "Observation" for agent in agents}
 
-    def describe_actions(self):
+    def display_actions(self):
         pass
 
     def should_continue(self):
         return True
 
     def reset(self, environment):
+        pass
+
+
+class ArtifactActions:
+    def __init__(self):
         pass
 
 
@@ -30,7 +35,7 @@ class ArtifactController:
         self.artifacts[artifact.name] = artifact
 
     def execute_action(self, agent, action):
-        self.action_logs.append(action)
+        self.action_logs.append((agent, action))
         artifact_name, action_details = action
         if artifact_name not in self.artifacts.keys():
             raise KeyError(f"The artifact name that you supplied in the agents actions ({artifact_name}) does not exist in: {list(self.artifacts.keys())}")

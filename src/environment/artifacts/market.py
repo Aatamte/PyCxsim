@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 import random
+from typing import  Union, Optional
 
 from src.core import Agent
 from src.environment.artifacts.artifact import Artifact, AdjacencyMatrix
@@ -213,8 +214,11 @@ class Market(Artifact):
         self.agent_name_lookup = None
 
     # The execute method adds an order to the market's order book
-    def execute(self, agent, action: tuple):
-        self.market.add(Order(action[1], action[2], agent))
+    def execute(self, agent, action: Union[tuple, Order]):
+        if isinstance(action, tuple):
+            self.market.add(Order(action[1], action[2], agent))
+        elif isinstance(action, Order):
+            self.market.add(action)
 
     # The generate_observations method prepares the current market state for all agents
     def generate_observations(self, agents):

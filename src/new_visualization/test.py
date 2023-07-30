@@ -1,17 +1,13 @@
 from src.core import Agent, Environment
 from src.core import Market, Order
 import numpy as np
-from src.new_visualization.visualizer import Visualizer
-import dearpygui.dearpygui as dpg
 
 
 class MyAgent(Agent):
     def __init__(self):
         super(MyAgent, self).__init__()
         self.starting_capital = 500000
-        self.starting_inventory = {
-            "socks": 100000
-        }
+        self.starting_inventory = {"gold": 100000}
         self.is_buyer = True if np.random.randint(0, 100) > 50 else False
         self.quantity = 1 if self.is_buyer else -1
 
@@ -20,12 +16,12 @@ class MyAgent(Agent):
             price = np.random.randint(85, 100)
         else:
             price = np.random.randint(90, 105)
-        self.action_queue.append(("Market", ["socks", price, self.quantity]))
+        self.action_queue.append(("Market", ["gold", price, self.quantity]))
 
 
 if __name__ == '__main__':
     env = Environment(enable_visualization=True)
-    market = Market("socks")
+    market = Market("gold")
     env.add(market)
     env.add([MyAgent() for _ in range(10)])
 

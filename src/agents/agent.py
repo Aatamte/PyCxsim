@@ -18,8 +18,11 @@ class Agent:
         # holds the observations for each artifact
         self.observations = []
 
-        # holds the next action that the agent would take
+        # holds the next action that the agent will take
         self.action_queue = []
+
+        #
+        self.params = {}
 
         # inventory
         self.starting_capital = starting_capital

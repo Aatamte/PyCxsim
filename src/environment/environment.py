@@ -2,13 +2,11 @@ import time
 
 import numpy as np
 import logging
-from src.agents.base_agent import Agent
+from src.agents.agent import Agent
 from src.environment.artifacts.artifact import Artifact, ArtifactController
-#from src.visualization.app import Visualizer
 from src.new_visualization.visualizer import Visualizer
 import h5py
 import names
-import asyncio
 import random
 import dearpygui.dearpygui as dpg
 

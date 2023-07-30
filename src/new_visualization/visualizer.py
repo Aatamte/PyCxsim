@@ -63,13 +63,16 @@ class Visualizer:
         self.world_height = 120
         self.world_width = 120
 
-        self.agent_world_height = self.HEIGHT
+        self.agent_world_height = int(self.HEIGHT * 0.8)
         self.agent_world_width = int(2 * self.WIDTH / 3)
         self.agent_world_middle_position = (int(self.agent_world_width / 2), int(self.agent_world_height / 2))
 
         self.info_tab_height = self.HEIGHT
         self.info_tab_width = int(self.WIDTH / 3)
         self.text_control = None
+
+        self.bottom_panel_height = int(self.HEIGHT * 0.2)
+        self.bottom_panel_width = int(2 * self.WIDTH / 3)
 
         self.plot_data = []
 
@@ -105,7 +108,6 @@ class Visualizer:
     def step(self):
         dpg.set_value(self.environment_overview_text, f"current episode: {self.environment.current_episode} / {self.environment.max_episodes}\ncurrent step: {self.environment.current_step} / {self.environment.max_steps}")
         self.update_agent_overview()
-
         dpg.render_dearpygui_frame()
 
     def is_running(self):
@@ -175,18 +177,68 @@ class Visualizer:
                    #     self.draw_interaction(source_agent, target_agent, "gray")
 
     def create_information_window(self):
-        with dpg.window(label="Information", tag="Info", width=self.info_tab_width, height=self.info_tab_height, pos=(self.agent_world_width + int(self.WIDTH * 0.01), 0), no_close=True, no_move=True, no_scrollbar=True, no_collapse=True, no_resize=True):
+        with dpg.window(
+            label="Information", tag="Info",
+            width=self.info_tab_width,
+            pos=(self.agent_world_width + int(self.WIDTH * 0.01), 0),
+            no_close=True, no_move=True,
+            no_scrollbar=True,
+            no_collapse=True,
+            no_resize=True
+        ) as info:
+            self.info = info
             self.draw_environment_overview()
             self.draw_action_logs()
 
+    def draw_bottom_panel(self):
+        with dpg.child_window(
+                label="Bottom Panel", tag="Bottom",
+                width=self.agent_world_width,
+                pos=(0, self.agent_world_height)
+        ) as bottom:
+            self.bottom = bottom
+
     def create_world_window(self):
-        with dpg.window(label="Agent World", tag="World", width=self.agent_world_width, height=self.agent_world_height, no_close=True, no_move=True, menubar=True, no_scrollbar=True, no_collapse=True, autosize=True, no_resize=True):
+        with dpg.window(
+                label="Environment",
+                tag="World",
+                no_close=True,
+                no_move=True,
+                menubar=True,
+                no_scrollbar=True,
+                no_collapse=True,
+                no_resize=True
+        ) as world:
+            self.world = world
             dpg.add_spacer(height=self.top_position)
             self.draw_world()
+            self.draw_bottom_panel()
 
     def reset(self, environment):
         self.environment = environment
         self.start()
+
+    def update(self):
+        self.WIDTH = dpg.get_viewport_width()
+        self.HEIGHT = dpg.get_viewport_height()
+
+        self.agent_world_height = self.HEIGHT
+        self.agent_world_width = int(2 * self.WIDTH / 3)
+        self.agent_world_middle_position = (int(self.agent_world_width / 2), int(self.agent_world_height / 2))
+
+        self.info_tab_height = self.HEIGHT
+        self.info_tab_width = int(self.WIDTH / 3)
+
+        self.bottom_panel_height = int(self.HEIGHT * 0.2)
+        self.bottom_panel_width = int(2 * self.WIDTH / 3)
+
+        dpg.set_item_width(self.world, self.agent_world_width)
+        dpg.set_item_width(self.info, self.info_tab_width)
+
+        dpg.set_item_height(self.world, self.agent_world_height)
+        dpg.set_item_height(self.info, self.info_tab_height)
+
+        dpg.set_item_pos(self.info, [self.agent_world_width, 0])
 
     def start(self):
         self.create_world_window()
@@ -198,9 +250,18 @@ class Visualizer:
 
         self.add_menu_bar()
 
+        with dpg.theme() as item_theme:
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_color(dpg.mvThemeCol_FrameBg, (200, 200, 100), category=dpg.mvThemeCat_Core)
+                dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 0, category=dpg.mvThemeCat_Core)
+
+        dpg.bind_item_theme(self.bottom, item_theme)
+
+        dpg.set_viewport_resize_callback(self.update)
         dpg.create_viewport(title='Complex Adaptive Economic Simulator', width=self.WIDTH, height=self.HEIGHT)
         dpg.setup_dearpygui()
         dpg.show_viewport()
+
 
     def __del__(self):
         dpg.destroy_context()
