@@ -9,6 +9,7 @@ import h5py
 import names
 import random
 import dearpygui.dearpygui as dpg
+from src.environment.calander import Calender
 
 
 logger = logging.getLogger(__name__)
@@ -68,6 +69,7 @@ class Environment:
 
         # artifacts
         self.artifact_controller = ArtifactController()
+        self.calender = Calender()
 
         # agent attributes
         self.agents = []
@@ -171,11 +173,14 @@ class Environment:
         if self.current_episode >= self.max_episodes:
             self.should_stop_simulation = True
 
+        self.calender.step()
+
     def step(self) -> [np.ndarray, list, list]:
         if self.enable_visualization:
-            self.visualizer.step()
-            if time.perf_counter() - self._current_time <= self.step_delay:
-                return None
+            while (time.perf_counter() - self._current_time <= self.step_delay) or (self.visualizer.is_paused):
+                self.visualizer.step(False)
+            else:
+                self.visualizer.step(True)
 
         random.shuffle(self.agents)
         self._current_time = time.perf_counter()

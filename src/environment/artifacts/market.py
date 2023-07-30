@@ -253,6 +253,9 @@ class Market(Artifact):
     def history(self):
         return self.market.history
 
+    def describe(self):
+        return str(f"A double-auction market for the good: {self.market_name}.\nAgents can interact with this artifact through sending an <Order> class to the environment or an action in the format ('Market', 'good', price, quantity)")
+
     def __repr__(self):
         return str(self.market)
 

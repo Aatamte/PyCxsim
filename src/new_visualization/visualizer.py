@@ -61,6 +61,7 @@ class Visualizer:
         self.environment_overview_text = dpg.generate_uuid()
         self.agent_overview_text = dpg.generate_uuid()
         self.agent_information_text = dpg.generate_uuid()
+        self.environment_date = dpg.generate_uuid()
         self.agent_information_table = {}
         self.agent_interaction_table = {}
         self.action_log_size = 30
@@ -72,6 +73,8 @@ class Visualizer:
         self.current_tab = None
         self.show_environment_overview = False
         self.last_environment_step = 0
+
+        self.is_paused = True
 
     def draw_interaction(self, source_agent, target_agent, color, tag: str = None):
         if tag is None:
@@ -96,15 +99,17 @@ class Visualizer:
         for source_idx, source_agent in enumerate(self.environment.agents):
             for target_idx, target_agent in enumerate(self.environment.agents):
                 if mat[source_idx][target_idx] == 1:
-                    dpg.show_item(self.agent_interaction_table[source_agent.name][target_agent.name])
+                    dpg.show_item(self.agent_interaction_table[source_agent.id][target_agent.id])
                 elif source_agent != target_agent:
-                    dpg.hide_item(self.agent_interaction_table[source_agent.name][target_agent.name])
+                    dpg.hide_item(self.agent_interaction_table[source_agent.id][target_agent.id])
 
-    def step(self):
-        dpg.set_value(self.environment_overview_text, f"current episode: {self.environment.current_episode} / {self.environment.max_episodes}\ncurrent step: {self.environment.current_step} / {self.environment.max_steps}")
+    def step(self, is_new_step):
+        dpg.set_value(self.environment_overview_text, f"episode: {self.environment.current_episode} / {self.environment.max_episodes}\nstep: {self.environment.current_step} / {self.environment.max_steps}")
+        dpg.set_value(self.environment_date,f"date: {self.environment.calender.current_date}")
         self.update_agent_overview()
-        for name, artifact in artifact_tabs.items():
-            artifact.step()
+        if is_new_step:
+            for name, artifact in artifact_tabs.items():
+                artifact.step()
         self.draw_adjacency_matrix()
         dpg.render_dearpygui_frame()
 
@@ -113,10 +118,10 @@ class Visualizer:
 
     def draw_world(self):
         num_agents = len(self.environment.agents)
-        radius = 200
+        radius = num_agents * 4
         with dpg.drawlist(width=self.agent_world_width, height=self.agent_world_height):
             for idx, agent in enumerate(self.environment.agents):
-                self.agent_interaction_table[agent.name] = {}
+                self.agent_interaction_table[agent.id] = {}
                 angle = math.pi * 2 * idx / num_agents
                 x = radius * math.cos(angle)
                 y = radius * math.sin(angle)
@@ -124,10 +129,9 @@ class Visualizer:
                 agent.y_pos = y + int(radius * 1.2)
                 dpg.draw_circle((agent.x_pos, agent.y_pos), 10, color=[0, 255, 0], fill=[0, 255, 0])
                 for target_idx, target_agent in enumerate(self.environment.agents):
-                    if target_idx == idx:
-                        continue
-                    else:
-                        self.agent_interaction_table[agent.name][target_agent.name] = self.draw_interaction(self.environment.agents[idx], self.environment.agents[target_idx], "red", tag=f"{agent}_{target_agent}")
+                    if target_agent != agent:
+                            self.agent_interaction_table[agent.id][target_agent.id] = self.draw_interaction(self.environment.agents[idx], self.environment.agents[target_idx], "red", tag=f"{agent.id}_{target_agent.id}")
+
 
     def draw_action_logs(self):
         with dpg.child_window(label="Action Logs", show=False) as self.env_logs:
@@ -144,6 +148,7 @@ class Visualizer:
 
     def draw_environment_overview(self):
         with dpg.child_window(label="Environment Overview", show=self.show_environment_overview) as self.environment_overview:
+            self.environment_date = dpg.add_text("", wrap=300)
             self.environment_overview_text = dpg.add_text("", wrap=300)
             #self.draw_agent_overview()
 
@@ -215,6 +220,12 @@ class Visualizer:
                 if artifact_name in artifact_tabs.keys():
                     artifact_tabs[artifact_name].draw()
 
+    def pause_simulation_callback(self, sender):
+        self.is_paused = True
+
+    def resume_simulation_callback(self, sender):
+        self.is_paused = False
+
     def draw_bottom_panel(self):
         with dpg.child_window(
             label="Bottom Panel", tag="Bottom",
@@ -224,7 +235,8 @@ class Visualizer:
         ) as bottom:
             self.bottom = bottom
             dpg.add_text("bottom panel")
-            dpg.add_button(label="Pause")
+            dpg.add_button(label="Pause", callback=self.pause_simulation_callback)
+            dpg.add_button(label="Resume", callback=self.resume_simulation_callback)
 
     def create_world_window(self):
         with dpg.window(
@@ -290,7 +302,6 @@ class Visualizer:
         dpg.create_viewport(title='Complex Adaptive Economic Simulator', width=self.WIDTH, height=self.HEIGHT)
         dpg.setup_dearpygui()
         dpg.show_viewport()
-
 
     def __del__(self):
         dpg.destroy_context()

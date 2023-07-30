@@ -36,11 +36,12 @@ class ArtifactController:
 
     def execute_action(self, agent, action):
         self.action_logs.append((agent, action))
-        artifact_name, action_details = action
-        if artifact_name not in self.artifacts.keys():
-            raise KeyError(f"The artifact name that you supplied in the agents actions ({artifact_name}) does not exist in: {list(self.artifacts.keys())}")
-        artifact = self.artifacts[artifact_name]
-        artifact.execute(agent, action_details)
+        if action is not None:
+            artifact_name, action_details = action
+            if artifact_name not in self.artifacts.keys():
+                raise KeyError(f"The artifact name that you supplied in the agents actions ({artifact_name}) does not exist in: {list(self.artifacts.keys())}")
+            artifact = self.artifacts[artifact_name]
+            artifact.execute(agent, action_details)
 
     def execute(self, agents):
         for idx, agent in enumerate(agents):

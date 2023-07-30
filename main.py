@@ -17,27 +17,29 @@ class MyAgent(Agent):
         else:
             price = np.random.randint(90, 105)
 
-        self.action_queue.append(("Market", ("socks", price, self.quantity)))
+        if np.random.randint(0, 100) > 50:
+            self.action_queue.append(("Market", ("socks", price, self.quantity)))
+        else:
+            self.action_queue.append(None)
 
 
 if __name__ == '__main__':
     env = Environment(enable_visualization=True)
-
-    env.add([MyAgent() for _ in range(15)])
+    env.add([MyAgent() for _ in range(75)])
 
     market = Market("socks")
 
     env.add(market)
-
     env.add(Dialogue())
 
-    env.step_delay = 1
+    env.step_delay = 0.5
 
     env.max_episodes = 100000
     env.max_steps = 100000
 
     env.reset()
     while env.is_running():
+        #
         for step in env.iter_steps():
             current_episode = env.current_episode
             env.step()
