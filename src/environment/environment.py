@@ -176,6 +176,8 @@ class Environment:
             self.visualizer.step()
             if time.perf_counter() - self._current_time <= self.step_delay:
                 return None
+
+        random.shuffle(self.agents)
         self._current_time = time.perf_counter()
         # after all actions are processed
         self.artifact_controller.execute(self.agents)

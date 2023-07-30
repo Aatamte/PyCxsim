@@ -214,11 +214,15 @@ class Market(Artifact):
         self.agent_name_lookup = None
 
     # The execute method adds an order to the market's order book
-    def execute(self, agent, action: Union[tuple, Order]):
+    def execute(self, agent, action: Union[list, Order]):
         if isinstance(action, tuple):
             self.market.add(Order(action[1], action[2], agent))
         elif isinstance(action, Order):
             self.market.add(action)
+        elif isinstance(action, list):
+            raise TypeError("action should be a tuple, not a list.")
+        else:
+            raise TypeError("action should either be a ")
 
     # The generate_observations method prepares the current market state for all agents
     def generate_observations(self, agents):

@@ -1,5 +1,5 @@
 from src.core import Agent, Environment
-from src.core import Market, Order
+from src.core import Market, Order, Dialogue
 import numpy as np
 
 
@@ -7,7 +7,7 @@ class MyAgent(Agent):
     def __init__(self):
         super(MyAgent, self).__init__()
         self.starting_capital = 500000
-        self.starting_inventory = {"gold": 100000}
+        self.starting_inventory = {"socks": 100000}
         self.is_buyer = True if np.random.randint(0, 100) > 50 else False
         self.quantity = 1 if self.is_buyer else -1
 
@@ -16,16 +16,22 @@ class MyAgent(Agent):
             price = np.random.randint(85, 100)
         else:
             price = np.random.randint(90, 105)
-        self.action_queue.append(("Market", ["gold", price, self.quantity]))
+
+        self.action_queue.append(("Market", ("socks", price, self.quantity)))
 
 
 if __name__ == '__main__':
     env = Environment(enable_visualization=True)
-    market = Market("gold")
-    env.add(market)
-    env.add([MyAgent() for _ in range(10)])
 
-    env.step_delay = 0.4
+    env.add([MyAgent() for _ in range(15)])
+
+    market = Market("socks")
+
+    env.add(market)
+
+    env.add(Dialogue())
+
+    env.step_delay = 1
 
     env.max_episodes = 100000
     env.max_steps = 100000
