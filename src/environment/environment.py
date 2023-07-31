@@ -103,8 +103,10 @@ class Environment:
         """
         agent.id = self.agent_idx
         self.agent_idx += 1
-        if agent.name in [a.name for a in self.agents]:
+        agent.name = names.get_first_name()
+        while agent.name in [a.name for a in self.agents]:
             agent.name = names.get_first_name()
+
         self.agent_names.append(agent.name)
         self.agents.append(agent)
         self.agent_name_lookup[agent.name] = agent

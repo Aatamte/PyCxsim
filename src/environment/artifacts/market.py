@@ -145,7 +145,7 @@ class OrderBook:
                 book_order.agent
             )
             print(self.buy_orders)
-            self.buy_orders.remove(book_order)
+            self.sell_orders.remove(book_order)
         else:
             incoming_order.agent.trade(
                 (self.product_name, transaction_quantity),
@@ -236,11 +236,8 @@ class Market(Artifact):
         size = len(self.agents)
         mat = [[random.randint(0, 0) for _ in range(size)] for _ in range(size)]
         for link in self.market.history[["buyer", "seller"]].values[-10:]:
-            print(link)
-            print(self.agent_name_lookup)
             source_idx = self.agent_name_lookup[link[0]].id
             sink_idx = self.agent_name_lookup[link[1]].id
-            print(source_idx, sink_idx)
             mat[source_idx][sink_idx] = 1
             #mat[sink_idx][source_idx] = 1
         return mat

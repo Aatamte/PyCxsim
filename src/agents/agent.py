@@ -130,7 +130,7 @@ class Agent:
     def values(self):
         return self.inventory.values()
 
-    def __repr__(self):
+    def display(self):
         return \
             f"""
 -----------------------------
