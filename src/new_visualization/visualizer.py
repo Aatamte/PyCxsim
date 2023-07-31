@@ -86,9 +86,9 @@ class Visualizer:
     def update_agent_overview(self):
         #dpg.set_value(self.agent_overview_text, f"current episode: {self.environment.current_step}")
         for agent in self.environment.agents:
-            agent_str = f"capital: {agent.capital}\ninventory: {agent.inventory}"
+            #agent_str = f"capital: {agent.capital}\ninventory: {agent.inventory}"
             #dpg.set_value(self.agent_information_table[agent.name], agent_str)
-
+            pass
         for idx, action in enumerate(self.environment.action_logs()[-self.action_log_size:]):
             dpg.set_value(self.action_logs[idx][0], str(self.environment.current_step))
             dpg.set_value(self.action_logs[idx][1], action[0].name)
@@ -98,10 +98,15 @@ class Visualizer:
         mat = self.environment.artifact_controller.artifacts["Market"].get_adjacency_matrix()
         for source_idx, source_agent in enumerate(self.environment.agents):
             for target_idx, target_agent in enumerate(self.environment.agents):
-                if mat[source_idx][target_idx] == 1:
-                    dpg.show_item(self.agent_interaction_table[source_agent.id][target_agent.id])
-                elif source_agent != target_agent:
-                    dpg.hide_item(self.agent_interaction_table[source_agent.id][target_agent.id])
+                try:
+                    if mat[source_idx][target_idx] == 1:
+                        dpg.show_item(self.agent_interaction_table[source_agent.id][target_agent.id])
+                    elif source_agent != target_agent:
+                        dpg.hide_item(self.agent_interaction_table[source_agent.id][target_agent.id])
+                except Exception as e:
+                    print(e)
+                    print(source_agent, source_idx, target_agent, target_idx)
+                    raise Warning()
 
     def step(self, is_new_step):
         dpg.set_value(self.environment_overview_text, f"episode: {self.environment.current_episode} / {self.environment.max_episodes}\nstep: {self.environment.current_step} / {self.environment.max_steps}")
@@ -131,7 +136,6 @@ class Visualizer:
                 for target_idx, target_agent in enumerate(self.environment.agents):
                     if target_agent != agent:
                             self.agent_interaction_table[agent.id][target_agent.id] = self.draw_interaction(self.environment.agents[idx], self.environment.agents[target_idx], "red", tag=f"{agent.id}_{target_agent.id}")
-
 
     def draw_action_logs(self):
         with dpg.child_window(label="Action Logs", show=False) as self.env_logs:

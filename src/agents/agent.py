@@ -1,3 +1,20 @@
+from collections import deque
+from dataclasses import dataclass
+import numpy as np
+from typing import Union
+
+
+@dataclass
+class Item:
+    name: str
+    uid: Union[np.uint, int]
+
+
+@dataclass
+class Trade:
+    item_one: Item
+    item_two: Item
+
 
 class Agent:
     """
@@ -7,13 +24,14 @@ class Agent:
     """
     def __init__(
             self, name: str = "default",
-            starting_capital: int = 0,
-            starting_inventory: dict = None
+            inventory: dict = None,
+            default_starting_capital: int = 50
     ):
         self.name = name
         self.id = None  # None, initialized before the first episode by the environment class
         self.x_pos = None
         self.y_pos = None
+        self.color: tuple = (0, 0, 0)
 
         # holds the observations for each artifact
         self.observations = []
@@ -25,14 +43,12 @@ class Agent:
         self.params = {}
 
         # inventory
-        self.starting_capital = starting_capital
-        self.starting_inventory = {} if starting_inventory is None else starting_inventory
-        self.inventory = {}
-        self.capital = None
+        if inventory is None:
+            self.inventory = {"capital": default_starting_capital}
+
+        self.starting_inventory = self.inventory.copy()
 
     def reset(self):
-        self.capital = self.starting_capital
-        self.inventory.clear()
         self.inventory = self.starting_inventory
 
     def update(self, observation):
@@ -53,8 +69,40 @@ class Agent:
     def select_action(self):
         pass
 
+    def capital(self):
+        return self.inventory["capital"]
+
     def step(self):
         pass
+
+    def trade(self, this_agents_item: tuple, other_agents_item: tuple, other_agent):
+
+        # transfer agent two's item
+        for amount in range(this_agents_item[1]):
+            single_item = self.inventory[this_agents_item[0]].pop()
+            other_agent += single_item
+
+        for amount in range(other_agents_item[1]):
+            single_item = other_agent.inventory[other_agents_item[0]].pop()
+            self.__iadd__(single_item)
+
+    def __isub__(self, other):
+        if not isinstance(other, Item):
+            raise Warning("Can only add an Item class to the Agent")
+        elif other.name in self.inventory.keys():
+            self.inventory[other.name].append(other)
+            return self
+        else:
+            pass
+
+    def __iadd__(self, other: Item):
+        if not isinstance(other, Item):
+            raise Warning("Can only add an Item class to the Agent")
+        elif other.name in self.inventory.keys():
+            self.inventory[other.name].append(other)
+            return self
+        else:
+            pass
 
     def __getitem__(self, item):
         if item in self.inventory.keys():
@@ -71,6 +119,14 @@ class Agent:
         else:
             self.inventory[key] = value
 
+    def get_amounts(self, item):
+        if item in self.inventory.keys():
+            if isinstance(self.inventory[item], int):
+                return "unverified " + str(self.inventory[item])
+            return len(self.inventory[item])
+        else:
+            return 0
+
     def values(self):
         return self.inventory.values()
 
@@ -79,9 +135,12 @@ class Agent:
             f"""
 -----------------------------
 Agent: {self.name} 
-capital {self.capital}
-{self.inventory}
+capital {self.get_amounts("capital")}
 -----------------------------"""
+
+
+class Wallet:
+    pass
 
 
 class Inventory:
@@ -91,15 +150,13 @@ class Inventory:
         self.starting_inventory = starting_inventory
         self.capital = starting_capital
         self.inventory = self.starting_inventory if self.starting_inventory else {}
-        self.history = []
 
     def reset(self):
         self.inventory = self.starting_inventory if self.starting_inventory  else {}
         self.capital = self.starting_capital
-        self.history.clear()
 
     def step(self):
-        self.history.append(self.inventory.copy())
+        pass
 
     def __getitem__(self, item):
         if item in self.inventory.keys():

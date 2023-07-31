@@ -1,5 +1,4 @@
 import time
-
 import numpy as np
 import logging
 from src.agents.agent import Agent
@@ -10,6 +9,7 @@ import names
 import random
 import dearpygui.dearpygui as dpg
 from src.environment.calander import Calender
+from src.agents.items import ItemGenerator
 
 
 logger = logging.getLogger(__name__)
@@ -70,6 +70,7 @@ class Environment:
         # artifacts
         self.artifact_controller = ArtifactController()
         self.calender = Calender()
+        self.item_generator = ItemGenerator
 
         # agent attributes
         self.agents = []
@@ -156,6 +157,10 @@ class Environment:
         if self.enable_visualization:
             self.visualizer.reset(self)
 
+        self.item_generator = ItemGenerator(self.agents)
+        self.item_generator.generate_agent_items()
+        for agent in self.agents:
+            print(agent)
         return 0
 
     def record_step(func):
@@ -182,7 +187,6 @@ class Environment:
             else:
                 self.visualizer.step(True)
 
-        random.shuffle(self.agents)
         self._current_time = time.perf_counter()
         # after all actions are processed
         self.artifact_controller.execute(self.agents)

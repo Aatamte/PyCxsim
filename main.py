@@ -6,8 +6,7 @@ import numpy as np
 class MyAgent(Agent):
     def __init__(self):
         super(MyAgent, self).__init__()
-        self.starting_capital = 500000
-        self.starting_inventory = {"socks": 100000}
+        self.starting_inventory = {"capital": 10000, "socks": 100}
         self.is_buyer = True if np.random.randint(0, 100) > 50 else False
         self.quantity = 1 if self.is_buyer else -1
 
@@ -25,7 +24,7 @@ class MyAgent(Agent):
 
 if __name__ == '__main__':
     env = Environment(enable_visualization=True)
-    env.add([MyAgent() for _ in range(75)])
+    env.add([MyAgent() for _ in range(20)])
 
     market = Market("socks")
 

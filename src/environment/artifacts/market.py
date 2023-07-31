@@ -79,6 +79,7 @@ class OrderBook:
         # orders exist in order book
         else:
             if is_buy_order and (order.price >= self.lowest_offer_order.price):
+                print(order, self.lowest_offer_order)
                 return self.execute(order, self.lowest_offer_order)
             if not is_buy_order and (order.price <= self.highest_bid_order.price):
                 return self.execute(order, self.highest_bid_order)
@@ -88,9 +89,9 @@ class OrderBook:
         if order.quantity == 0:
             return False
         # if agent is buying,
-        if is_buy_order and order.agent.capital >= order.price:
+        if is_buy_order and order.agent.get_amounts("capital") >= order.price:
             return True
-        if not is_buy_order and order.agent.inventory[self.product_name] >= abs(order.quantity):
+        if not is_buy_order and order.agent.get_amounts(self.product_name) >= abs(order.quantity):
             return True
         return False
 
@@ -108,7 +109,9 @@ class OrderBook:
 
         # check if agent has enough capital or quantity of good to make the order
         is_buy_order = True if order.quantity >= 0 else False
+
         order_is_legitimate = self.is_order_legitimate(order, is_buy_order)
+
         self.should_remove_existing_order(order)
 
         if order_is_legitimate:
@@ -130,37 +133,26 @@ class OrderBook:
                 self.lowest_offer_order = self.sell_orders[0]
 
     def execute(self, incoming_order: Order, book_order: Order):
+        print("executing order")
         transaction_price = book_order.price
         is_incoming_buy_order = True if incoming_order.quantity >= 0 else False
         transaction_quantity = min(abs(incoming_order.quantity), abs(book_order.quantity))
 
         if is_incoming_buy_order:
-            incoming_order.agent.inventory[self.product_name] += transaction_quantity
-            book_order.agent.inventory[self.product_name] -= transaction_quantity
-
-            incoming_order.agent.capital -= transaction_price
-            book_order.agent.capital += transaction_price
-
-            # modify orders to reflect transaction
-            incoming_order.quantity -= transaction_quantity
-            book_order.quantity += transaction_quantity
-
-            if book_order.quantity == 0:
-                self.sell_orders.remove(book_order)
-
+            incoming_order.agent.trade(
+                ("capital", transaction_price),
+                (self.product_name, transaction_quantity),
+                book_order.agent
+            )
+            print(self.buy_orders)
+            self.buy_orders.remove(book_order)
         else:
-            incoming_order.agent.inventory[self.product_name] -= transaction_quantity
-            book_order.agent.inventory[self.product_name] += transaction_quantity
-
-            incoming_order.agent.capital += transaction_price
-            book_order.agent.capital -= transaction_price
-
-            # modify orders to reflect transaction
-            incoming_order.quantity += transaction_quantity
-            book_order.quantity -= transaction_quantity
-
-            if book_order.quantity == 0:
-                self.buy_orders.remove(book_order)
+            incoming_order.agent.trade(
+                (self.product_name, transaction_quantity),
+                ("capital", transaction_price),
+                book_order.agent
+            )
+            self.buy_orders.remove(book_order)
 
         self.history = pd.concat([self.history, pd.DataFrame(
             {
@@ -244,8 +236,11 @@ class Market(Artifact):
         size = len(self.agents)
         mat = [[random.randint(0, 0) for _ in range(size)] for _ in range(size)]
         for link in self.market.history[["buyer", "seller"]].values[-10:]:
+            print(link)
+            print(self.agent_name_lookup)
             source_idx = self.agent_name_lookup[link[0]].id
             sink_idx = self.agent_name_lookup[link[1]].id
+            print(source_idx, sink_idx)
             mat[source_idx][sink_idx] = 1
             #mat[sink_idx][source_idx] = 1
         return mat
