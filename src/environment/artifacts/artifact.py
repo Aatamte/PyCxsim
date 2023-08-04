@@ -17,6 +17,10 @@ class Artifact:
     def should_continue(self):
         return True
 
+    @staticmethod
+    def action_space():
+        return []
+
     def reset(self, environment):
         pass
 
@@ -30,6 +34,7 @@ class ArtifactController:
     def __init__(self):
         self.artifacts: dict[str, Artifact] = {}
         self.action_logs = []
+        self.action_space_map = {}
 
     def add_artifact(self, artifact: Artifact):
         self.artifacts[artifact.name] = artifact
@@ -37,17 +42,21 @@ class ArtifactController:
     def execute_action(self, agent, action):
         self.action_logs.append((agent, action))
         if action is not None:
-            artifact_name, action_details = action
-            if artifact_name not in self.artifacts.keys():
-                raise KeyError(f"The artifact name that you supplied in the agents actions ({artifact_name}) does not exist in: {list(self.artifacts.keys())}")
-            artifact = self.artifacts[artifact_name]
-            artifact.execute(agent, action_details)
+            if isinstance(action, tuple):
+                artifact_name, action_details = action
+                if artifact_name not in self.artifacts.keys():
+                    raise KeyError(f"The artifact name that you supplied in the agents actions ({artifact_name}) does not exist in: {list(self.artifacts.keys())}")
+                artifact = self.artifacts[artifact_name]
+                artifact.execute(agent, action_details)
+            elif type(action) in self.action_space_map.keys():
+                self.artifacts[self.action_space_map[type(action)]].execute(agent, action)
+            else:
+                raise Warning("An agents action must be either a tuple or an action class")
 
     def execute(self, agents):
         for idx, agent in enumerate(agents):
             if not isinstance(agent, Agent):
-                raise TypeError("The first element in the action tuple must be of type <BaseAgent>")
-
+                raise TypeError("The first element in the action tuple must be of type <Agent>")
             if len(agent.action_queue) == 0:
                 agent.select_action()
             action = agent.execute_next_action()
@@ -71,8 +80,13 @@ class ArtifactController:
         return all(artifact.should_continue() for artifact in self.artifacts.values())
 
     def reset(self, environment):
-        for artifact in self.artifacts.values():
+
+        for name, artifact in self.artifacts.items():
             artifact.reset(environment)
+            for action in artifact.action_space():
+                self.action_space_map[action] = name
+
+        print(self.action_space_map)
 
     def __repr__(self):
         return str(self.artifacts)

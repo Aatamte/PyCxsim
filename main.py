@@ -1,5 +1,5 @@
 from src.core import Agent, Environment
-from src.core import Market, Order, Dialogue
+from src.core import Market, Order, Dialogue, Marketplace
 import numpy as np
 
 
@@ -17,7 +17,7 @@ class MyAgent(Agent):
             price = np.random.randint(90, 105)
 
         if np.random.randint(0, 100) > 50:
-            self.action_queue.append(("Market", ("socks", price, self.quantity)))
+            self.action_queue.append((Order(good="socks", price=price, quantity=self.quantity, agent=self)))
         else:
             self.action_queue.append(None)
 
@@ -28,10 +28,12 @@ if __name__ == '__main__':
 
     market = Market("socks")
 
+    marketplace = Marketplace()
+    env.add(marketplace)
     env.add(market)
     env.add(Dialogue())
 
-    env.step_delay = 0.1
+    env.step_delay = 0
 
     env.max_episodes = 100000
     env.max_steps = 100000

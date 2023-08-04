@@ -22,10 +22,12 @@ class Order:
     id: The order id, None by default.
     duration: The order duration, None by default.
     """
+    good: str
     price: int
     quantity: int
     agent: Agent
     id: int = None
+    action_class: str = "Market"
 
 
 # The OrderBook class represents the order book in a market
@@ -48,8 +50,8 @@ class OrderBook:
         # Initialize lists to hold buy and sell orders
         self.sell_orders = []
         self.buy_orders = []
-        self.highest_bid_order: Order = Order(-np.inf, 1, Agent())
-        self.lowest_offer_order: Order = Order(np.inf, -1, Agent())
+        self.highest_bid_order: Order = Order(self.product_name, -np.inf, 1, Agent())
+        self.lowest_offer_order: Order = Order(self.product_name, np.inf, -1, Agent())
         self.order_count = 0
         self.num_transactions = 0
         # store transaction history in a pandas DataFrame for easy data manipulation and analysis
@@ -60,8 +62,8 @@ class OrderBook:
         self.sell_orders = []
         self.buy_orders = []
         # Reset bid/offer orders
-        self.highest_bid_order: Order = Order(-np.inf, 1, Agent())
-        self.lowest_offer_order: Order = Order(np.inf, -1, Agent())
+        self.highest_bid_order: Order = Order(self.product_name, -np.inf, 1, Agent())
+        self.lowest_offer_order: Order = Order(self.product_name, np.inf, -1, Agent())
         # Reset counters
         self.order_count = 0
         self.num_transactions = 0
@@ -79,7 +81,6 @@ class OrderBook:
         # orders exist in order book
         else:
             if is_buy_order and (order.price >= self.lowest_offer_order.price):
-                print(order, self.lowest_offer_order)
                 return self.execute(order, self.lowest_offer_order)
             if not is_buy_order and (order.price <= self.highest_bid_order.price):
                 return self.execute(order, self.highest_bid_order)
@@ -133,7 +134,6 @@ class OrderBook:
                 self.lowest_offer_order = self.sell_orders[0]
 
     def execute(self, incoming_order: Order, book_order: Order):
-        print("executing order")
         transaction_price = book_order.price
         is_incoming_buy_order = True if incoming_order.quantity >= 0 else False
         transaction_quantity = min(abs(incoming_order.quantity), abs(book_order.quantity))
@@ -144,7 +144,7 @@ class OrderBook:
                 (self.product_name, transaction_quantity),
                 book_order.agent
             )
-            print(self.buy_orders)
+
             self.sell_orders.remove(book_order)
         else:
             incoming_order.agent.trade(
@@ -208,7 +208,7 @@ class Market(Artifact):
     # The execute method adds an order to the market's order book
     def execute(self, agent, action: Union[list, Order]):
         if isinstance(action, tuple):
-            self.market.add(Order(action[1], action[2], agent))
+            self.market.add(Order(self.market_name, action[1], action[2], agent))
         elif isinstance(action, Order):
             self.market.add(action)
         elif isinstance(action, list):
@@ -232,6 +232,10 @@ class Market(Artifact):
         self.agent_name_lookup = environment.agent_name_lookup
         self.transaction_adjacency_matrix = AdjacencyMatrix(self.agents)
 
+    @staticmethod
+    def action_space():
+        return [Order]
+
     def get_adjacency_matrix(self):
         size = len(self.agents)
         mat = [[random.randint(0, 0) for _ in range(size)] for _ in range(size)]
@@ -253,18 +257,38 @@ class Market(Artifact):
 
 
 class Marketplace(Artifact):
-    def __init__(self, market_names: list = None):
+    def __init__(self, infer_from_agents:  bool = True):
         super(Marketplace, self).__init__("Marketplace")
-        self.markets: Dict[str, OrderBook] = {market_name: OrderBook(market_name) for market_name in market_names} if market_names else None
+        self.markets: Dict[str, OrderBook] = {}
 
-    def execute(self, agent, action: tuple):
-        self.markets[action[0]].add(Order(action[1], action[2], agent))
+    def execute(self, agent, action: Union[list, Order]):
+        if isinstance(action, tuple):
+            market = action[0]
+            self.markets[market].add(Order(market, action[1], action[2], agent))
+        elif isinstance(action, Order):
+            market = action.good
+            self.markets[market].add(action)
+        elif isinstance(action, list):
+            raise TypeError("action should be a tuple, not a list.")
+        else:
+            raise TypeError("action should either be a ")
+
+    @staticmethod
+    def action_space():
+        return [Order]
 
     def generate_observations(self, agents):
         observations = {agent.name: [(m.product_name, m.get_full_orderbook()) for m in self.markets.values()] for agent in agents}
         return observations
 
-    def reset(self):
+    def reset(self, environment):
+        for agent in environment.agents:
+            for good in agent.inventory.keys():
+                if good == "capital":
+                    pass
+                elif good not in self.markets.keys():
+                    self.markets[good] = OrderBook(good)
+
         for market in self.markets.values():
             market.reset()
 

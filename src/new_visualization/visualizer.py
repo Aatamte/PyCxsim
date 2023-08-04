@@ -238,9 +238,9 @@ class Visualizer:
             pos=(50, self.agent_world_height)
         ) as bottom:
             self.bottom = bottom
-            dpg.add_text("bottom panel")
-            dpg.add_button(label="Pause", callback=self.pause_simulation_callback)
-            dpg.add_button(label="Resume", callback=self.resume_simulation_callback)
+            dpg.add_text("Control Panel")
+            dpg.add_button(label="Pause", pos=(0, 40), callback=self.pause_simulation_callback, height=50, width=50)
+            dpg.add_button(label="Resume", pos=(55, 40), callback=self.resume_simulation_callback, height=50, width=50)
 
     def create_world_window(self):
         with dpg.window(

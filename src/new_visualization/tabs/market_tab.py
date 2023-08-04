@@ -47,7 +47,7 @@ class MarketTab(Tab):
                     parent="y_axis",
                 )
 
-            self.text = dpg.add_text("hello", wrap=300)
+            self.text = dpg.add_text("", wrap=300)
 
     def reset(self, env):
         self.environment = env

@@ -7,7 +7,7 @@ class MyAgent(Agent):
     def __init__(self):
         super(MyAgent, self).__init__()
         self.starting_capital = 500000
-        self.starting_inventory = {"gold": 100000}
+        self.starting_inventory = {"capital": 10000, "gold": 10}
         self.is_buyer = True if np.random.randint(0, 100) > 50 else False
         self.quantity = 1 if self.is_buyer else -1
 
@@ -16,7 +16,7 @@ class MyAgent(Agent):
             price = np.random.randint(85, 100)
         else:
             price = np.random.randint(90, 105)
-        self.action_queue.append(("Market", ["gold", price, self.quantity]))
+        self.action_queue.append(("Market", ("gold", price, self.quantity)))
 
 
 if __name__ == '__main__':
