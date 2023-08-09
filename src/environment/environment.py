@@ -199,6 +199,7 @@ class Environment:
         for agent in self.agents:
             agent.step()
 
+        self.artifact_controller.step()
         # logic for steps
         should_continue = self.artifact_controller.should_continue()
         self.update_simulation_state()
@@ -208,10 +209,13 @@ class Environment:
         return self.artifact_controller.action_logs
 
     def is_running(self):
-        if self.should_stop_simulation:
-            del self.visualizer
-            return False
-        return dpg.is_dearpygui_running()
+        if self.enable_visualization:
+            if self.should_stop_simulation:
+                del self.visualizer
+                return False
+            return dpg.is_dearpygui_running()
+        else:
+            return True
 
     def iter_steps(self):
         return range(0, self.max_steps)

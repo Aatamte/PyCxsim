@@ -24,23 +24,21 @@ class MyAgent(Agent):
 
 if __name__ == '__main__':
     env = Environment(enable_visualization=True)
-    env.add([MyAgent() for _ in range(40)])
-
-    market = Market("socks")
+    env.add([MyAgent() for _ in range(20)])
 
     marketplace = Marketplace()
     env.add(marketplace)
-    env.add(market)
+
     env.add(Dialogue())
 
-    env.step_delay = 0
+    env.step_delay = 1
 
     env.max_episodes = 100000
     env.max_steps = 100000
 
     env.reset()
+
     while env.is_running():
-        #
         for step in env.iter_steps():
             current_episode = env.current_episode
             env.step()

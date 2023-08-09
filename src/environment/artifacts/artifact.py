@@ -14,6 +14,9 @@ class Artifact:
     def display_actions(self):
         pass
 
+    def step(self):
+        pass
+
     def should_continue(self):
         return True
 
@@ -23,6 +26,7 @@ class Artifact:
 
     def reset(self, environment):
         pass
+
 
 
 class ArtifactActions:
@@ -62,6 +66,10 @@ class ArtifactController:
             action = agent.execute_next_action()
             self.execute_action(agent, action)
         return 0
+
+    def step(self):
+        for name, artifact in self.artifacts.items():
+            artifact.step()
 
     def insert_observations(self, agents):
         agent_observations_per_artifact = {agent.name: {} for agent in agents}

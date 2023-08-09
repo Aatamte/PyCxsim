@@ -1,11 +1,11 @@
 import dearpygui.dearpygui as dpg
 import math
-from src.new_visualization.tabs.market_tab import MarketTab
+from src.new_visualization.tabs.market_tab import MarketplaceTab
 
 dpg.create_context()
 
 artifact_tabs = {
-    "Market": MarketTab()
+    "Marketplace": MarketplaceTab()
 }
 
 
@@ -110,12 +110,12 @@ class Visualizer:
 
     def step(self, is_new_step):
         dpg.set_value(self.environment_overview_text, f"episode: {self.environment.current_episode} / {self.environment.max_episodes}\nstep: {self.environment.current_step} / {self.environment.max_steps}")
-        dpg.set_value(self.environment_date,f"date: {self.environment.calender.current_date}")
+        dpg.set_value(self.environment_date, f"date: {self.environment.calender.current_date}")
         self.update_agent_overview()
         if is_new_step:
-            for name, artifact in artifact_tabs.items():
-                artifact.step()
-        self.draw_adjacency_matrix()
+            for name, artifact_tab in artifact_tabs.items():
+                artifact_tab.step()
+        #self.draw_adjacency_matrix()
         dpg.render_dearpygui_frame()
 
     def is_running(self):

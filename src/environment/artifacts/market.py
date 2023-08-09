@@ -57,6 +57,9 @@ class OrderBook:
         # store transaction history in a pandas DataFrame for easy data manipulation and analysis
         self.history = pd.DataFrame(columns=["transaction_id", "price", "quantity", "buying_agent", "selling_agent"])
 
+        self.best_bid_history = []
+        self.best_ask_history = []
+
     def reset(self):
         # Clear orders
         self.sell_orders = []
@@ -166,6 +169,14 @@ class OrderBook:
         self.num_transactions += 1
         return True
 
+    def step(self):
+        self.best_bid_history.append(
+            self.highest_bid_order.price
+        )
+        self.best_ask_history.append(
+            self.lowest_offer_order.price
+        )
+
     def get_full_orderbook(self):
         return [(order.price, order.quantity) for order in self.buy_orders] + [(order.price, order.quantity) for order in self.sell_orders]
 
@@ -205,6 +216,9 @@ class Market(Artifact):
         self.transaction_adjacency_matrix = None
         self.agent_name_lookup = None
 
+        self.best_bid_history = []
+        self.best_ask_history = []
+
     # The execute method adds an order to the market's order book
     def execute(self, agent, action: Union[list, Order]):
         if isinstance(action, tuple):
@@ -231,6 +245,14 @@ class Market(Artifact):
         self.agents = environment.agents
         self.agent_name_lookup = environment.agent_name_lookup
         self.transaction_adjacency_matrix = AdjacencyMatrix(self.agents)
+
+    def step(self):
+        self.best_ask_history.append(
+            self.market.highest_bid_order.price
+        )
+        self.best_ask_history.append(
+            self.market.lowest_offer_order.price
+        )
 
     @staticmethod
     def action_space():
@@ -260,6 +282,9 @@ class Marketplace(Artifact):
     def __init__(self, infer_from_agents:  bool = True):
         super(Marketplace, self).__init__("Marketplace")
         self.markets: Dict[str, OrderBook] = {}
+        self.market_best_bids = {}
+        self.market_best_asks = {}
+        self.market_transactions = {}
 
     def execute(self, agent, action: Union[list, Order]):
         if isinstance(action, tuple):
@@ -277,6 +302,10 @@ class Marketplace(Artifact):
     def action_space():
         return [Order]
 
+    def step(self):
+        for name, market in self.markets.items():
+            market.step()
+
     def generate_observations(self, agents):
         observations = {agent.name: [(m.product_name, m.get_full_orderbook()) for m in self.markets.values()] for agent in agents}
         return observations
@@ -291,6 +320,11 @@ class Marketplace(Artifact):
 
         for market in self.markets.values():
             market.reset()
+
+    def __getitem__(self, item):
+        if item not in self.markets.keys():
+            raise KeyError(f"Market {item} is not in {list(self.markets.keys())}")
+        return self.markets[item]
 
     def __repr__(self):
         newline = '\n'

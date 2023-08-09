@@ -2,22 +2,23 @@ from src.new_visualization.tabs.tab import Tab
 import dearpygui.dearpygui as dpg
 
 
-class MarketTab(Tab):
+class MarketplaceTab(Tab):
     def __init__(self):
-        super(MarketTab, self).__init__("Market", "market_tab")
+        super(MarketplaceTab, self).__init__("Marketplace", "market_tab")
         self.environment = None
-        self.market = None
+        self.marketplace = None
+
+        self.current_market = None
+
         self.best_bid_plot = []
         self.best_ask_plot = []
 
     def step(self):
-        self.best_bid_plot.append(self.market.market.highest_bid_order.price)
         dpg.set_value(self.best_bid, [[n for n in range(len(self.best_bid_plot))], self.best_bid_plot])
-        self.best_ask_plot.append(self.market.market.lowest_offer_order.price)
         dpg.set_value(self.best_ask, [[n for n in range(len(self.best_ask_plot))], self.best_ask_plot])
         dpg.fit_axis_data("y_axis")
         dpg.fit_axis_data("x_axis")
-        dpg.set_value(self.text, str(self.market))
+        dpg.set_value(self.text, str("hello"))
 
     def get_window(self):
         return self.window
@@ -25,9 +26,21 @@ class MarketTab(Tab):
     def show(self):
         dpg.show_item(self.window)
 
+    def show_good_plot_callback(self, sender):
+        self.current_market = sender
+        self.best_bid_plot = self.marketplace[sender].best_bid_history
+        self.best_ask_plot = self.marketplace[sender].best_ask_history
+
     def draw(self):
+        self.current_market = list(self.marketplace.markets.keys())[0]
+        self.best_bid_plot = self.marketplace[self.current_market].best_bid_history
+        self.best_ask_plot = self.marketplace[self.current_market].best_ask_history
+
         with dpg.child_window(label=self.name, show=False) as self.window:
-            with dpg.plot(label=f"Market for {self.market.market_name}", height=400, width=400):
+            with dpg.menu(label="goods"):
+                for good in list(self.marketplace.markets.keys()):
+                    dpg.add_menu_item(label=good, tag=good, callback=self.show_good_plot_callback)
+            with dpg.plot(label=f"Market for {self.current_market}", height=400, width=400):
                 dpg.add_plot_legend()
                 dpg.add_plot_axis(dpg.mvXAxis, label="step", tag="x_axis")
                 dpg.add_plot_axis(dpg.mvYAxis, label="price", tag="y_axis")
@@ -51,5 +64,5 @@ class MarketTab(Tab):
 
     def reset(self, env):
         self.environment = env
-        self.market = self.environment.artifact_controller.artifacts["Market"]
+        self.marketplace = self.environment.artifact_controller.artifacts["Marketplace"]
 
