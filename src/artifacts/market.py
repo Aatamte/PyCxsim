@@ -6,7 +6,7 @@ import random
 from typing import  Union, Optional
 
 from src.core import Agent
-from src.environment.artifacts.artifact import Artifact, AdjacencyMatrix
+from src.artifacts.artifact import Artifact, AdjacencyMatrix
 
 
 # An Order is represented as a dataclass for simplicity and ease of use
@@ -219,6 +219,10 @@ class Market(Artifact):
         self.best_bid_history = []
         self.best_ask_history = []
 
+        self.valid_actions = [
+            Order
+        ]
+
     # The execute method adds an order to the market's order book
     def execute(self, agent, action: Union[list, Order]):
         if isinstance(action, tuple):
@@ -258,6 +262,9 @@ class Market(Artifact):
     def action_space():
         return [Order]
 
+    def list_actions(self):
+        return self.valid_actions
+
     def get_adjacency_matrix(self):
         size = len(self.agents)
         mat = [[random.randint(0, 0) for _ in range(size)] for _ in range(size)]
@@ -285,6 +292,10 @@ class Marketplace(Artifact):
         self.market_best_bids = {}
         self.market_best_asks = {}
         self.market_transactions = {}
+
+        self.valid_actions = [
+            Order
+        ]
 
     def execute(self, agent, action: Union[list, Order]):
         if isinstance(action, tuple):
@@ -320,6 +331,12 @@ class Marketplace(Artifact):
 
         for market in self.markets.values():
             market.reset()
+
+    def list_actions(self):
+        return self.valid_actions
+
+    def language_model_starting_prompt(self):
+        return """Marketplace: allows agents in the simulation to make trades with each other """
 
     def __getitem__(self, item):
         if item not in self.markets.keys():

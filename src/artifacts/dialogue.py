@@ -1,5 +1,5 @@
 import dataclasses
-from src.environment.artifacts.artifact import Artifact
+from src.artifacts.artifact import Artifact
 from copy import deepcopy
 
 

@@ -1,4 +1,5 @@
 from src.agents.agent import Agent
+import openai
 # NOTES
 #
 # a language model agent should have the following features:
@@ -11,6 +12,21 @@ from src.agents.agent import Agent
 #
 #
 #
+
+
+class OAIAgent(Agent):
+    def __init__(self, model_id: str = "gpt-3.5-turbo-0613"):
+        super(OAIAgent, self).__init__()
+        self.model_id = model_id
+        self.n_unfollowed_actions = 0
+
+        self.language_model_logs = []
+
+    def make_api_request(self):
+        pass
+
+
+
 
 
 class LanguageModelAgent(Agent):
@@ -27,3 +43,5 @@ class LanguageModelAgent(Agent):
 
 
 
+if __name__ == '__main__':
+    pass

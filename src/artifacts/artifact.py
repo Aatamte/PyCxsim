@@ -27,6 +27,11 @@ class Artifact:
     def reset(self, environment):
         pass
 
+    def list_actions(self):
+        pass
+
+    def language_model_starting_prompt(self):
+        pass
 
 
 class ArtifactActions:
@@ -95,6 +100,7 @@ class ArtifactController:
                 self.action_space_map[action] = name
 
         print(self.action_space_map)
+
 
     def __repr__(self):
         return str(self.artifacts)

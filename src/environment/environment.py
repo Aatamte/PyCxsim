@@ -2,7 +2,7 @@ import time
 import numpy as np
 import logging
 from src.agents.agent import Agent
-from src.environment.artifacts.artifact import Artifact, ArtifactController
+from src.artifacts.artifact import Artifact, ArtifactController
 from src.new_visualization.visualizer import Visualizer
 import h5py
 import names
@@ -222,6 +222,9 @@ class Environment:
 
     def iter_episodes(self):
         return range(0, self.max_episodes)
+
+    def list_artifacts(self):
+        return self.artifact_controller.artifacts
 
     def close(self):
         self.recorder.close()

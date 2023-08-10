@@ -27,6 +27,9 @@ if __name__ == '__main__':
     env.add([MyAgent() for _ in range(20)])
 
     marketplace = Marketplace()
+
+    print(marketplace.list_actions())
+
     env.add(marketplace)
 
     env.add(Dialogue())
