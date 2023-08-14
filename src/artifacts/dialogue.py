@@ -27,6 +27,7 @@ class Dialogue(Artifact):
         # Messages can be sent within the execute function based on agent logic
         self.send_message(agent.name, action[0], action[1])
 
+
     def generate_observations(self, agents):
         # The observations are the messages sent to each agent
         messages = self.messages.copy()

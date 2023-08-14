@@ -1,5 +1,5 @@
 from src.core import Agent
-from src.environment.artifacts.artifact import Artifact
+from src.artifacts.artifact import Artifact
 
 
 class Government(Artifact):

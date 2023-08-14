@@ -1,0 +1,6 @@
+pandas
+numpy
+h5py
+dearpygui
+names
+openai

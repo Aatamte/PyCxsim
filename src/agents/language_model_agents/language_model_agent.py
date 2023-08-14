@@ -1,5 +1,5 @@
 from src.agents.agent import Agent
-from src.prompts.prompt import  Prompt
+from src.prompts.prompt import Prompt
 # NOTES
 #
 # a language model agent should have the following features:

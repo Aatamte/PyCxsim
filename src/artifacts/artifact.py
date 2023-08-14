@@ -5,6 +5,9 @@ class Artifact:
     def __init__(self, name):
         self.name = name
 
+    def set_up(self):
+        pass
+
     def execute(self, agent, action_details):
         pass
 
@@ -48,6 +51,10 @@ class ArtifactController:
     def add_artifact(self, artifact: Artifact):
         self.artifacts[artifact.name] = artifact
 
+    def set_up(self):
+        for artifact_name, artifact in self.artifacts.items():
+            artifact.set_up()
+
     def execute_action(self, agent, action):
         self.action_logs.append((agent, action))
         if action is not None:
@@ -67,8 +74,9 @@ class ArtifactController:
             if not isinstance(agent, Agent):
                 raise TypeError("The first element in the action tuple must be of type <Agent>")
             if len(agent.action_queue) == 0:
-                agent.select_action()
-            action = agent.execute_next_action()
+                action = agent.select_action()
+            else:
+                action = agent.execute_next_action()
             self.execute_action(agent, action)
         return 0
 

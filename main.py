@@ -22,19 +22,22 @@ class MyAgent(Agent):
             price = np.random.randint(90, 105)
 
         if np.random.randint(0, 100) > 50:
-            self.action_queue.append((Order(good="socks", price=price, quantity=quantity, agent=self)))
+            return Order(good="socks", price=price, quantity=quantity, agent=self)
         else:
-            self.action_queue.append(None)
+            return None
 
 
 if __name__ == '__main__':
-    env = Environment(enable_visualization=True)
+    env = Environment(
+        visualization=True,
+        save_to_file=True
+    )
 
     buyer_params = {"is_buyer": True}
 
     seller_params = {"is_buyer": False}
 
-    buyer_population = Population(MyAgent(), 2, buyer_params)
+    buyer_population = Population(MyAgent(), 10, buyer_params)
     env.add(buyer_population)
 
     seller_population = Population(MyAgent(), 10, seller_params)
@@ -46,7 +49,7 @@ if __name__ == '__main__':
 
     env.add(Dialogue())
 
-    env.step_delay = 1
+    env.step_delay = 0
 
     env.max_episodes = 100000
     env.max_steps = 100000

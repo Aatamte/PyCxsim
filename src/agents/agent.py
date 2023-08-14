@@ -42,6 +42,7 @@ class Agent:
         self.x_pos = None
         self.y_pos = None
         self.color: tuple = (0, 0, 0)
+        self.role = None
 
         # holds the observations for each artifact
         self.observations = []

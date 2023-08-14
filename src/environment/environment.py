@@ -39,10 +39,11 @@ class Environment:
     def __init__(
         self,
         name: str = "default environment",
-        record_environment: bool = False,
-        enable_visualization: bool = False,
+        visualization: bool = False,
+        save_to_file: bool = False,
         verbose: int = 0,
-        seed: int = None
+        seed: int = None,
+        log: bool = False
     ):
         """
         Initialize the environment.
@@ -56,7 +57,7 @@ class Environment:
         self.name = name
         self.verbose = verbose
         self.seed = seed
-        self.enable_visualization = enable_visualization
+        self.visualization = visualization
 
         self.should_stop_simulation = False
         self.is_first_step = True
@@ -85,12 +86,13 @@ class Environment:
         console_handler.setLevel(logging.CRITICAL)
         logger.addHandler(console_handler)
 
-        self.should_record = record_environment
+        self.save_to_file = save_to_file
 
-        if self.should_record:
-            self.recorder = RecordedEnvironment("env_record.hdf5")
+        if self.save_to_file:
+            pass
+            #self.recorder = RecordedEnvironment("env_record.hdf5")
 
-        if self.enable_visualization:
+        if self.visualization:
             self.visualizer = Visualizer(self)
 
         self._current_time = time.perf_counter()
@@ -144,8 +146,9 @@ class Environment:
 
     def set_up(self):
         # go through the artifacts and set them up
+        self.artifact_controller.set_up()
 
-        # iterate through agents and
+        # iterate through agents
         agent_specific_prompts = 0
         set_prompts = 0
 
@@ -171,13 +174,11 @@ class Environment:
         # reset artifacts
         self.artifact_controller.reset(self)
 
-        if self.enable_visualization:
+        if self.visualization:
             self.visualizer.reset(self)
 
         self.item_generator = ItemGenerator(self.agents)
         self.item_generator.generate_agent_items()
-        for agent in self.agents:
-            print(agent)
         return 0
 
     def update_simulation_state(self):
@@ -191,7 +192,7 @@ class Environment:
         self.calender.step()
 
     def step(self) -> [np.ndarray, list, list]:
-        if self.enable_visualization:
+        if self.visualization:
             while (time.perf_counter() - self._current_time <= self.step_delay) or (self.visualizer.is_paused):
                 self.visualizer.step(False)
             else:
@@ -217,7 +218,7 @@ class Environment:
         return self.artifact_controller.action_logs
 
     def is_running(self):
-        if self.enable_visualization:
+        if self.visualization:
             if self.should_stop_simulation:
                 del self.visualizer
                 return False
@@ -236,6 +237,12 @@ class Environment:
 
     def close(self):
         self.recorder.close()
+
+    def save(self):
+        print("saving")
+
+    def load(self, filepath):
+        pass
 
     def __repr__(self):
         newline = '\n'
