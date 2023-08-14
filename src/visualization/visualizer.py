@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 import math
-from src.new_visualization.tabs.market_tab import MarketplaceTab
+from src.visualization.tabs.market_tab import MarketplaceTab
 
 dpg.create_context()
 

@@ -32,3 +32,8 @@ class Dialogue(Artifact):
         messages = self.messages.copy()
         self.messages.clear()
         return messages
+
+
+class Inbox:
+    def __init__(self):
+        pass

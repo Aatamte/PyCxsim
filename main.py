@@ -1,34 +1,46 @@
 from src.core import Agent, Environment
 from src.core import Market, Order, Dialogue, Marketplace
+from src.agents.language_model_agents.openai_agent import OAIAgent
+from src.agents.population import Population
 import numpy as np
 
 
 class MyAgent(Agent):
     def __init__(self):
         super(MyAgent, self).__init__()
-        self.starting_inventory = {"capital": 10000, "socks": 100}
-        self.is_buyer = True if np.random.randint(0, 100) > 50 else False
-        self.quantity = 1 if self.is_buyer else -1
+        self.starting_inventory = {
+            "capital": 10000,
+            "socks": 100
+        }
 
     def select_action(self):
-        if self.is_buyer:
+        if self.params["is_buyer"]:
+            quantity = 1
             price = np.random.randint(85, 100)
         else:
+            quantity = -1
             price = np.random.randint(90, 105)
 
         if np.random.randint(0, 100) > 50:
-            self.action_queue.append((Order(good="socks", price=price, quantity=self.quantity, agent=self)))
+            self.action_queue.append((Order(good="socks", price=price, quantity=quantity, agent=self)))
         else:
             self.action_queue.append(None)
 
 
 if __name__ == '__main__':
     env = Environment(enable_visualization=True)
-    env.add([MyAgent() for _ in range(20)])
+
+    buyer_params = {"is_buyer": True}
+
+    seller_params = {"is_buyer": False}
+
+    buyer_population = Population(MyAgent(), 2, buyer_params)
+    env.add(buyer_population)
+
+    seller_population = Population(MyAgent(), 10, seller_params)
+    env.add(seller_population)
 
     marketplace = Marketplace()
-
-    print(marketplace.list_actions())
 
     env.add(marketplace)
 
@@ -39,7 +51,8 @@ if __name__ == '__main__':
     env.max_episodes = 100000
     env.max_steps = 100000
 
-    env.reset()
+    # set up the environment
+    env.set_up()
 
     while env.is_running():
         for step in env.iter_steps():

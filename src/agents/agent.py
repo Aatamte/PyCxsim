@@ -2,6 +2,7 @@ from collections import deque
 from dataclasses import dataclass
 import numpy as np
 from typing import Union
+from copy import deepcopy
 
 
 @dataclass
@@ -14,6 +15,15 @@ class Item:
 class Trade:
     item_one: Item
     item_two: Item
+
+
+def pre_process_action(pre_process_func):
+    def decorator(select_action_func):
+        def wrapper(self, *args, **kwargs):
+            pre_process_func(self, *args, **kwargs)
+            return select_action_func(self, *args, **kwargs)
+        return wrapper
+    return decorator
 
 
 class Agent:
@@ -104,6 +114,9 @@ class Agent:
         else:
             pass
 
+    def copy(self):
+        return deepcopy(self)
+
     def __getitem__(self, item):
         if item in self.inventory.keys():
             return self.inventory[item]
@@ -137,11 +150,6 @@ class Agent:
 Agent: {self.name} 
 capital {self.get_amounts("capital")}
 -----------------------------"""
-
-
-class Wallet:
-    pass
-
 
 class Inventory:
     def __init__(self, agent, starting_capital: int = 0, starting_inventory: dict = None):

@@ -2,8 +2,9 @@ import time
 import numpy as np
 import logging
 from src.agents.agent import Agent
+from src.agents.population import Population
 from src.artifacts.artifact import Artifact, ArtifactController
-from src.new_visualization.visualizer import Visualizer
+from src.visualization.visualizer import Visualizer
 import h5py
 import names
 import random
@@ -104,9 +105,11 @@ class Environment:
         agent.id = self.agent_idx
         self.agent_idx += 1
         agent.name = names.get_first_name()
-        while agent.name in [a.name for a in self.agents]:
-            agent.name = names.get_first_name()
-
+        if self.agents:
+            while agent.name in [a.name for a in self.agents]:
+                print(agent.name, [a.name for a in self.agents])
+                agent.name = names.get_first_name()
+        print("done")
         self.agent_names.append(agent.name)
         self.agents.append(agent)
         self.agent_name_lookup[agent.name] = agent
@@ -130,14 +133,26 @@ class Environment:
             self.add_artifact(item)
         elif isinstance(item, Agent):
             self.add_agent(item)
+        elif isinstance(item, Population):
+            for it in item.generate_agents():
+                self.add_agent(it)
         elif isinstance(item, list):
             for it in item:
                 self.add(it)
         else:
             raise UnsupportedItemType()
 
-    def _initialize(self):
-        pass
+    def set_up(self):
+        # go through the artifacts and set them up
+
+        # iterate through agents and
+        agent_specific_prompts = 0
+        set_prompts = 0
+
+        for agent in self.agents:
+            pass
+
+        self.reset()
 
     def reset(self) -> [np.ndarray, dict]:
         """
@@ -164,13 +179,6 @@ class Environment:
         for agent in self.agents:
             print(agent)
         return 0
-
-    def record_step(func):
-        def wrapper(self, *args, **kwargs):
-            result = func(self, *args, **kwargs)
-            self.recorder.save_step(env=self)
-            return result
-        return wrapper
 
     def update_simulation_state(self):
         self.current_step += 1
