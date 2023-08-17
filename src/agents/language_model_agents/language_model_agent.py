@@ -16,12 +16,8 @@ class LanguageModelAgent(Agent):
         super(LanguageModelAgent, self).__init__()
         self.local: bool = local
         self.temperature: float = temperature
-        self.message_history = [
-            {"system": "You are in a simulation"},
-            {"agent": "Yes, I understand"},
-            {"user": "start the simulation"}]
+        self.messages = []
 
-        self.set_up_prompt: str = ""
         self.system_prompt: str = ""
 
         self.n_unfollowed_actions: int = 0
@@ -44,6 +40,14 @@ class LanguageModelAgent(Agent):
 
     def set_up(self):
         pass
+
+    def get_observation(self, observation):
+        self.messages.append(
+            {
+                "role": "user",
+                "content": observation
+            }
+        )
 
     def add_set_up_prompt(self, prompt: Prompt, order_urgency: int):
 

@@ -4,6 +4,8 @@ from src.agents.agent import Agent
 class Artifact:
     def __init__(self, name):
         self.name = name
+        self.system_prompt = ""
+        self.action_space_prompt = ""
 
     def set_up(self):
         pass
@@ -84,18 +86,17 @@ class ArtifactController:
         for name, artifact in self.artifacts.items():
             artifact.step()
 
-    def insert_observations(self, agents):
-        agent_observations_per_artifact = {agent.name: {} for agent in agents}
+    def insert_observations(self, env, agents):
+        artifact_observations = ""
+        for artifact in self.artifacts.values():
+            artifact_observations += artifact.generate_observations(agents)
 
-        for artifact_name, artifact in self.artifacts.items():
-            all_agent_observations = artifact.generate_observations(agents)
-            for agent in agents:
-                if agent.name not in all_agent_observations.keys():
-                    continue
-                agent_observations_per_artifact[agent.name][artifact_name] = all_agent_observations[agent.name]
+        standard_environment_information = f"current step: {env.current_step}"
+
+        full_observation = standard_environment_information + "\n" + artifact_observations
 
         for agent in agents:
-            agent.update(agent_observations_per_artifact[agent.name])
+            agent.get_observation(full_observation)
 
     def should_continue(self):
         return all(artifact.should_continue() for artifact in self.artifacts.values())
@@ -108,7 +109,6 @@ class ArtifactController:
                 self.action_space_map[action] = name
 
         print(self.action_space_map)
-
 
     def __repr__(self):
         return str(self.artifacts)

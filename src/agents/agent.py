@@ -50,6 +50,9 @@ class Agent:
         # holds the next action that the agent will take
         self.action_queue = []
 
+        # holds messages
+        self.messages = []
+
         #
         self.params = {}
 
@@ -62,9 +65,14 @@ class Agent:
     def reset(self):
         self.inventory = self.starting_inventory
 
-    def update(self, observation):
+    def get_observation(self, observation):
         # update the state depending on the observation
-        self.observations.append(observation)
+        self.messages.append(
+                {
+                    "role": "user",
+                    "content": observation
+                }
+            )
 
     def execute_next_action(self):
         action = self.action_queue.pop(0)
@@ -127,6 +135,9 @@ class Agent:
 
         # if item does not exist, assume they 0 of it
         return 0
+
+    def __repr__(self):
+        return str(self.name)
 
     def __setitem__(self, key, value):
         if key == "capital":

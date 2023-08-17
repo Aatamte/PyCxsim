@@ -11,6 +11,7 @@ import random
 import dearpygui.dearpygui as dpg
 from src.environment.calander import Calender
 from src.agents.items import ItemGenerator
+from src.prompts.prompt import SystemPrompt
 
 
 logger = logging.getLogger(__name__)
@@ -148,12 +149,10 @@ class Environment:
         # go through the artifacts and set them up
         self.artifact_controller.set_up()
 
-        # iterate through agents
-        agent_specific_prompts = 0
-        set_prompts = 0
 
         for agent in self.agents:
-            pass
+            agent.system_prompt = SystemPrompt().create()
+            print(agent.system_prompt)
 
         self.reset()
 
@@ -203,7 +202,10 @@ class Environment:
         self.artifact_controller.execute(self.agents)
 
         # insert observations for the agents
-        self.artifact_controller.insert_observations(self.agents)
+        self.artifact_controller.insert_observations(
+            self,
+            self.agents
+        )
 
         for agent in self.agents:
             agent.step()

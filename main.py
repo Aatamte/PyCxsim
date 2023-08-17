@@ -3,6 +3,7 @@ from src.core import Market, Order, Dialogue, Marketplace
 from src.agents.language_model_agents.openai_agent import OAIAgent
 from src.agents.population import Population
 import numpy as np
+import openai
 
 
 class MyAgent(OAIAgent):
@@ -28,6 +29,7 @@ class MyAgent(OAIAgent):
 
 
 if __name__ == '__main__':
+    openai.api_key = "sk-"
     env = Environment(
         visualization=True,
         save_to_file=True
@@ -37,22 +39,20 @@ if __name__ == '__main__':
 
     seller_params = {"is_buyer": False}
 
-    buyer_population = Population(MyAgent(), 10, buyer_params)
+    buyer_population = Population(MyAgent(), 1, buyer_params)
     env.add(buyer_population)
 
-    seller_population = Population(MyAgent(), 10, seller_params)
+    seller_population = Population(MyAgent(), 1, seller_params)
     env.add(seller_population)
 
     marketplace = Marketplace()
 
     env.add(marketplace)
 
-    env.add(Dialogue())
+    env.step_delay = 1
 
-    env.step_delay = 0.1
-
-    env.max_episodes = 100000
-    env.max_steps = 100000
+    env.max_episodes = 1
+    env.max_steps = 10
 
     # set up the environment
     env.set_up()

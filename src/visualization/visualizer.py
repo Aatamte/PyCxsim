@@ -9,17 +9,6 @@ artifact_tabs = {
 }
 
 
-class EnvironmentOverview:
-    def __init__(self):
-        pass
-
-    def create(self):
-        pass
-
-    def updated(self):
-        pass
-
-
 color_dict = {
     'red': (255, 0, 0),
     'green': (0, 255, 0),
@@ -129,6 +118,7 @@ class Visualizer:
         if is_new_step:
             for name, artifact_tab in artifact_tabs.items():
                 artifact_tab.step()
+            self.agent_overview.update()
         #self.draw_adjacency_matrix()
         dpg.render_dearpygui_frame()
 
@@ -244,6 +234,7 @@ class Visualizer:
             dpg.add_text("Control Panel")
             dpg.add_button(label="Pause", pos=(0, 40), callback=self.pause_simulation_callback, height=50, width=50)
             dpg.add_button(label="Resume", pos=(55, 40), callback=self.resume_simulation_callback, height=50, width=50)
+            dpg.add_text(self.environment_overview_text)
 
     def create_world_window(self):
         with dpg.window(

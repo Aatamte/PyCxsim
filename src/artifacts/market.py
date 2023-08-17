@@ -3,11 +3,11 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 import random
-from typing import  Union, Optional
+from typing import Union, Optional
 
 from src.core import Agent
 from src.artifacts.artifact import Artifact, AdjacencyMatrix
-
+from src.prompts.prompt import Prompt
 
 # An Order is represented as a dataclass for simplicity and ease of use
 @dataclass
@@ -27,7 +27,6 @@ class Order:
     quantity: int
     agent: Agent
     id: int = None
-    action_class: str = "Market"
 
 
 # The OrderBook class represents the order book in a market
@@ -223,6 +222,11 @@ class Market(Artifact):
             Order
         ]
 
+        self.system_prompt = Prompt(
+            "This us a ma"
+        )
+
+
     # The execute method adds an order to the market's order book
     def execute(self, agent, action: Union[list, Order]):
         if isinstance(action, tuple):
@@ -317,9 +321,19 @@ class Marketplace(Artifact):
         for name, market in self.markets.items():
             market.step()
 
+    def set_up(self):
+        self.system_prompt = Prompt(
+            "This is a marketplace where agents can buy and sell goods."
+        )
+
     def generate_observations(self, agents):
-        observations = {agent.name: [(m.product_name, m.get_full_orderbook()) for m in self.markets.values()] for agent in agents}
-        return observations
+        observation = ""
+        for m in self.markets.values():
+            observation += m.product_name + "\n"
+            observation += "Best bid order: " + str(m.highest_bid_order) + "\n"
+            observation += "Best bid order: " + str(m.lowest_offer_order)
+
+        return observation
 
     def reset(self, environment):
         for agent in environment.agents:

@@ -19,12 +19,13 @@ class AgentOverview:
         self.agent = self.environment.agent_name_lookup[new_agent_name]
         self.message_box.set_agent(self.agent)
         self.update()
-        self.message_box.update()
+        self.message_box.update(self.agent)
 
     def update(self):
         if self.agent:
             dpg.set_value(self.agent_name_text, self.agent_name)
             dpg.set_value(self.agent_inventory_text, self.agent.display_inventory())
+            self.message_box.update(self.agent)
 
     def set_show(self, value: bool):
         self.show = value
@@ -66,6 +67,8 @@ class MessageBox:
 
         self.input_text = dpg.generate_uuid()
 
+        self.send_hint = dpg.generate_uuid()
+
         self.window = None
 
     def set_agent(self, agent):
@@ -75,16 +78,17 @@ class MessageBox:
 
     def redraw_everything(self):
         dpg.delete_item(self.input_text)
+        dpg.delete_item(self.send_hint)
         self.last_agent = self.agent
         for message in self.existing_messages:
             dpg.delete_item(message)
         self.existing_messages = []
 
-        for idx, message in enumerate(self.agent.message_history):
+        for idx, message in enumerate(self.agent.messages):
             if "user" in message:
-                indent = 150
+                indent = 0
             elif "system" in message:
-                indent = 150
+                indent = 0
             else:
                 indent = 0
 
@@ -92,41 +96,40 @@ class MessageBox:
                 message,
                 indent=indent,
                 parent=self.window,
-
+                wrap=350
                 #pos=(10 + indent, idx * 25)
             )
             self.existing_messages.append(new_message)
 
         self.input_text = dpg.add_input_text(
             label="",
-            default_value="chat with agent...",
+            multiline=True,
+            default_value="",
+            hint="chat with agent...",
             callback=self.send_message_to_agent,
             on_enter=True,
             parent=self.window,
         )
+        self.send_hint = dpg.add_text("CTRL + ENTER to send message", parent=self.window)
 
     def draw(self):
         with dpg.child_window(label="message box") as self.window:
             if self.agent:
-                print(self.agent.message_history)
-                for message in self.agent.mesage_history:
+                for message in self.agent.messages:
                     dpg.add_text(message)
 
         self.input_text = dpg.add_input_text()
+        self.send_hint = dpg.add_text("CTRL + ENTER to send message", parent=self.window)
 
     def send_message_to_agent(self, id, message):
-        self.agent.message_history.append(
-            {"user": message}
-        )
+        self.agent.receives_message(message)
         self.redraw_everything()
         print(message)
 
-    def update(self):
-        print(self.agent.model_id)
-        print(self.agent.usage_statistics)
-        print(self.agent.message_history)
-        print(self.agent.usage_statistics)
-        pass
+    def update(self, agent):
+        if len(self.existing_messages) != len(agent.messages):
+            self.redraw_everything()
+
 
     def add_agent_message(self, message: str):
         pass
