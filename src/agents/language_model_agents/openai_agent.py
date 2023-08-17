@@ -9,7 +9,6 @@ class OAIAgent(LanguageModelAgent):
     ):
         super(OAIAgent, self).__init__()
         self.model_id = model_id
-        self.n_unfollowed_actions = 0
 
         self.language_model_logs = []
 

@@ -5,7 +5,7 @@ from src.agents.population import Population
 import numpy as np
 
 
-class MyAgent(Agent):
+class MyAgent(OAIAgent):
     def __init__(self):
         super(MyAgent, self).__init__()
         self.starting_inventory = {
@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
     env.add(Dialogue())
 
-    env.step_delay = 0
+    env.step_delay = 0.1
 
     env.max_episodes = 100000
     env.max_steps = 100000

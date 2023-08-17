@@ -1,7 +1,7 @@
 import dearpygui.dearpygui as dpg
 import math
 from src.visualization.tabs.market_tab import MarketplaceTab
-
+from src.visualization.agent_overview import AgentOverview
 dpg.create_context()
 
 artifact_tabs = {
@@ -72,9 +72,20 @@ class Visualizer:
 
         self.current_tab = None
         self.show_environment_overview = False
+        self.show_agent_overview = False
         self.last_environment_step = 0
 
         self.is_paused = True
+
+        self.show_agent_name = None
+
+        self.show_agent_header = None
+        self.show_agent_inventory = None
+        self.show_agent_messages = None
+
+        self.agent_inventory = None
+
+        self.agent_overview = AgentOverview(environment)
 
     def draw_interaction(self, source_agent, target_agent, color, tag: str = None):
         if tag is None:
@@ -89,6 +100,9 @@ class Visualizer:
             #agent_str = f"capital: {agent.capital}\ninventory: {agent.inventory}"
             #dpg.set_value(self.agent_information_table[agent.name], agent_str)
             pass
+        dpg.set_value(self.show_agent_header, self.show_agent_name)
+        if self.show_agent_name:
+            dpg.set_value(self.show_agent_inventory,  self.environment.agent_name_lookup[self.show_agent_name].display_inventory())
         for idx, action in enumerate(self.environment.action_logs()[-self.action_log_size:]):
             dpg.set_value(self.action_logs[idx][0], str(self.environment.current_step))
             dpg.set_value(self.action_logs[idx][1], action[0].name)
@@ -111,7 +125,7 @@ class Visualizer:
     def step(self, is_new_step):
         dpg.set_value(self.environment_overview_text, f"episode: {self.environment.current_episode} / {self.environment.max_episodes}\nstep: {self.environment.current_step} / {self.environment.max_steps}")
         dpg.set_value(self.environment_date, f"date: {self.environment.calender.current_date}")
-        self.update_agent_overview()
+        self.agent_overview.update()
         if is_new_step:
             for name, artifact_tab in artifact_tabs.items():
                 artifact_tab.step()
@@ -156,41 +170,29 @@ class Visualizer:
             self.environment_overview_text = dpg.add_text("", wrap=300)
             #self.draw_agent_overview()
 
-    def draw_agent_overview(self):
-        with dpg.collapsing_header(label="Agent Overview", default_open=False):
-            self.agent_overview_text = dpg.add_text("", wrap=300)
-            self.add_agent_information_table()
-
-    def add_agent_information_table(self):
-        with dpg.collapsing_header(label="Agent information", default_open=False):
-            self.agent_information_text = dpg.add_text("", wrap=300)
-            for agent in self.environment.agents:
-                self.agent_information_table[agent.name] = dpg.generate_uuid()
-                with dpg.collapsing_header(label=agent.name, default_open=False):
-                    self.agent_information_table[agent.name] = dpg.add_text("", wrap=300)
-
-        with dpg.drawlist(width=self.agent_world_width, height=self.agent_world_height):
-            for source_agent in self.environment.agents:
-                self.agent_interaction_table[source_agent.name] = {}
-                #for target_agent in self.environment.agents:
-                    #if source_agent != target_agent:
-                  #      self.agent_interaction_table[source_agent.name][target_agent.name] = dpg.generate_uuid()
-                   #     self.draw_interaction(source_agent, target_agent, "gray")
-
     def show_callback(self, sender):
         print(sender)
         if sender == "show_overview":
             self.switch_tab(self.current_tab, self.environment_overview)
         elif sender == "show_logs":
             self.switch_tab(self.current_tab, self.env_logs)
+        elif sender == "agent_overview":
+            if self.current_tab:
+                dpg.hide_item(self.current_tab)
+            self.agent_overview.set_show(True)
+            self.current_tab = self.agent_overview
         elif sender in artifact_tabs.keys():
             self.switch_tab(self.current_tab, artifact_tabs[sender].get_window())
 
     def switch_tab(self, previous_tab, next_tab):
         # if a previous tab exists, hide it
-        if previous_tab:
+        if previous_tab == self.agent_overview:
+            self.agent_overview.set_show(False)
+        elif previous_tab:
             dpg.hide_item(previous_tab)
+
         dpg.show_item(next_tab)
+
         self.current_tab = next_tab
 
     def create_information_window(self):
@@ -209,16 +211,17 @@ class Visualizer:
             with dpg.menu_bar(label="Information menu bar"):
                 with dpg.menu(label="Environment"):
                     dpg.add_menu_item(label="Overview", tag="show_overview", callback=self.show_callback)
+                    dpg.add_menu_item(label="Agents", tag="agent_overview", callback=self.show_callback)
                     dpg.add_menu_item(label="logs", tag="show_logs", callback=self.show_callback)
 
                 with dpg.menu(label="Artifacts"):
                     for artifact_name in self.artifact_names:
                         dpg.add_menu_item(label=artifact_name, tag=artifact_name, callback=self.show_callback)
-                dpg.add_menu_item(label="Agents")
                 dpg.add_menu_item(label="Settings")
 
             self.draw_environment_overview()
             self.draw_action_logs()
+            self.agent_overview.draw()
 
             for artifact_name in self.artifact_names:
                 if artifact_name in artifact_tabs.keys():
@@ -246,7 +249,7 @@ class Visualizer:
         with dpg.window(
             label="Environment",
             tag="World",
-            height = self.HEIGHT,
+            height=self.HEIGHT,
             no_close=True,
             no_move=True,
             menubar=True,

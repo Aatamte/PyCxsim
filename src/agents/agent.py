@@ -83,6 +83,9 @@ class Agent:
     def capital(self):
         return self.inventory["capital"]
 
+    def display_inventory(self):
+        return str({key: len(value) for key, value in self.inventory.items()})
+
     def step(self):
         pass
 

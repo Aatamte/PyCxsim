@@ -16,8 +16,13 @@ class LanguageModelAgent(Agent):
         super(LanguageModelAgent, self).__init__()
         self.local: bool = local
         self.temperature: float = temperature
-        self.message_history = []
+        self.message_history = [
+            {"system": "You are in a simulation"},
+            {"agent": "Yes, I understand"},
+            {"user": "start the simulation"}]
+
         self.set_up_prompt: str = ""
+        self.system_prompt: str = ""
 
         self.n_unfollowed_actions: int = 0
 
