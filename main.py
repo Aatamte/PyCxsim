@@ -39,10 +39,10 @@ if __name__ == '__main__':
 
     seller_params = {"is_buyer": False}
 
-    buyer_population = Population(MyAgent(), 1, buyer_params)
+    buyer_population = Population(MyAgent(), 5, buyer_params)
     env.add(buyer_population)
 
-    seller_population = Population(MyAgent(), 1, seller_params)
+    seller_population = Population(MyAgent(), 5, seller_params)
     env.add(seller_population)
 
     marketplace = Marketplace()

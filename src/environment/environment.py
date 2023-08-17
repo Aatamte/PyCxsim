@@ -149,7 +149,6 @@ class Environment:
         # go through the artifacts and set them up
         self.artifact_controller.set_up()
 
-
         for agent in self.agents:
             agent.system_prompt = SystemPrompt().create()
             print(agent.system_prompt)
