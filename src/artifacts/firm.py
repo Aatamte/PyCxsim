@@ -1,4 +1,4 @@
-from src.environment.artifacts.artifact import Artifact
+from src.artifacts.artifact import Artifact
 
 
 class Firm(Artifact):

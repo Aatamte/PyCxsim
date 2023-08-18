@@ -151,7 +151,9 @@ class Environment:
 
         for agent in self.agents:
             agent.system_prompt = SystemPrompt().create()
-            print(agent.system_prompt)
+            agent.messages.append(
+                agent.system_prompt
+            )
 
         self.reset()
 
