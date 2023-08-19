@@ -2,12 +2,13 @@ from typing import Dict
 from dataclasses import dataclass
 import numpy as np
 import pandas as pd
-import random
 from typing import Union, Optional
 
 from src.core import Agent
-from src.artifacts.artifact import Artifact, AdjacencyMatrix
+from src.artifacts.artifact import Artifact
 from src.prompts.prompt import Prompt
+from src.environment.event import Event
+
 
 # An Order is represented as a dataclass for simplicity and ease of use
 @dataclass
@@ -27,6 +28,15 @@ class Order:
     quantity: int
     agent: Agent
     id: int = None
+
+
+@dataclass
+class MarketPlaceTransaction(Event):
+    seller_agent: Agent
+    buyer_agent: Agent
+    good: str
+    quantity: int
+    price: int
 
 
 # The OrderBook class represents the order book in a market
@@ -58,6 +68,8 @@ class OrderBook:
 
         self.best_bid_history = []
         self.best_ask_history = []
+
+        self.event_history = []
 
     def reset(self):
         # Clear orders
@@ -148,6 +160,17 @@ class OrderBook:
             )
 
             self.sell_orders.remove(book_order)
+
+            self.event_history.append(
+                MarketPlaceTransaction(
+                    buyer_agent=incoming_order.agent,
+                    seller_agent = book_order.agent,
+                    good = self.product_name,
+                    quantity = transaction_quantity,
+                    price=transaction_price,
+                    step=0
+                )
+            )
         else:
             incoming_order.agent.trade(
                 (self.product_name, transaction_quantity),
@@ -155,6 +178,17 @@ class OrderBook:
                 book_order.agent
             )
             self.buy_orders.remove(book_order)
+
+            self.event_history.append(
+                MarketPlaceTransaction(
+                    buyer_agent=book_order.agent,
+                    seller_agent=incoming_order.agent,
+                    good=self.product_name,
+                    quantity=transaction_quantity,
+                    price=transaction_price,
+                    step=0
+                )
+            )
 
         self.history = pd.concat([self.history, pd.DataFrame(
             {
