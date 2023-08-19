@@ -19,7 +19,6 @@ class AgentOverview:
     def __init__(self, environment):
         self.environment = environment
         self.agent = None
-        self.message_box = MessageBox()
         self.show = False
         self.agent_name = None
 
@@ -28,18 +27,30 @@ class AgentOverview:
         self.agent_name_text = dpg.generate_uuid()
         self.agent_inventory_text = dpg.generate_uuid()
 
-    def change_agent(self, new_agent_name):
+        self.message_box = MessageBox()
+        self.action_history = ActionHistoryVisualization()
+        self.inventory_viz = InventoryVisualization()
+        self.parameter_viz = ParameterVisualization()
+
+        self.current_tab = "inventory"
+
+        self.tab_options = {
+            "messages": self.message_box,
+            "actions": self.action_history,
+            "inventory": self.inventory_viz,
+            "params": self.parameter_viz
+        }
+
+    def change_agent(self, sender, new_agent_name):
         self.agent_name = new_agent_name
         self.agent = self.environment.agent_name_lookup[new_agent_name]
-        self.message_box.set_agent(self.agent)
+
         self.update()
-        self.message_box.update(self.agent)
 
     def update(self):
         if self.agent:
-            dpg.set_value(self.agent_name_text, self.agent_name)
-            dpg.set_value(self.agent_inventory_text, self.agent.display_inventory())
-            self.message_box.update(self.agent)
+            for name, tab in self.tab_options.items():
+                tab.update(self.agent)
 
     def set_show(self, value: bool):
         self.show = value
@@ -48,23 +59,124 @@ class AgentOverview:
         else:
             dpg.hide_item(self.agent_overview_window)
 
+    def show_tab(self, sender, data):
+
+        if self.current_tab:
+            self.tab_options[self.current_tab].set_show(False)
+        self.tab_options[sender].set_show(True)
+        self.current_tab = sender
+
     def draw(self):
-        with dpg.child_window(label="Agent Overview", show=self.show) as self.agent_overview_window:
-            with dpg.collapsing_header(label="agent"):
-                for agent in self.environment.agents:
-                    dpg.add_selectable(label=agent.name, tag=agent.name, callback=self.change_agent, disable_popup_close=True)
+        with dpg.child_window(label="Agent Overview", show=self.show, border=False) as self.agent_overview_window:
+            dpg.add_combo(label="Agent", items=[agent.name for agent in self.environment.agents], callback=self.change_agent)
+            with dpg.child_window(label="Agent information", menubar=True):
+                with dpg.menu_bar(label="agent menu bar"):
+                    dpg.add_menu_item(label="inventory", tag="inventory", callback=self.show_tab)
+                    dpg.add_menu_item(label="messages", tag="messages", callback=self.show_tab)
+                    dpg.add_menu_item(label="actions", tag="actions", callback=self.show_tab)
+                    dpg.add_menu_item(label="events", tag="events", callback=self.show_tab)
+                    dpg.add_menu_item(label="params", tag="params", callback=self.show_tab)
 
-            dpg.add_text("Name")
-            dpg.add_same_line()
-            self.agent_name_text = dpg.add_text(self.agent_name)
-
-            dpg.add_text("Inventory")
-            self.agent_inventory_text = dpg.add_text(self.agent)
-
-            self.message_box.draw()
+                for name, tab in self.tab_options.items():
+                    tab.draw()
 
     def get_window(self):
         return self.agent_overview_window
+
+
+class ActionHistoryVisualization:
+    def __init__(self):
+        self.show = False
+        self.agent = None
+        self.window = None
+
+        self.action_table = None
+
+        self.action_history_text = dpg.generate_uuid()
+
+        self.action_history_values = []
+
+        self.max_action_length = 50
+        self.action_history_uid = []
+        for row_idx in range(self.max_action_length):
+            self.action_history_uid.append([dpg.generate_uuid(), dpg.generate_uuid(), dpg.generate_uuid()])
+
+        self.rows_uuids = []
+
+    def update(self, agent):
+        self.agent = agent
+        for idx, row in enumerate(range(len(agent.action_history))):
+            dpg.set_value(self.action_history_uid[idx][2], str(agent.action_history[-(idx + 1)]))
+            dpg.set_value(self.action_history_uid[idx][0], len(agent.action_history) - (idx + 1))
+
+    def draw(self):
+        with dpg.child_window(label="actions", border=False, show=self.show) as self.window:
+            with dpg.table(header_row=True) as self.action_table:
+                # use add_table_column to add columns to the table,
+                # table columns use child slot 0
+                dpg.add_table_column(label="step", init_width_or_weight=0.2)
+                dpg.add_table_column(label="artifact", init_width_or_weight=0.3)
+                dpg.add_table_column(label="action")
+
+                for i in range(self.max_action_length):
+                    with dpg.table_row():
+                        for j in range(0, 3):
+                            self.action_history_uid[i][j] = dpg.add_text("N/A", wrap=250)
+
+    def set_show(self, value):
+        self.show = value
+        if self.show:
+            dpg.show_item(self.window)
+        else:
+            dpg.hide_item(self.window)
+
+
+class InventoryVisualization:
+    def __init__(self):
+        self.show = False
+        self.agent = None
+        self.window = None
+
+        self.inventory_text = dpg.generate_uuid()
+
+    def update(self, agent):
+        self.agent = agent
+        dpg.set_value(self.inventory_text, self.agent.display_inventory())
+
+    def draw(self):
+        with dpg.child_window(label="inventory", border=False, show=self.show) as self.window:
+            self.inventory_text = dpg.add_text("")
+
+    def set_show(self, value):
+        self.show = value
+        if self.show:
+            dpg.show_item(self.window)
+        else:
+            dpg.hide_item(self.window)
+
+
+class ParameterVisualization:
+    def __init__(self):
+        self.show = False
+        self.agent = None
+        self.window = None
+
+        self.param_text = dpg.generate_uuid()
+
+    def update(self, agent):
+        self.agent = agent
+        dpg.set_value(self.param_text, self.agent.params)
+
+    def draw(self):
+        with dpg.child_window(label="inventory", border=False, show=self.show) as self.window:
+            self.param_text = dpg.add_text("")
+
+    def set_show(self, value):
+        self.show = value
+        if self.show:
+            dpg.show_item(self.window)
+        else:
+            dpg.hide_item(self.window)
 
 
 class MessageBox:
@@ -72,6 +184,7 @@ class MessageBox:
         self.agent = None
         self.last_agent = None
         self.existing_messages = []
+        self.show = False
 
         self.agent_name = dpg.generate_uuid()
         self.agent_messages = [dpg.generate_uuid()]
@@ -85,10 +198,9 @@ class MessageBox:
 
         self.window = None
 
-    def set_agent(self, agent):
+    def update(self, agent):
         self.agent = agent
-        if self.agent != self.last_agent:
-            self.redraw_everything()
+        self.redraw_everything()
 
     def redraw_everything(self):
         dpg.delete_item(self.input_text)
@@ -97,7 +209,7 @@ class MessageBox:
         for message in self.existing_messages:
             dpg.delete_item(message)
         self.existing_messages = []
-        print(self.agent.messages)
+
         for idx, message in enumerate(self.agent.messages):
             if "user" in message.keys():
                 indent = 0
@@ -130,23 +242,26 @@ class MessageBox:
         )
         self.send_hint = dpg.add_text("CTRL + ENTER to send message", parent=self.window)
 
+    def set_show(self, value):
+        self.show = value
+        if self.show:
+            dpg.show_item(self.window)
+        else:
+            dpg.hide_item(self.window)
+
     def draw(self):
-        with dpg.child_window(label="message box") as self.window:
+        with dpg.child_window(label="message box", border=False, show=self.show) as self.window:
             if self.agent:
                 for message in self.agent.messages:
                     dpg.add_text(message)
 
-        self.input_text = dpg.add_input_text()
-        self.send_hint = dpg.add_text("CTRL + ENTER to send message", parent=self.window)
+            self.input_text = dpg.add_input_text()
+            self.send_hint = dpg.add_text("CTRL + ENTER to send message", parent=self.window)
 
     def send_message_to_agent(self, id, message):
         self.agent.receives_message(message)
         self.redraw_everything()
         print(message)
-
-    def update(self, agent):
-        if len(self.existing_messages) != len(agent.messages):
-            self.redraw_everything()
 
     def add_agent_message(self, message: str):
         pass

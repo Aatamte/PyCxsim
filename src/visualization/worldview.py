@@ -82,19 +82,28 @@ def get_random_unused_color():
 
 
 class World:
-    def __init__(self, environment, starting_WIDTH, starting_HEIGHT):
-        self.HEIGHT = int(starting_HEIGHT * 0.8)
+    def __init__(
+            self,
+            environment,
+            starting_WIDTH,
+            starting_HEIGHT,
+            n_blocks: int = 10
+    ):
+        self.HEIGHT = int(starting_HEIGHT * 0.95)
         self.WIDTH = int(2 * starting_WIDTH / 3)
         self.world = None
+        self.grid = None
         self.environment = environment
-        self.blocks = 15
-        self.block_size_x = int(0.85 * self.WIDTH) / (self.blocks - 1)
-        self.block_size_y = int(0.85 * self.HEIGHT) / (self.blocks - 1)
+        self.blocks = n_blocks
         self.agent_positions = np.zeros((self.blocks, self.blocks))
+        self.tiles = [[dpg.generate_uuid() for _ in range(self.blocks)] for _ in range(self.blocks)]
 
-    def get_middle_of_block(self, block_x, block_y):
-        middle_x = block_x * self.block_size_x + self.block_size_x / 2
-        middle_y = block_y * self.block_size_y + self.block_size_y / 2
+        self.block_size_x = int(0.5 * self.WIDTH) / self.blocks
+        self.block_size_y = int(0.5 * self.HEIGHT) / self.blocks
+
+    def get_middle_of_block(self, block_x, block_y, block_size_x, block_size_y):
+        middle_x = block_x * block_size_x + block_size_x / 2
+        middle_y = block_y * block_size_y + block_size_y / 2
 
         return middle_x, middle_y
 
@@ -115,31 +124,32 @@ class World:
         return tuple(chosen_position)
 
     def update(self):
-        self.HEIGHT = int(dpg.get_viewport_height() * 0.8)
+        pass
+
+    def resize(self):
+        self.HEIGHT = int(dpg.get_viewport_height() * 0.95)
         self.WIDTH = int(2 * dpg.get_viewport_width() / 3)
         dpg.set_item_width(self.world, self.WIDTH)
         dpg.set_item_height(self.world, self.HEIGHT)
+        dpg.delete_item(self.grid)
+        if self.HEIGHT < self.WIDTH:
+            scale_factor = self.HEIGHT
+        else:
+            scale_factor = self.WIDTH
 
-    def set_up(self):
-        with dpg.drawlist(width=self.WIDTH, height=self.HEIGHT, parent=self.world) as parent:
-            self.draw_background(parent)
-            for idx, agent in enumerate(self.environment.agents):
-                if agent.x_pos != 0 and agent.y_pos != 0:
-                    x, y = self.choose_and_set_position()
-                    agent.x_pos = x
-                    agent.y_pos = y
-                x = agent.x_pos
-                y = agent.y_pos
-                x, y = self.get_middle_of_block(x, y)
+        self.block_size_x = int(0.9 * scale_factor) / self.blocks
+        self.block_size_y = int(0.9 * scale_factor) / self.blocks
 
-                if agent.color == (0, 0, 0):
-                    name, color = get_random_unused_color()
-                    agent.color = color
-                dpg.draw_circle(
-                    (x, y),
-                    int(self.block_size_y // 2), color=[0, 0, 0], fill=list(agent.color))
+        with dpg.drawlist(
+                width=self.WIDTH,
+                height=int(self.HEIGHT * 0.95),
+                parent=self.world,
 
-    def draw_background(self, parent):
+        ) as self.grid:
+            self.draw_background(True)
+            self.place_agents(True)
+
+    def draw_background(self, resize: bool = False):
         for row in range(self.blocks):
             for col in range(self.blocks):
                 x1 = col * self.block_size_x
@@ -147,7 +157,7 @@ class World:
                 x2 = x1 + self.block_size_x
                 y2 = y1 + self.block_size_y
 
-                dpg.draw_quad(
+                self.tiles[row][col] = dpg.draw_quad(
                     p1=(x1, y1),
                     p2=(x2, y1),
                     p3=(x2, y2),
@@ -156,17 +166,57 @@ class World:
                     fill=(211, 211, 211, 255)
                 )
 
+    def place_agents(self, resize: bool = False):
+        for idx, agent in enumerate(self.environment.agents):
+            if agent.x_pos is None and agent.y_pos is None:
+                x, y = self.choose_and_set_position()
+                agent.x_pos = x
+                agent.y_pos = y
+            x = agent.x_pos
+            y = agent.y_pos
+            x, y = self.get_middle_of_block(x, y, self.block_size_x, self.block_size_y)
+            print(np.sum(self.agent_positions))
+
+            if agent.color == (0, 0, 0):
+                name, color = get_random_unused_color()
+                agent.color = color
+
+            dpg.draw_circle(
+                (x, y),
+                int(self.block_size_y // 2),
+                color=[0, 0, 0],
+                fill=list(agent.color)
+            )
+
+            text_size = int(self.block_size_x * 0.2)
+
+            dpg.draw_text(
+                text=agent.name,
+                pos=(int(x - (self.block_size_x / 2)), y),
+                color=[0, 0, 0],
+                size=text_size
+            )
+
+    def set_up(self):
+        with dpg.drawlist(
+                width=self.WIDTH,
+                height=self.HEIGHT,
+                parent=self.world,
+        ) as self.grid:
+            self.draw_background()
+            self.place_agents()
+
     def create(self):
         with dpg.window(
             label="Environment",
             tag="World",
-            pos=(0, 0),
+            pos=(0, int(self.HEIGHT * 0.1)),
             height=self.HEIGHT,
             width=self.WIDTH,
             no_close=True,
             no_move=True,
             menubar=False,
-            no_scrollbar=True,
+            no_scrollbar=False,
             no_collapse=True,
             no_resize=True,
             no_title_bar=True,

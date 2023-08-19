@@ -53,8 +53,11 @@ class Agent:
         # holds messages
         self.messages = []
 
-        #
+        # holds agent parameters
         self.params = {}
+
+        # records past actions
+        self.action_history = []
 
         # inventory
         if inventory is None:

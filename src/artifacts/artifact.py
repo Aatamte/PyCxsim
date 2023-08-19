@@ -6,6 +6,7 @@ class Artifact:
         self.name = name
         self.system_prompt = ""
         self.action_space_prompt = ""
+        self.event_history = []
 
     def set_up(self):
         pass
@@ -28,6 +29,12 @@ class Artifact:
     @staticmethod
     def action_space():
         return []
+
+    def process_summary(self):
+        pass
+
+    def execute_query(self):
+        pass
 
     def reset(self, environment):
         pass
@@ -59,6 +66,7 @@ class ArtifactController:
 
     def execute_action(self, agent, action):
         self.action_logs.append((agent, action))
+        agent.action_history.append(action)
         if action is not None:
             if isinstance(action, tuple):
                 artifact_name, action_details = action
@@ -79,6 +87,7 @@ class ArtifactController:
                 action = agent.select_action()
             else:
                 action = agent.execute_next_action()
+
             self.execute_action(agent, action)
         return 0
 

@@ -3,7 +3,7 @@ import math
 from src.visualization.tabs.market_tab import MarketplaceTab
 from src.visualization.agent_overview import AgentOverview
 from src.visualization.worldview import World
-from src.visualization.bottom_panel import BottomPanel
+from src.visualization.top_panel import TopPanel
 
 dpg.create_context()
 
@@ -33,19 +33,12 @@ class Visualizer:
         self.WIDTH = 1400
         self.HEIGHT = 1000
 
-        self.world_height = 120
-        self.world_width = 120
-
         self.agent_world_height = int(self.HEIGHT * 0.8)
         self.agent_world_width = int(2 * self.WIDTH / 3)
-        self.agent_world_middle_position = (int(self.agent_world_width / 2), int(self.agent_world_height / 2))
 
         self.info_tab_height = self.HEIGHT
         self.info_tab_width = int(self.WIDTH / 3)
         self.text_control = None
-
-        self.bottom_panel_height = int(self.HEIGHT * 0.2)
-        self.bottom_panel_width = int(2 * self.WIDTH / 3)
 
         self.middle_line = int(self.WIDTH / 2) + int(self.WIDTH * 0.01)
         self.top_position = 20
@@ -79,7 +72,7 @@ class Visualizer:
 
         self.agent_overview = AgentOverview(environment)
         self.world = World(environment, self.WIDTH, self.HEIGHT)
-        self.bottom_panel = BottomPanel(self, environment, self.HEIGHT, self.WIDTH)
+        self.top_panel = TopPanel(self, environment, self.HEIGHT, self.WIDTH)
 
     def draw_interaction(self, source_agent, target_agent, color, tag: str = None):
         if tag is None:
@@ -170,8 +163,7 @@ class Visualizer:
             no_collapse=True,
             no_resize=True,
             no_title_bar=True
-        ) as info:
-            self.info = info
+        ) as self.info:
             with dpg.menu_bar(label="Information menu bar"):
                 with dpg.menu(label="Environment"):
                     dpg.add_menu_item(label="Overview", tag="show_overview", callback=self.show_callback)
@@ -198,6 +190,9 @@ class Visualizer:
         self.start()
 
     def update(self):
+        self.world.update()
+
+    def resize(self):
         self.WIDTH = dpg.get_viewport_width()
         self.HEIGHT = dpg.get_viewport_height()
 
@@ -209,11 +204,11 @@ class Visualizer:
 
         dpg.set_item_pos(self.info, [int(2 * self.WIDTH / 3), 0])
 
-        self.world.update()
-        self.bottom_panel.update()
+        self.world.resize()
+        self.top_panel.resize()
 
     def start(self):
-        self.bottom_panel.create()
+        self.top_panel.create()
         self.create_information_window()
         self.world.create()
 
@@ -225,7 +220,7 @@ class Visualizer:
                 dpg.add_theme_color(dpg.mvThemeCol_FrameBg, (200, 200, 100), category=dpg.mvThemeCat_Core)
                 dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 0, category=dpg.mvThemeCat_Core)
 
-        dpg.set_viewport_resize_callback(self.update)
+        dpg.set_viewport_resize_callback(self.resize)
         dpg.create_viewport(title='Complex Adaptive Economic Simulator', width=self.WIDTH, height=self.HEIGHT)
         dpg.setup_dearpygui()
         dpg.show_viewport()

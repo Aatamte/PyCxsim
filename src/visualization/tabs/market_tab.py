@@ -9,6 +9,7 @@ class MarketplaceTab(Tab):
         self.marketplace = None
 
         self.current_market = None
+        self.window = None
 
         self.best_bid_plot = []
         self.best_ask_plot = []
@@ -26,10 +27,11 @@ class MarketplaceTab(Tab):
     def show(self):
         dpg.show_item(self.window)
 
-    def show_good_plot_callback(self, sender):
-        self.current_market = sender
-        self.best_bid_plot = self.marketplace[sender].best_bid_history
-        self.best_ask_plot = self.marketplace[sender].best_ask_history
+    def show_good_plot_callback(self, sender, data):
+        print(sender, data)
+        self.current_market = data
+        self.best_bid_plot = self.marketplace[data].best_bid_history
+        self.best_ask_plot = self.marketplace[data].best_ask_history
 
     def draw(self):
         self.current_market = list(self.marketplace.markets.keys())[0]
@@ -37,9 +39,7 @@ class MarketplaceTab(Tab):
         self.best_ask_plot = self.marketplace[self.current_market].best_ask_history
 
         with dpg.child_window(label=self.name, show=False) as self.window:
-            with dpg.menu(label="goods"):
-                for good in list(self.marketplace.markets.keys()):
-                    dpg.add_menu_item(label=good, tag=good, callback=self.show_good_plot_callback)
+            dpg.add_combo(label="good", items=[good for good in list(self.marketplace.markets.keys())], callback=self.show_good_plot_callback)
             with dpg.plot(label=f"Market for {self.current_market}", height=400, width=400):
                 dpg.add_plot_legend()
                 dpg.add_plot_axis(dpg.mvXAxis, label="step", tag="x_axis")

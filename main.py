@@ -1,5 +1,5 @@
 from src.core import Agent, Environment
-from src.core import Market, Order, Dialogue, Marketplace
+from src.core import Order, Dialogue, Marketplace
 from src.agents.language_model_agents.openai_agent import OAIAgent
 from src.agents.population import Population
 import numpy as np
@@ -11,7 +11,9 @@ class MyAgent(OAIAgent):
         super(MyAgent, self).__init__()
         self.starting_inventory = {
             "capital": 10000,
-            "socks": 100
+            "socks": 100,
+            "banana": 10,
+            "iphones": 10
         }
 
     def select_action(self):
@@ -23,7 +25,7 @@ class MyAgent(OAIAgent):
             price = np.random.randint(90, 105)
 
         if np.random.randint(0, 100) > 50:
-            return Order(good="socks", price=price, quantity=quantity, agent=self)
+            return Order(good="banana", price=price, quantity=quantity, agent=self)
         else:
             return None
 
@@ -52,7 +54,7 @@ if __name__ == '__main__':
     env.step_delay = 1
 
     env.max_episodes = 1
-    env.max_steps = 10
+    env.max_steps = 50
 
     # set up the environment
     env.set_up()
