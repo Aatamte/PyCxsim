@@ -1,0 +1,9 @@
+It is your turn.
+
+CURRENT STEP: #!current_step!#
+INVENTORY:
+#!inventory!#
+ARTIFACTS INFORMATION:
+#!artifact_information!#
+
+What action do you take?
