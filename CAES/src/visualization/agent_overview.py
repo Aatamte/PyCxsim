@@ -213,7 +213,7 @@ class MessageBox:
         for idx, message in enumerate(self.agent.messages):
             if message["role"] == "user":
                 indent = 0
-                color = color_dict["blue"]
+                color = color_dict["green"]
             elif message["role"] == "system":
                 indent = 0
                 color = color_dict["red"]
@@ -259,9 +259,14 @@ class MessageBox:
             self.send_hint = dpg.add_text("CTRL + ENTER to send message", parent=self.window)
 
     def send_message_to_agent(self, id, message):
-        self.agent.receives_message(message)
+        self.agent.messages.append(
+            {
+                "role": "user",
+                "content": message
+            }
+        )
+        self.agent.create_ChatCompletion()
         self.redraw_everything()
-        print(message)
 
     def add_agent_message(self, message: str):
         pass

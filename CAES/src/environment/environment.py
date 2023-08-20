@@ -319,11 +319,9 @@ class Environment:
 
     def run(self, close_on_end: bool = True):
         while self.is_running():
-            for episode in self.iter_episodes():
-                for step in self.iter_steps():
-                    self.step()
-            if close_on_end:
-                break
+            for step in self.iter_steps():
+                self.step()
+
 
     def save(self):
         print("saving")

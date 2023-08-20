@@ -27,10 +27,12 @@ class LanguageModelAgent(Agent):
             "total_tokens": 0
         }
 
-
     def complete_ChatCompletion(self):
-        return openai.ChatCompletion.create(model=self.model_id, messages=self.messages,
-                                                  temperature=self.temperature)
+        return openai.ChatCompletion.create(
+            model=self.model_id,
+            messages=self.messages,
+            temperature=self.temperature
+        )
 
     def create_ChatCompletion(self):
         response = self.complete_ChatCompletion()

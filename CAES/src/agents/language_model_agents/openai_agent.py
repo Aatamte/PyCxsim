@@ -14,16 +14,6 @@ class OAIAgent(LanguageModelAgent):
 
         self.language_model_logs = []
 
-    def receives_message(self, text):
-        self.messages.append(
-            {
-                "role": "user",
-                "content": text
-            }
-        )
-        di = {'None': 'None'}
-        self.create_ChatCompletion()
-
     def execute_action(self):
         self.create_ChatCompletion()
         response = self.messages[-1]["content"]
