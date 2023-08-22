@@ -1,17 +1,20 @@
 import time
 import numpy as np
 import logging
-from src.CAES import Agent
-from src.CAES import Population
-from src.CAES import Artifact, ArtifactController
-from src.CAES import Visualizer
 import h5py
 import names
 import random
 import dearpygui.dearpygui as dpg
-from src.CAES import Calender
-from src.CAES import ItemGenerator
-from src.CAES import SystemPrompt, ObservationPrompt
+import multiprocessing
+
+
+from src.CAES.agents.agent import Agent
+from src.CAES.agents.population import Population
+from src.CAES.artifacts.artifact import Artifact, ArtifactController
+from src.CAES.visualization.visualizer import Visualizer
+from src.CAES.environment.calander import Calender
+from src.CAES.agents.items import ItemGenerator
+from src.CAES.prompts.prompt import SystemPrompt, ObservationPrompt
 
 
 logger = logging.getLogger(__name__)
@@ -320,10 +323,8 @@ class Environment:
         return self.artifact_controller.artifacts
 
     def run(self, close_on_end: bool = True):
-        while self.is_running():
-            for step in self.iter_steps():
-                self.step()
-
+        for step in self.iter_steps():
+            self.step()
 
     def save(self):
         print("saving")

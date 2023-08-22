@@ -1,4 +1,4 @@
-from src.CAES import Agent
+from src.CAES.agents.agent import Agent
 
 
 class Population:

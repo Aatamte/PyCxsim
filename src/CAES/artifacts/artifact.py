@@ -59,12 +59,16 @@ class ArtifactController:
         self.map_action_to_artifact = {}
         self.map_query_to_artifact = {}
 
+        self.action_lookup = {}
+
     def add_artifact(self, artifact: Artifact):
         self.artifacts[artifact.name] = artifact
 
         # add actions to map_action_to_artifact
         for action in artifact.get_action_space():
             self.map_action_to_artifact[action] = artifact.name
+
+            self.action_lookup[action.__name__] = action
 
         # add queries to map_query_to_artifact
         for query in artifact.get_query_space():
@@ -76,8 +80,13 @@ class ArtifactController:
 
     def execute_action(self, agent, action):
         action_log = [self.environment.current_step, None, None]
-        if "None" in action.keys():
+
+        if action["action"] == "skip":
             action = None
+        elif action["action"]["action_name"] in self.action_lookup.keys():
+            action = self.action_lookup[action["action"]["action_name"]](**action["action"]["parameters"], agent=agent)
+            print(action)
+
         if action is not None:
             if isinstance(action, tuple):
                 artifact_name, action_details = action

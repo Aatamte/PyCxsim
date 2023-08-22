@@ -4,11 +4,11 @@ import numpy as np
 import pandas as pd
 from typing import Union
 
-from src.CAES import Agent
-from src.CAES import Artifact
-from src.CAES import Prompt
-from src.CAES import Event
+from src.CAES.agents.agent import Agent
+from src.CAES.artifacts.artifact import Artifact
+from src.CAES.prompts.prompt import Prompt
 from src.CAES.environment.query import Query
+from src.CAES.environment.event import Event
 
 
 # An Order is represented as a dataclass for simplicity and ease of use
@@ -32,8 +32,11 @@ class Order:
 
     @staticmethod
     def create_prompt():
-        return """Order: {"good": <str>, "price": <int>, "quantity": <int>}"""
+        return """{"action_name": "Order", "parameters": {"good": <str>, "price": <int>, "price": <int>}"""
 
+    @staticmethod
+    def get_name():
+        return "order"
 
 @dataclass
 class MarketPlaceTransaction(Event):

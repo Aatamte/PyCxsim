@@ -1,4 +1,4 @@
-from src.CAES import Tab
+from src.CAES.visualization.tabs.tab import Tab
 import dearpygui.dearpygui as dpg
 
 

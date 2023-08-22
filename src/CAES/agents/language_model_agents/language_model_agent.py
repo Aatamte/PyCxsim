@@ -1,6 +1,5 @@
-from src.CAES import Agent
-import openai
-
+from src.CAES.agents.agent import Agent
+from queue import Queue
 
 # NOTES
 #
@@ -14,6 +13,7 @@ class LanguageModelAgent(Agent):
         super(LanguageModelAgent, self).__init__()
         self.local: bool = local
         self.temperature: float = temperature
+
         self.messages = []
 
         self.system_prompt = None
@@ -26,28 +26,11 @@ class LanguageModelAgent(Agent):
             "total_tokens": 0
         }
 
-    def complete_ChatCompletion(self):
-        return openai.ChatCompletion.create(
-            model=self.model_id,
-            messages=self.messages,
-            temperature=self.temperature
-        )
-
-    def create_ChatCompletion(self):
-        response = self.complete_ChatCompletion()
-        self.messages.append(
-            {'role': response.choices[0].message.role, 'content': response.choices[0].message.content}
-        )
-        print(self.messages)
+    def execute_api_call(self, api_callable):
+        pass
 
     def set_up(self):
-        self.messages.append(
-            {
-                "role": "system",
-                "content": self.system_prompt.content
-            }
-        )
-        self.create_ChatCompletion()
+        pass
 
     def retry_select_action(self):
         self.n_unfollowed_actions += 1

@@ -1,8 +1,8 @@
 import dearpygui.dearpygui as dpg
-from src.CAES import MarketplaceTab
-from src.CAES import AgentOverview
-from src.CAES import World
-from src.CAES import TopPanel
+from src.CAES.visualization.tabs.market_tab import MarketplaceTab
+from src.CAES.visualization.agent_overview import AgentOverview
+from src.CAES.visualization.worldview import World
+from src.CAES.visualization.top_panel import TopPanel
 
 dpg.create_context()
 

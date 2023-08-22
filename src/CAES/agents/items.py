@@ -1,5 +1,5 @@
 import numpy as np
-from src.CAES import Agent, Item
+from src.CAES.agents.agent import Agent, Item
 from collections import deque
 
 

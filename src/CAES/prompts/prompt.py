@@ -3,12 +3,13 @@ import importlib_resources
 import copy
 
 # Open the file (replace 'your_package_name' with the actual name of your package)
-with importlib_resources.open_text('CAES.src.prompts', 'environment_system_prompt.txt') as file:
+with importlib_resources.open_text('CAES.prompts', 'environment_system_prompt.txt') as file:
     system_prompt = file.read()
 
 # Open the file (replace 'your_package_name' with the actual name of your package)
-with importlib_resources.open_text('CAES.src.prompts', 'observation_template_prompt.txt') as file:
+with importlib_resources.open_text('CAES.prompts', 'observation_template_prompt.txt') as file:
     observation_prompt = file.read()
+
 
 @dataclass
 class Prompt:
@@ -79,7 +80,7 @@ class SystemPrompt:
     def set_global_actions(self):
         global_action_string = ""
         for action in self.global_actions:
-            global_action_string += action + "\n"
+            global_action_string += str({"action": action, "reason": "<reason for action>"}) + "\n"
 
         global_action_string += "None: {None}"
 

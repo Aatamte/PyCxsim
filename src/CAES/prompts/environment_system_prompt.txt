@@ -13,7 +13,7 @@ ARTIFACT DESCRIPTIONS:
 Number of artifacts in the simulationL #!num_artifacts!#
 #!artifact_descriptions!#
 ACTIONS ({action: <action parameters>, 'reason': <describe why you choose that action>}):
-{'skip': 'None' "reason": <describe why you choose that action>} (you may skip your turn if you desire)
+{'action': 'skip' "reason": <describe why you choose that action>} (you may skip your turn if you desire)
 #!global_actions!#
 ACTION RESTRICTIONS:
 (if the function returns False, then the action is invalid)
