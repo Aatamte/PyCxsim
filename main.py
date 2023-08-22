@@ -21,21 +21,21 @@ class MyAgent(OAIAgent):
 
 
 def buy_restriction(order: Order):
-    if order.quantity >= 0:
-        return True
-    else:
-        return False
-
-
-def sell_restriction(order: Order):
     if order.quantity <= 0:
         return True
     else:
         return False
 
 
+def sell_restriction(order: Order):
+    if order.quantity >= 0:
+        return True
+    else:
+        return False
+
+
 if __name__ == '__main__':
-    openai.api_key = os.environ["open_ai_key"]
+    openai.api_key = os.environ["openai_api_key"]
 
     env = Environment(visualization=True)
 
@@ -74,8 +74,6 @@ if __name__ == '__main__':
     env.add(seller_population)
 
     marketplace = Marketplace()
-
-    print(marketplace.get_action_space(), marketplace.get_query_space())
 
     env.add(marketplace)
 

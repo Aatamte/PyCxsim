@@ -193,6 +193,8 @@ class Environment:
 
             agent_system_prompt.set_environment_information(str(len(self.agents)), str(self.max_steps))
 
+            agent_system_prompt.set_num_artifacts(str(len(self.artifact_controller.artifacts)))
+
             agent_system_prompt.set_artifact_descriptions()
 
             agent_system_prompt.set_global_actions()

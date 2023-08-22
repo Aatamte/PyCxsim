@@ -6,4 +6,6 @@ INVENTORY:
 ARTIFACTS INFORMATION:
 #!artifact_information!#
 
-What action do you take?
+Think step by step to decide which action best furthers your goals.
+Remember your restrictions and the rules of the artifacts.
+Once you have given it some thought, what action do you take?
