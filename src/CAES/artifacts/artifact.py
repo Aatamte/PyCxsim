@@ -1,3 +1,7 @@
+import json
+from src.CAES.utilities.convert_string_to_json import string_to_dict
+
+
 class Artifact:
     def __init__(self, name):
         self.name = name
@@ -59,7 +63,9 @@ class ArtifactController:
         self.map_action_to_artifact = {}
         self.map_query_to_artifact = {}
 
-        self.action_lookup = {}
+        self.action_lookup = {
+
+        }
 
     def add_artifact(self, artifact: Artifact):
         self.artifacts[artifact.name] = artifact
@@ -80,30 +86,33 @@ class ArtifactController:
 
     def execute_action(self, agent, action):
         action_log = [self.environment.current_step, None, None]
+        try:
+            if action["action"] == "skip":
+                action = None
+            elif action["action"] in self.action_lookup.keys():
+                action = self.action_lookup[action["action"]](**action["action_parameters"], agent=agent)
+                print(action)
 
-        if action["action"] == "skip":
-            action = None
-        elif action["action"]["action_name"] in self.action_lookup.keys():
-            action = self.action_lookup[action["action"]["action_name"]](**action["action"]["parameters"], agent=agent)
-            print(action)
-
-        if action is not None:
-            if isinstance(action, tuple):
-                artifact_name, action_details = action
-                if artifact_name not in self.artifacts.keys():
-                    raise KeyError(f"The artifact name that you supplied in the agents actions ({artifact_name}) does not exist in: {list(self.artifacts.keys())}")
-                artifact = self.artifacts[artifact_name]
-                action_log[1] = artifact_name
-                action_log[2] = action_details
-                artifact.execute_action(agent, action_details)
-            elif type(action) in self.map_action_to_artifact.keys():
-                action_log[1] = self.map_action_to_artifact[type(action)]
-                action_log[2] = action
-                self.artifacts[self.map_action_to_artifact[type(action)]].execute_action(agent, action)
-            else:
-                raise Warning("An agents action must be either a tuple or an action class")
-        agent.action_history.append(action)
-        self.action_logs.append((agent.name, *action_log))
+            if action is not None:
+                if isinstance(action, tuple):
+                    artifact_name, action_details = action
+                    if artifact_name not in self.artifacts.keys():
+                        raise KeyError(f"The artifact name that you supplied in the agents actions ({artifact_name}) does not exist in: {list(self.artifacts.keys())}")
+                    artifact = self.artifacts[artifact_name]
+                    action_log[1] = artifact_name
+                    action_log[2] = action_details
+                    artifact.execute_action(agent, action_details)
+                elif type(action) in self.map_action_to_artifact.keys():
+                    action_log[1] = self.map_action_to_artifact[type(action)]
+                    action_log[2] = action
+                    self.artifacts[self.map_action_to_artifact[type(action)]].execute_action(agent, action)
+                else:
+                    raise Warning("An agents action must be either a tuple or an action class")
+            agent.action_history.append(action)
+            self.action_logs.append((agent.name, *action_log))
+        except Exception as e:
+            print(e)
+            print(action, agent)
 
     def execute_query(self, agent, query):
         artifact = self.map_query_to_artifact[type(query)]

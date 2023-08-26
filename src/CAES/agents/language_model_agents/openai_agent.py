@@ -1,12 +1,11 @@
-import time
-
-from src.CAES.agents.language_model_agents.language_model_agent import LanguageModelAgent
 import ast
 import openai
-import threading
 import json
-from queue import Queue
+
+
+from src.CAES.agents.language_model_agents.language_model_agent import LanguageModelAgent
 from src.CAES.background_jobs.decorators import background_task
+from src.CAES.utilities.convert_string_to_json import string_to_dict
 
 
 class OAIAgent(LanguageModelAgent):
@@ -24,24 +23,27 @@ class OAIAgent(LanguageModelAgent):
     def execute_action(self):
         self.create_ChatCompletion()
 
-        response = self.messages[-1]["content"]
-        if "\n" in response:
-            action_string = response.strip("\n")[0]
-        else:
-            action_string = response
-        action_dict = ast.literal_eval(action_string)
-        print(action_dict)
-        print(type(action_dict))
-        if action_dict["action"] == "skip":
-            pass
-        else:
-            if not isinstance(action_dict, dict):
-                action_dict["action"] = json.loads(action_dict["action"])
-        print(action_dict)
-        self.action_queue.append(action_dict)
-        return action_dict
+        try:
+            # Get the last message's content
+            response = self.messages[-1]["content"]
 
-    def complete_ChatCompletion(self):
+            # Process the response to get action_string
+            action_string = response.strip("\n").split("\n")[0]
+            action_dict = string_to_dict(action_string)
+
+            # Append the action to the action queue
+            self.action_queue.append(action_dict)
+            return action_dict
+
+        except (ValueError, SyntaxError, TypeError):
+            # This will catch errors from ast.literal_eval and any type issues
+            # Handle or log the error here if necessary
+            pass
+
+        # In case of errors, you might want to return a default action or None
+        return None
+
+    def create_ChatCompletion(self):
         response = openai.ChatCompletion.create(
             model=self.model_id,
             messages=self.messages,
@@ -53,10 +55,6 @@ class OAIAgent(LanguageModelAgent):
 
     def get_result(self):
         pass
-
-    @background_task
-    def create_ChatCompletion(self):
-        self.complete_ChatCompletion()
 
     def set_up(self):
         self.messages.append(

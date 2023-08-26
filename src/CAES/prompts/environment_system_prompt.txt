@@ -12,8 +12,8 @@ number of rounds: #!max_steps!#
 ARTIFACT DESCRIPTIONS:
 Number of artifacts in the simulationL #!num_artifacts!#
 #!artifact_descriptions!#
-ACTIONS ({action: <action parameters>, 'reason': <describe why you choose that action>}):
-{'action': 'skip' "reason": <describe why you choose that action>} (you may skip your turn if you desire)
+ACTIONS ({"action": "action_name", "action_parameters": {<action_parameters>},  "reason": <describe why you choose that action>}):
+{"action": "skip", "action_parameters": "None", "reason": "<describe why you choose that action>"} (you may skip your turn if you desire)
 #!global_actions!#
 ACTION RESTRICTIONS:
 (if the function returns False, then the action is invalid)
@@ -22,7 +22,9 @@ INVENTORY:
 #!inventory!#
 
 EXPECTATIONS:
-You will adhere to a strict response format where at the beginning of your response you will output a dictionary: {<action>: <action parameters>, "reason": <describe why you choose that action>}. Any deviation from this format will mean that you forfeit your action for the round.
+You will adhere to a strict response format where at the beginning of your response you will output a dictionary: {"action": "action_name", "action_parameters": {<action_parameters>},  "reason": <describe why you choose that action>}
+where "<action>" is a string, and {<action parameters>} is a dictionary. You MUST have an output that json.loads can read a dictionary into python.
+Any deviation from this format will mean that you forfeit your action for the round.
 
 GOAL:
 Your goal for the simulation is to end with as much capital as you possibly can.

@@ -90,7 +90,7 @@ class World:
             n_blocks: int = 10
     ):
         self.HEIGHT = int(starting_HEIGHT * 0.95)
-        self.WIDTH = int(2 * starting_WIDTH / 3)
+        self.WIDTH = int(3 * starting_WIDTH / 5)
         self.world = None
         self.grid = None
         self.environment = environment
@@ -128,7 +128,7 @@ class World:
 
     def resize(self):
         self.HEIGHT = int(dpg.get_viewport_height() * 0.95)
-        self.WIDTH = int(2 * dpg.get_viewport_width() / 3)
+        self.WIDTH = int(3 * dpg.get_viewport_width() / 5)
         dpg.set_item_width(self.world, self.WIDTH)
         dpg.set_item_height(self.world, self.HEIGHT)
         dpg.delete_item(self.grid)

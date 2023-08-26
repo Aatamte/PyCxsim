@@ -34,7 +34,7 @@ class Visualizer:
         self.HEIGHT = 1000
 
         self.agent_world_height = int(self.HEIGHT * 0.8)
-        self.agent_world_width = int(2 * self.WIDTH / 3)
+        self.agent_world_width = int(3 * self.WIDTH / 5)
 
         self.info_tab_height = self.HEIGHT
         self.info_tab_width = int(self.WIDTH / 3)
@@ -61,6 +61,7 @@ class Visualizer:
         self.last_environment_step = 0
 
         self.is_paused = True
+        self.skip_steps = 0
 
         self.show_agent_name = None
 
@@ -108,7 +109,7 @@ class Visualizer:
     def step(self, is_new_step):
         dpg.set_value(self.environment_overview_text, f"episode: {self.environment.current_episode} / {self.environment.max_episodes}\nstep: {self.environment.current_step} / {self.environment.max_steps}")
         dpg.set_value(self.environment_date, f"date: {self.environment.calender.current_date}")
-        self.world.update()
+        self.update()
 
         if is_new_step:
             for name, artifact_tab in artifact_tabs.items():
@@ -205,21 +206,23 @@ class Visualizer:
 
     def update(self):
         self.world.update()
+        self.top_panel.update()
 
     def resize(self):
         self.WIDTH = dpg.get_viewport_width()
         self.HEIGHT = dpg.get_viewport_height()
 
         self.info_tab_height = self.HEIGHT
-        self.info_tab_width = int(self.WIDTH / 3)
+        self.info_tab_width = int(2 * self.WIDTH / 5)
 
         dpg.set_item_width(self.info, self.info_tab_width)
         dpg.set_item_height(self.info, self.info_tab_height)
 
-        dpg.set_item_pos(self.info, [int(2 * self.WIDTH / 3), 0])
+        dpg.set_item_pos(self.info, [int(3 * self.WIDTH / 5), 0])
 
         self.world.resize()
         self.top_panel.resize()
+        self.agent_overview.resize()
 
     def start(self):
         self.top_panel.create()

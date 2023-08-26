@@ -1,5 +1,6 @@
 import dearpygui.dearpygui as dpg
 
+
 color_dict = {
     'red': (255, 0, 0),
     'green': (0, 255, 0),
@@ -40,6 +41,9 @@ class AgentOverview:
             "inventory": self.inventory_viz,
             "params": self.parameter_viz
         }
+
+    def resize(self):
+        self.message_box.resize()
 
     def change_agent(self, sender, new_agent_name):
         self.agent_name = new_agent_name
@@ -102,6 +106,9 @@ class ActionHistoryVisualization:
             self.action_history_uid.append([dpg.generate_uuid(), dpg.generate_uuid(), dpg.generate_uuid()])
 
         self.rows_uuids = []
+
+    def resize(self):
+        pass
 
     def update(self, agent):
         self.agent = agent
@@ -198,9 +205,16 @@ class MessageBox:
 
         self.window = None
 
+        self.wrap_size = 350
+
     def update(self, agent):
         self.agent = agent
         self.redraw_everything()
+
+    def resize(self):
+        self.wrap_size = int((2 * dpg.get_viewport_width() / 5) * 0.8)
+        if self.existing_messages:
+            self.redraw_everything()
 
     def redraw_everything(self):
         dpg.delete_item(self.input_text)
@@ -225,8 +239,8 @@ class MessageBox:
                 message["content"],
                 indent=indent,
                 parent=self.window,
-                wrap=350,
-                color = color
+                wrap=self.wrap_size,
+                color=color
                 #pos=(10 + indent, idx * 25)
             )
             self.existing_messages.append(new_message)
@@ -240,7 +254,7 @@ class MessageBox:
             on_enter=True,
             parent=self.window,
         )
-        self.send_hint = dpg.add_text("CTRL + ENTER to send message", parent=self.window)
+        self.send_hint = dpg.add_text("CTRL + ENTER to send message\n\n\n\n\n\n", parent=self.window)
 
     def set_show(self, value):
         self.show = value

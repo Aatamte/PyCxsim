@@ -74,6 +74,7 @@ class Environment:
         self.max_episodes = 1
 
         # artifacts
+        self.n_artifacts = 0
         self.artifact_controller = ArtifactController(self)
         self.calender = Calender()
         self.item_generator = ItemGenerator
@@ -212,6 +213,7 @@ class Environment:
         # assert that all artifacts have necessary functionality
         self.validate_artifacts()
 
+        self.n_artifacts = len(self.artifact_controller.artifacts)
         # give agents the system prompt
 
         self.reset()
@@ -252,10 +254,17 @@ class Environment:
 
     def step(self) -> [np.ndarray, list, list]:
         if self.visualization:
-            while (time.perf_counter() - self._current_time <= self.step_delay) or (self.visualizer.is_paused):
-                self.visualizer.step(False)
-            else:
+            if self.visualizer.skip_steps > 0:
+                self.visualizer.skip_steps -= 1
                 self.visualizer.step(True)
+            else:
+                while (time.perf_counter() - self._current_time <= self.step_delay) or self.visualizer.is_paused:
+                    self.visualizer.step(False)
+                    if self.visualizer.skip_steps != 0:
+                        self.visualizer.skip_steps -= 1
+                        break
+                else:
+                    self.visualizer.step(True)
 
         self._current_time = time.perf_counter()
 
@@ -277,14 +286,14 @@ class Environment:
             # agent chooses action based on the observation
             agent.execute_action()
 
-            self.visualizer.running_background_tasks()
+        self.visualizer.running_background_tasks()
 
+        for agent in self.agents:
             action = agent.action_queue.pop(0)
-
+            print(action)
             # process logic for the action
             self.artifact_controller.execute_action(agent, action)
 
-        for agent in self.agents:
             agent.step()
 
         self.artifact_controller.step()
