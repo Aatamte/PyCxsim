@@ -273,7 +273,6 @@ class Environment:
 
             # append observation to the agents messages
             agent.messages.append({"role": "user", "content": observation_prompt.content})
-            print(agent.messages)
 
             # agent chooses action based on the observation
             agent.execute_action()
@@ -281,7 +280,6 @@ class Environment:
             self.visualizer.running_background_tasks()
 
             action = agent.action_queue.pop(0)
-            print(action)
 
             # process logic for the action
             self.artifact_controller.execute_action(agent, action)
