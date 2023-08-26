@@ -32,7 +32,7 @@ class Order:
 
     @staticmethod
     def create_prompt():
-        return """{"action": "Order", "action_parameters": {"good": <str>, "price": <int>, "price": <int>}"""
+        return """{"action": "Order", "action_parameters": {"good": <str>, "price": <int>, "quantity": <int> for buy order, -<int> for sell order}"""
 
     @staticmethod
     def get_name():
@@ -280,7 +280,7 @@ class Marketplace(Artifact):
 
     def set_up(self):
         self.system_prompt = Prompt(
-            f"""This is a marketplace where agents can buy and sell goods. A positive quantity represents a buy order, while a negative quantity represents a sell order."""
+            f"""This is a marketplace where agents can buy and sell goods. A positive quantity represents a buy order, while a negative quantity represents a sell order. If there are no other orders in the marketplace, you are required to submit an order (you may choose parameters that are unrealistic, but valid)"""
         )
 
     def reset(self, environment):

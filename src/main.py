@@ -5,8 +5,6 @@ from CAES import OAIAgent
 import openai
 import os
 
-import asyncio
-
 
 class MyAgent(OAIAgent):
     def __init__(self):
@@ -15,23 +13,18 @@ class MyAgent(OAIAgent):
             "capital": 10000,
             "socks": 10,
         }
+        self.params["max_price"] = 10
 
     def execute_query(self):
         return Query()
 
 
-def buy_restriction(order: Order):
-    if order.quantity <= 0:
-        return True
-    else:
-        return False
+def buy_restriction(agent, order: Order):
+    assert order.quantity <= 0
 
 
-def sell_restriction(order: Order):
-    if order.quantity >= 0:
-        return True
-    else:
-        return False
+def sell_restriction(agent, order: Order):
+    assert order.quantity >= 0
 
 
 if __name__ == '__main__':
@@ -58,17 +51,9 @@ if __name__ == '__main__':
         )
     ]
 
-    buyer_population = Population(
-        agent=MyAgent(),
-        number_of_agents=1,
-        action_restrictions=buyer_restrictions
-    )
+    buyer_population = Population(agent=MyAgent(), number_of_agents=5, action_restrictions=buyer_restrictions)
 
-    seller_population = Population(
-        agent=MyAgent(),
-        number_of_agents=1,
-        action_restrictions=seller_restrictions
-    )
+    seller_population = Population(agent=MyAgent(), number_of_agents=5, action_restrictions=seller_restrictions)
 
     env.add(buyer_population)
     env.add(seller_population)
@@ -88,6 +73,6 @@ if __name__ == '__main__':
     print(env.action_space, env.query_space)
 
     for step in env.iter_steps():
-        print(step)
+        print(env.agents)
         env.step()
 

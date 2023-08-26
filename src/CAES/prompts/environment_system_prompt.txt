@@ -16,7 +16,7 @@ ACTIONS ({"action": "action_name", "action_parameters": {<action_parameters>},  
 {"action": "skip", "action_parameters": "None", "reason": "<describe why you choose that action>"} (you may skip your turn if you desire)
 #!global_actions!#
 ACTION RESTRICTIONS:
-(if the function returns False, then the action is invalid)
+(function must not hit any assertions)
 #!action_restrictions!#
 INVENTORY:
 #!inventory!#

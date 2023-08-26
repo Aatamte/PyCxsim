@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import importlib_resources
 import copy
+import inspect
 
 # Open the file (replace 'your_package_name' with the actual name of your package)
 with importlib_resources.open_text('src.CAES.prompts', 'environment_system_prompt.txt') as file:
@@ -65,7 +66,13 @@ class SystemPrompt:
         self.content = self.content.replace("#!inventory!#", inventory)
 
     def set_action_restrictions(self, restrictions):
-        self.content = self.content.replace("#!action_restrictions!#", restrictions)
+        restriction_string = ""
+        for idx, (name, restriction_list) in enumerate(restrictions.items()):
+            restriction_string += f"{name.__name__}: " + "[" + "\n"
+            for rest in restriction_list:
+                restriction_string += str(inspect.getsource(rest))
+            restriction_string += "]"
+        self.content = self.content.replace("#!action_restrictions!#", restriction_string)
 
     def set_num_artifacts(self, num_artifacts):
         self.content = self.content.replace("#!num_artifacts!#", num_artifacts)
@@ -81,8 +88,6 @@ class SystemPrompt:
         global_action_string = ""
         for action in self.global_actions:
             global_action_string += str({"action": action, "reason": "<reason for action>"}) + "\n"
-
-        global_action_string += "None: {None}"
 
         self.content = self.content.replace("#!global_actions!#", global_action_string)
 

@@ -193,7 +193,7 @@ class Environment:
 
             agent_system_prompt.set_starting_inventory(str(agent.starting_inventory))
 
-            agent_system_prompt.set_action_restrictions(str(agent.action_restrictions))
+            agent_system_prompt.set_action_restrictions(agent.action_restrictions)
 
             agent_system_prompt.set_environment_information(str(len(self.agents)), str(self.max_steps))
 
@@ -292,7 +292,7 @@ class Environment:
             action = agent.action_queue.pop(0)
             print(action)
             # process logic for the action
-            self.artifact_controller.execute_action(agent, action)
+            self.artifact_controller.process_action(agent, action)
 
             agent.step()
 
@@ -350,15 +350,6 @@ Step: {self.current_step} / {self.max_steps}
 """
 
 
-def env_to_dict(env: Environment):
-    return {
-        "step": env.current_step,
-        "max_steps": env.max_steps,
-        "episode": env.current_episode,
-        "max_episodes": env.max_episodes,
-    }
-
-
 class RecordedEnvironment:
     def __init__(self, filename):
         self.file = h5py.File(filename, 'w')
@@ -405,8 +396,10 @@ class RecordedEnvironment:
             f.visititems(print_attrs)
 
 
+
+
 if __name__ == '__main__':
     # Initialize environment
-    env = Environment(enable_visualization=False)
+    env = Environment(visualization=False)
 
     env.run()

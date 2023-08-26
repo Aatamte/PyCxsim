@@ -11,6 +11,10 @@ class MarketplaceTab(Tab):
         self.current_market = None
         self.window = None
 
+        self.current_market_info = None
+        self.market_history = dpg.generate_uuid()
+        self.text = None
+
         self.best_bid_plot = []
         self.best_ask_plot = []
 
@@ -19,7 +23,8 @@ class MarketplaceTab(Tab):
         dpg.set_value(self.best_ask, [[n for n in range(len(self.best_ask_plot))], self.best_ask_plot])
         dpg.fit_axis_data("y_axis")
         dpg.fit_axis_data("x_axis")
-        dpg.set_value(self.text, str("hello"))
+        dpg.set_value(self.text, self.marketplace[self.current_market])
+        dpg.set_value(self.market_history, self.marketplace[self.current_market].history)
 
     def get_window(self):
         return self.window
@@ -32,6 +37,8 @@ class MarketplaceTab(Tab):
         self.current_market = data
         self.best_bid_plot = self.marketplace[data].best_bid_history
         self.best_ask_plot = self.marketplace[data].best_ask_history
+        #self.text = self.marketplace[data]
+        print(self.text)
 
     def draw(self):
         self.current_market = list(self.marketplace.markets.keys())[0]
@@ -61,6 +68,8 @@ class MarketplaceTab(Tab):
                 )
 
             self.text = dpg.add_text("", wrap=300)
+
+            self.market_history = dpg.add_text("", wrap=450)
 
     def reset(self, env):
         self.environment = env

@@ -1,9 +1,8 @@
-from collections import deque
 from dataclasses import dataclass
 import numpy as np
 from typing import Union
 from copy import deepcopy
-import inspect
+from src.CAES.actions.action_restrictions import ActionRestriction
 
 
 @dataclass
@@ -25,27 +24,6 @@ def pre_process_action(pre_process_func):
             return select_action_func(self, *args, **kwargs)
         return wrapper
     return decorator
-
-
-class ActionRestriction:
-    def __init__(
-            self,
-            action,
-            func: callable,
-            message_to_agent_on_trigger: str = None,
-            inform_agent_and_retry_action: bool = True,
-            max_retries: int = 3
-    ):
-        self.action = action
-        self.inform_agent_and_retry = inform_agent_and_retry_action
-        self.restriction_function = func
-        self.max_retries = max_retries
-        self.message_to_agent_on_trigger = message_to_agent_on_trigger
-
-        self.current_retries = 0
-
-    def __repr__(self):
-        return str(inspect.getsource(self.restriction_function))
 
 
 class Agent:
@@ -147,7 +125,10 @@ class Agent:
 
     def add(self, item):
         if isinstance(item, ActionRestriction):
-            self.action_restrictions.append()
+            if item.action in self.action_restrictions:
+                self.action_restrictions[item.action].append(item.restriction_function)
+            else:
+                self.action_restrictions[item.action] = [item.restriction_function]
 
     def __iadd__(self, other: Item):
         if not isinstance(other, Item):

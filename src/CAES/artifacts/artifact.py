@@ -84,11 +84,12 @@ class ArtifactController:
         for artifact_name, artifact in self.artifacts.items():
             artifact.set_up()
 
-    def execute_action(self, agent, action):
+    def process_action(self, agent, action):
         action_log = [self.environment.current_step, None, None]
         try:
             if action["action"] == "skip":
                 action = None
+
             elif action["action"] in self.action_lookup.keys():
                 action = self.action_lookup[action["action"]](**action["action_parameters"], agent=agent)
                 print(action)

@@ -25,7 +25,9 @@ class Population:
                 agent.params = self.params
 
             if self.action_restrictions:
-                agent.action_restrictions = self.action_restrictions
+                for action_restriction in self.action_restrictions:
+
+                    agent.add(action_restriction)
 
             if self.query_restrictions:
                 agent.query_restrictions = self.query_restrictions

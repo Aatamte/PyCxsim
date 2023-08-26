@@ -189,9 +189,11 @@ class World:
 
             text_size = int(self.block_size_x * 0.2)
 
+            agent_name_length = len(agent.name)
+
             dpg.draw_text(
                 text=agent.name,
-                pos=(int(x - (self.block_size_x / 2)), y),
+                pos=(int(x - (self.block_size_x / 3)), int(y - (self.block_size_x / 10))),
                 color=[0, 0, 0],
                 size=text_size
             )

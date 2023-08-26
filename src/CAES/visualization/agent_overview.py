@@ -209,16 +209,18 @@ class MessageBox:
 
     def update(self, agent):
         self.agent = agent
-        self.redraw_everything()
+        self.redraw_everything(True)
 
     def resize(self):
         self.wrap_size = int((2 * dpg.get_viewport_width() / 5) * 0.8)
         if self.existing_messages:
-            self.redraw_everything()
+            self.redraw_everything(True)
 
-    def redraw_everything(self):
-        dpg.delete_item(self.input_text)
-        dpg.delete_item(self.send_hint)
+    def redraw_everything(self, include_input_text):
+        if include_input_text:
+            dpg.delete_item(self.input_text)
+            dpg.delete_item(self.send_hint)
+
         self.last_agent = self.agent
         for message in self.existing_messages:
             dpg.delete_item(message)
@@ -244,17 +246,17 @@ class MessageBox:
                 #pos=(10 + indent, idx * 25)
             )
             self.existing_messages.append(new_message)
-
-        self.input_text = dpg.add_input_text(
-            label="",
-            multiline=True,
-            default_value="",
-            hint="chat with agent...",
-            callback=self.send_message_to_agent,
-            on_enter=True,
-            parent=self.window,
-        )
-        self.send_hint = dpg.add_text("CTRL + ENTER to send message\n\n\n\n\n\n", parent=self.window)
+        if include_input_text:
+            self.input_text = dpg.add_input_text(
+                label="",
+                multiline=True,
+                default_value="",
+                hint="chat with agent...",
+                callback=self.send_message_to_agent,
+                on_enter=True,
+                parent=self.window,
+            )
+            self.send_hint = dpg.add_text("CTRL + ENTER to send message\n\n\n\n\n\n", parent=self.window)
 
     def set_show(self, value):
         self.show = value
@@ -280,7 +282,7 @@ class MessageBox:
             }
         )
         self.agent.create_ChatCompletion()
-        self.redraw_everything()
+        self.redraw_everything(True)
 
     def add_agent_message(self, message: str):
         pass

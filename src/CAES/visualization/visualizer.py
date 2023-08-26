@@ -110,12 +110,9 @@ class Visualizer:
         dpg.set_value(self.environment_overview_text, f"episode: {self.environment.current_episode} / {self.environment.max_episodes}\nstep: {self.environment.current_step} / {self.environment.max_steps}")
         dpg.set_value(self.environment_date, f"date: {self.environment.calender.current_date}")
         self.update()
-
-        if is_new_step:
-            for name, artifact_tab in artifact_tabs.items():
-                artifact_tab.step()
-            self.agent_overview.update()
-
+        self.agent_overview.update()
+        for name, artifact_tab in artifact_tabs.items():
+            artifact_tab.step()
         dpg.render_dearpygui_frame()
 
     def is_running(self):
@@ -148,10 +145,7 @@ class Visualizer:
         elif sender == "show_logs":
             self.switch_tab(self.current_tab, self.env_logs)
         elif sender == "agent_overview":
-            if self.current_tab:
-                dpg.hide_item(self.current_tab)
-            self.agent_overview.set_show(True)
-            self.current_tab = self.agent_overview
+            self.switch_tab(self.current_tab, self.agent_overview)
         elif sender in artifact_tabs.keys():
             self.switch_tab(self.current_tab, artifact_tabs[sender].get_window())
 
@@ -162,7 +156,10 @@ class Visualizer:
         elif previous_tab:
             dpg.hide_item(previous_tab)
 
-        dpg.show_item(next_tab)
+        if next_tab == self.agent_overview:
+            self.agent_overview.set_show(True)
+        else:
+            dpg.show_item(next_tab)
 
         self.current_tab = next_tab
 
@@ -182,12 +179,14 @@ class Visualizer:
             with dpg.menu_bar(label="Information menu bar"):
                 with dpg.menu(label="Environment"):
                     dpg.add_menu_item(label="Overview", tag="show_overview", callback=self.show_callback)
-                    dpg.add_menu_item(label="Agents", tag="agent_overview", callback=self.show_callback)
                     dpg.add_menu_item(label="logs", tag="show_logs", callback=self.show_callback)
+
+                dpg.add_menu_item(label="Agents", tag="agent_overview", callback=self.show_callback)
 
                 with dpg.menu(label="Artifacts"):
                     for artifact_name in self.artifact_names:
                         dpg.add_menu_item(label=artifact_name, tag=artifact_name, callback=self.show_callback)
+
                 dpg.add_menu_item(label="Settings")
 
             self.draw_environment_overview()
@@ -207,6 +206,7 @@ class Visualizer:
     def update(self):
         self.world.update()
         self.top_panel.update()
+        #self.agent_overview.update()
 
     def resize(self):
         self.WIDTH = dpg.get_viewport_width()
