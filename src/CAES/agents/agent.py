@@ -17,15 +17,6 @@ class Trade:
     item_two: Item
 
 
-def pre_process_action(pre_process_func):
-    def decorator(select_action_func):
-        def wrapper(self, *args, **kwargs):
-            pre_process_func(self, *args, **kwargs)
-            return select_action_func(self, *args, **kwargs)
-        return wrapper
-    return decorator
-
-
 class Agent:
     """
     Agent represents the lowest-level abstraction in Agent Based Modeling (ABM)
