@@ -1,9 +1,12 @@
+import time
+
 from src.CAES.agents.language_model_agents.language_model_agent import LanguageModelAgent
 import ast
 import openai
 import threading
 import json
 from queue import Queue
+from src.CAES.background_jobs.decorators import background_task
 
 
 class OAIAgent(LanguageModelAgent):
@@ -15,8 +18,12 @@ class OAIAgent(LanguageModelAgent):
         self.model_id = model_id
         self.language_model_logs = []
 
+        self.action_queue = []
+
+    @background_task
     def execute_action(self):
         self.create_ChatCompletion()
+
         response = self.messages[-1]["content"]
         if "\n" in response:
             action_string = response.strip("\n")[0]
@@ -31,6 +38,7 @@ class OAIAgent(LanguageModelAgent):
             if not isinstance(action_dict, dict):
                 action_dict["action"] = json.loads(action_dict["action"])
         print(action_dict)
+        self.action_queue.append(action_dict)
         return action_dict
 
     def complete_ChatCompletion(self):
@@ -46,6 +54,7 @@ class OAIAgent(LanguageModelAgent):
     def get_result(self):
         pass
 
+    @background_task
     def create_ChatCompletion(self):
         self.complete_ChatCompletion()
 

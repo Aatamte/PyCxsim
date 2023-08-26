@@ -3,11 +3,11 @@ import importlib_resources
 import copy
 
 # Open the file (replace 'your_package_name' with the actual name of your package)
-with importlib_resources.open_text('CAES.prompts', 'environment_system_prompt.txt') as file:
+with importlib_resources.open_text('src.CAES.prompts', 'environment_system_prompt.txt') as file:
     system_prompt = file.read()
 
 # Open the file (replace 'your_package_name' with the actual name of your package)
-with importlib_resources.open_text('CAES.prompts', 'observation_template_prompt.txt') as file:
+with importlib_resources.open_text('src.CAES.prompts', 'observation_template_prompt.txt') as file:
     observation_prompt = file.read()
 
 

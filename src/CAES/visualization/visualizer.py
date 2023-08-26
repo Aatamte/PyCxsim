@@ -3,6 +3,7 @@ from src.CAES.visualization.tabs.market_tab import MarketplaceTab
 from src.CAES.visualization.agent_overview import AgentOverview
 from src.CAES.visualization.worldview import World
 from src.CAES.visualization.top_panel import TopPanel
+from src.CAES.background_jobs.job_manager import JobManager
 
 dpg.create_context()
 
@@ -73,6 +74,11 @@ class Visualizer:
         self.world = World(environment, self.WIDTH, self.HEIGHT)
         self.top_panel = TopPanel(self, environment, self.HEIGHT, self.WIDTH)
 
+        self.last_key_input = None
+
+        self.job_manager = JobManager()
+        self.background_tasks_exist = False
+
     def draw_interaction(self, source_agent, target_agent, color, tag: str = None):
         if tag is None:
             return dpg.draw_line((source_agent.x_pos, source_agent.y_pos), (target_agent.x_pos, target_agent.y_pos), color=color_dict[color])
@@ -94,6 +100,11 @@ class Visualizer:
                     print(source_agent, source_idx, target_agent, target_idx)
                     raise Warning()
 
+    def running_background_tasks(self):
+        while self.job_manager.has_background_tasks:
+            self.step(False)
+            self.job_manager.cleanup_jobs()
+
     def step(self, is_new_step):
         dpg.set_value(self.environment_overview_text, f"episode: {self.environment.current_episode} / {self.environment.max_episodes}\nstep: {self.environment.current_step} / {self.environment.max_steps}")
         dpg.set_value(self.environment_date, f"date: {self.environment.calender.current_date}")
@@ -103,10 +114,14 @@ class Visualizer:
             for name, artifact_tab in artifact_tabs.items():
                 artifact_tab.step()
             self.agent_overview.update()
+
         dpg.render_dearpygui_frame()
 
     def is_running(self):
         return dpg.is_dearpygui_running()
+
+    def input_text_callback(self, sender, app_data):
+        self.last_key_input = app_data
 
     def draw_action_logs(self):
         with dpg.child_window(label="Action Logs", show=False) as self.env_logs:
@@ -210,9 +225,6 @@ class Visualizer:
         self.top_panel.create()
         self.create_information_window()
         self.world.create()
-
-        with dpg.handler_registry():
-            pass
 
         with dpg.theme() as item_theme:
             with dpg.theme_component(dpg.mvAll):

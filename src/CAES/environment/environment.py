@@ -264,27 +264,23 @@ class Environment:
 
             # agent makes a query for information, receives an observation
             query = agent.execute_query()
-
             observation = self.artifact_controller.execute_query(agent, query)
-
             observation_prompt = ObservationPrompt()
-
             observation_prompt.set_current_step(str(self.current_step))
-
             observation_prompt.set_inventory(str(agent.display_inventory()))
-
             observation_prompt.insert_artifact_information(observation)
-
             observation_prompt.set_artifact_information()
 
             # append observation to the agents messages
             agent.messages.append({"role": "user", "content": observation_prompt.content})
-
             print(agent.messages)
 
             # agent chooses action based on the observation
-            action = agent.execute_action()
+            agent.execute_action()
 
+            self.visualizer.running_background_tasks()
+
+            action = agent.action_queue.pop(0)
             print(action)
 
             # process logic for the action
@@ -323,6 +319,7 @@ class Environment:
         return self.artifact_controller.artifacts
 
     def run(self, close_on_end: bool = True):
+        #self.visualizer.start()
         for step in self.iter_steps():
             self.step()
 

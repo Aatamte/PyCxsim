@@ -5,6 +5,8 @@ from CAES import OAIAgent
 import openai
 import os
 
+import asyncio
+
 
 class MyAgent(OAIAgent):
     def __init__(self):
@@ -85,5 +87,7 @@ if __name__ == '__main__':
 
     print(env.action_space, env.query_space)
 
-    env.run()
+    for step in env.iter_steps():
+        print(step)
+        env.step()
 
