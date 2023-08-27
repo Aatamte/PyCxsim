@@ -1,16 +1,15 @@
 import time
-import numpy as np
 import logging
-import h5py
-import names
-import random
-import dearpygui.dearpygui as dpg
 
+import numpy as np
+import names
+import dearpygui.dearpygui as dpg
 
 from src.CAES.agents.agent import Agent
 from src.CAES.agents.population import Population
 from src.CAES.artifacts.artifact import Artifact
-from src.CAES.actions.action_controller import ActionController
+from src.CAES.actions.action_handler import ActionHandler
+from src.CAES.queries.query_handler import QueryHandler
 from src.CAES.visualization.visualizer import Visualizer
 from src.CAES.environment.calander import Calender
 from src.CAES.agents.item import ItemHandler
@@ -25,18 +24,6 @@ console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(level
 
 class UnsupportedItemType(Exception):
     """Exception raised when an unsupported item is added to the environment."""
-
-
-def generate_random_adjacency_matrix(size):
-    # Generate a random adjacency matrix with values from 0 to max_line_thickness
-    adjacency_matrix = [[random.randint(0, 1) for _ in range(size)] for _ in range(size)]
-
-    # Since adjacency matrix is symmetric, we copy the lower triangle to the upper triangle
-    for i in range(size):
-        for j in range(i+1, size):
-            adjacency_matrix[i][j] = adjacency_matrix[j][i]
-
-    return adjacency_matrix
 
 
 class Environment:
@@ -86,25 +73,23 @@ class Environment:
 
         # artifacts
         self.n_artifacts = 0
-        self.artifact_controller = ActionController(self)
+        self.artifacts = []
+
+        self.action_handler = ActionHandler(self)
+        self.query_handler = QueryHandler(self)
+
         self.calender = Calender()
         self.item_handler = ItemHandler(self)
-
-        # logger
-        console_handler.setLevel(logging.CRITICAL)
-        logger.addHandler(console_handler)
-
-        self.save_to_file = save_to_file
-
-        if self.save_to_file:
-            pass
-            #self.recorder = RecordedEnvironment("env_record.hdf5")
 
         if self.visualization:
             self.visualizer = Visualizer(self)
 
         self._current_time = time.perf_counter()
         self._past_time = time.perf_counter()
+
+        # logger
+        console_handler.setLevel(logging.CRITICAL)
+        logger.addHandler(console_handler)
 
     def add_agent(self, agent: Agent):
         """
@@ -129,7 +114,8 @@ class Environment:
 
         :param artifact: An Artifact object
         """
-        self.artifact_controller.add_artifact(artifact)
+        self.action_handler.add_artifact(artifact)
+        self.query_handler.add_artifact(artifact)
 
     def add(self, item):
         """
@@ -159,18 +145,34 @@ class Environment:
             assert agent.execute_query.__code__ != Agent.execute_query.__code__, "execute_query method must be implemented by subclass"
 
     def validate_artifacts(self):
-        for name, artifact in self.artifact_controller.artifacts.items():
-            assert artifact.execute_action.__code__ != Artifact.execute_action.__code__, "execute_action method must be implemented by subclass"
+        for name, artifact in self.action_handler.artifacts.items():
+            assert artifact.set_up.__code__ != Artifact.process_query.__code__, "process_query method must be implemented by subclass"
 
-            assert artifact.execute_query.__code__ != Artifact.execute_query.__code__, "execute_query method must be implemented by subclass"
+            assert artifact.reset.__code__ != Artifact.reset.__code__, "process_query method must be implemented by subclass"
+
+            assert artifact.process_action.__code__ != Artifact.process_action.__code__, "process_action method must be implemented by subclass"
+
+            assert artifact.process_query.__code__ != Artifact.process_query.__code__, "process_query method must be implemented by subclass"
+
+            assert len(artifact.action_space) != 0, "Action space must be greater than 0"
+
+            assert len(artifact.query_space) != 0, "Query space must be greater than 0"
+
+    def _set_up_artifacts(self):
+        pass
 
     def set_up(self):
-        # go through the artifacts and set them up
+
+        # assert that all agents have necessary functionality
+        self.validate_agents()
+
+        # assert that all artifacts have necessary functionality
+        self.validate_artifacts()
 
         system_prompt = SystemPrompt()
-
-        for name, artifact in self.artifact_controller.artifacts.items():
-            artifact.set_up()
+        # go through the artifacts and set them up
+        for name, artifact in self.action_handler.artifacts.items():
+            artifact.set_up(self)
 
             self.action_space[artifact.name] = artifact.get_action_space()
 
@@ -197,7 +199,7 @@ class Environment:
 
             agent_system_prompt.set_environment_information(str(len(self.agents)), str(self.max_steps))
 
-            agent_system_prompt.set_num_artifacts(str(len(self.artifact_controller.artifacts)))
+            agent_system_prompt.set_num_artifacts(str(len(self.action_handler.artifacts)))
 
             agent_system_prompt.set_artifact_descriptions()
 
@@ -207,13 +209,7 @@ class Environment:
 
             agent.set_up()
 
-        # assert that all agents have necessary functionality
-        self.validate_agents()
-
-        # assert that all artifacts have necessary functionality
-        self.validate_artifacts()
-
-        self.n_artifacts = len(self.artifact_controller.artifacts)
+        self.n_artifacts = len(self.action_handler.artifacts)
         # give agents the system prompt
 
         self.reset()
@@ -233,7 +229,7 @@ class Environment:
             agent.reset()
 
         # reset artifacts
-        self.artifact_controller.reset(self)
+        self.action_handler.reset(self)
 
         if self.visualization:
             self.visualizer.reset(self)
@@ -249,6 +245,34 @@ class Environment:
             self.should_stop_simulation = True
 
         self.calender.step()
+
+    def process_agent_turn(self, agent):
+        # agent makes a query for information
+        query = agent.execute_query()
+
+        observation = self.query_handler.process_query(agent, query)
+
+        observation_prompt = ObservationPrompt()
+        observation_prompt.set_current_step(str(self.current_step))
+        observation_prompt.set_inventory(str(agent.display_inventory()))
+        observation_prompt.insert_artifact_information(observation)
+        observation_prompt.set_artifact_information()
+
+        # append observation to the agents messages
+        agent.messages.append({"role": "user", "content": observation_prompt.content})
+
+        # agent chooses action based on the observation
+        agent.execute_action()
+
+        # wait until background tasks are complete
+        self.visualizer.running_background_tasks()
+
+        action = agent.action_queue.pop(0)
+
+        # process logic for the action
+        self.action_handler.process_action(agent, action)
+
+        agent.step()
 
     def step(self) -> [np.ndarray, list, list]:
         if self.visualization:
@@ -268,42 +292,18 @@ class Environment:
 
         # execute actions for each agent all actions are processed
         for agent in self.agents:
+            self.process_agent_turn(agent)
 
-            # agent makes a query for information, receives an observation
-            query = agent.execute_query()
-            observation = self.artifact_controller.execute_query(agent, query)
-            observation_prompt = ObservationPrompt()
-            observation_prompt.set_current_step(str(self.current_step))
-            observation_prompt.set_inventory(str(agent.display_inventory()))
-            observation_prompt.insert_artifact_information(observation)
-            observation_prompt.set_artifact_information()
-
-            # append observation to the agents messages
-            agent.messages.append({"role": "user", "content": observation_prompt.content})
-
-            # agent chooses action based on the observation
-            agent.execute_action()
-
-        self.visualizer.running_background_tasks()
-
-        for agent in self.agents:
-            action = agent.action_queue.pop(0)
-            print(action)
-            # process logic for the action
-            self.artifact_controller.process_action(agent, action)
-
-            agent.step()
-
-        self.artifact_controller.step()
+        self.action_handler.step()
 
         # should simulation stop based on response from artifacts
-        should_continue = self.artifact_controller.should_continue()
+        should_continue = self.action_handler.should_continue()
 
         self.update_simulation_state()
         return should_continue
 
     def action_logs(self):
-        return self.artifact_controller.action_logs
+        return self.action_handler.action_logs
 
     def is_running(self):
         if self.visualization:
@@ -321,10 +321,9 @@ class Environment:
         return range(0, self.max_episodes)
 
     def list_artifacts(self):
-        return self.artifact_controller.artifacts
+        return self.action_handler.artifacts
 
     def run(self, close_on_end: bool = True):
-        #self.visualizer.start()
         for step in self.iter_steps():
             self.step()
 
@@ -342,7 +341,7 @@ f"""
 Episode: {self.current_episode} / {self.max_steps}
 Step: {self.current_step} / {self.max_steps}
                         Artifacts 
-{str(self.artifact_controller)}
+{str(self.action_handler)}
                         Agents
 {newline.join([f"{idx}. "+ str(agent.name) for idx, agent in enumerate(self.agents)])}
 """

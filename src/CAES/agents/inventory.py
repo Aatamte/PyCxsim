@@ -60,6 +60,7 @@ class Inventory:
         return past_state
 
     def get_quantity(self, item_name):
+        print(item_name, self.inventory)
         return self.inventory.get(item_name, 0)
 
     def __getitem__(self, item_name):
@@ -94,4 +95,7 @@ class Inventory:
     def get(self, item_name, default=None):
         """Mimics dictionary get method."""
         return self.inventory.get(item_name, default)
+
+    def __repr__(self):
+        return str(self.inventory)
 

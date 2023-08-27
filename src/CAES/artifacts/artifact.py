@@ -1,3 +1,11 @@
+import dataclasses
+
+
+def generate_prompt(cls):
+    fields = dataclasses.fields(cls)
+    field_strs = ", ".join([f'"{field.name}": <{field.type.__name__}>' for field in fields])
+    method_str = f'{{"action": "{cls.__name__}", "action_parameters": {{{field_strs}}}}}'
+    return method_str
 
 
 class Artifact:
@@ -14,13 +22,13 @@ class Artifact:
         self.action_space = []
         self.query_space = []
 
-    def set_up(self):
+    def set_up(self, environment):
         pass
 
-    def execute_action(self, agent, action):
+    def process_action(self, agent, action):
         pass
 
-    def execute_query(self, agent, query):
+    def process_query(self, agent, query):
         pass
 
     def step(self):
@@ -33,7 +41,7 @@ class Artifact:
         return self.action_space
 
     def get_action_space_prompt(self):
-        return [action.create_prompt() for action in self.action_space]
+        return [generate_prompt(action) for action in self.action_space]
 
     def get_query_space(self):
         return self.query_space

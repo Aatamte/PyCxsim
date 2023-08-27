@@ -76,46 +76,6 @@ class Agent:
     def set_up(self):
         pass
 
-    def trade(self, this_agents_item: tuple, other_agents_item: tuple, other_agent):
-        # Extract item details
-        this_item_name, this_item_price = this_agents_item
-        other_item_name, other_item_price = other_agents_item
-
-        # If this agent is trading an item for capital
-        if other_item_name == "capital":
-            total_cost = this_item_price * this_item_price  # Price per item multiplied by itself
-
-            # Transfer the capital from the other agent to this agent
-            for _ in range(total_cost):
-                single_capital_unit = other_agent.capital().pop(0)
-                self.inventory["capital"].append(single_capital_unit)
-
-            # Transfer a single item from this agent to the other agent
-            single_item = self.inventory[this_item_name].pop(0)
-            other_agent.__iadd__(single_item)
-
-        # If the other agent is trading an item for capital
-        elif this_item_name == "capital":
-            total_cost = other_item_price * other_item_price  # Price per item multiplied by itself
-
-            # Transfer the capital from this agent to the other agent
-            for _ in range(total_cost):
-                single_capital_unit = self.capital().pop(0)
-                other_agent.inventory["capital"].append(single_capital_unit)
-
-            # Transfer a single item from the other agent to this agent
-            single_item = other_agent.inventory[other_item_name].pop(0)
-            self.__iadd__(single_item)
-
-        # Handle non-capital trades
-        else:
-            for _ in range(this_item_price):
-                single_item = self.inventory[this_item_name].pop(0)
-                other_agent.__iadd__(single_item)
-            for _ in range(other_item_price):
-                single_item = other_agent.inventory[other_item_name].pop(0)
-                self.__iadd__(single_item)
-
     def __isub__(self, other):
         if not isinstance(other, Item):
             raise Warning("Can only add an Item class to the Agent")
@@ -163,12 +123,7 @@ class Agent:
             self.inventory[key] = value
 
     def get_amounts(self, item):
-        if item in self.inventory.keys():
-            if isinstance(self.inventory[item], int):
-                return "unverified " + str(self.inventory[item])
-            return len(self.inventory[item])
-        else:
-            return 0
+        return self.inventory.get_quantity(item)
 
     def values(self):
         return self.inventory.values()

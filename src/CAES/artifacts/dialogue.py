@@ -1,37 +1,50 @@
 import dataclasses
-from src.CAES import Artifact
+from collections import deque
+
+from src.CAES.artifacts.artifact import Artifact
+from src.CAES.prompts.prompt import Prompt
 
 
 @dataclasses.dataclass
 class Message:
-    sender: int
     recipient: int
     content: int
+
+
+@dataclasses.dataclass
+class DialogueQuery:
+    verbose: int
 
 
 class Dialogue(Artifact):
     def __init__(self):
         super().__init__("Dialogue")
         self.messages = {}
+        self.action_space = [
+            Message
+        ]
+        self.query_space = [
+            DialogueQuery
+        ]
 
-    def send_message(self, sender, recipient, content):
-        if recipient in self.messages.keys():
-            self.messages[recipient].append(Message(sender, recipient, content))
-        else:
-            self.messages[recipient] = [Message(sender, recipient, content)]
+    def reset(self, environment):
+        self.environment = environment
+        self.messages = {}
 
-    def execute(self, agent, action):
-        if isinstance(action, Message):
-            self.send_message(action.sender, action.recipient, action.content)
-        # Messages can be sent within the execute function based on agent logic
-        self.send_message(agent.name, action[0], action[1])
+    def set_up(self, environment):
+        self.environment = environment
+        for agent in self.environment.agents:
+            self.messages[agent.name] = deque()
 
+        self.system_prompt = Prompt(
+            f"""This is a marketplace where agents can buy and sell goods. A positive quantity represents a buy order, while a negative quantity represents a sell order. If there are no other orders in the marketplace, you are required to submit an order (you may choose parameters that are unrealistic, but valid)"""
+        )
 
-    def generate_observations(self, agents):
-        # The observations are the messages sent to each agent
-        messages = self.messages.copy()
-        self.messages.clear()
-        return messages
+    def process_action(self, agent, action: Message):
+        self.messages[action.recipient].push(action.content)
+
+    def process_query(self, agent, query):
+        return self.messages[agent.name]
 
 
 class Inbox:

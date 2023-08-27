@@ -2,6 +2,7 @@ from CAES import Environment, Query, Order, Marketplace
 from CAES import Population
 from CAES import ActionRestriction
 from CAES import OAIAgent
+from CAES.artifacts.dialogue import Dialogue
 import openai
 
 
@@ -27,7 +28,7 @@ def sell_restriction(agent, order: Order):
 
 
 if __name__ == '__main__':
-    openai.api_key = None
+    openai.api_key = ""
 
     env = Environment(visualization=True)
 
@@ -58,10 +59,12 @@ if __name__ == '__main__':
     env.add(seller_population)
 
     marketplace = Marketplace()
-
     env.add(marketplace)
 
-    env.step_delay = 1
+    dialogue = Dialogue()
+    env.add(dialogue)
+
+    env.step_delay = 2
 
     env.max_episodes = 1
     env.max_steps = 50

@@ -26,6 +26,7 @@ class ItemHandler:
 
     @staticmethod
     def trade(agent1, agent1_item: tuple, agent2, agent2_item: tuple):
+
         """
         Executes a trade between two agents.
         agent1_item and agent2_item are tuples in the format (item_name, quantity).
@@ -35,41 +36,41 @@ class ItemHandler:
         # Handle the case where agent1 is buying items from agent2 using capital
         if agent1_item[0] == "capital":
             total_cost = agent1_item[1] * agent2_item[1]  # price per item * number of items
-            if agent1.inventory_manager.get_quantity("capital") >= total_cost:
+            if agent1.inventory.get_quantity("capital") >= total_cost:
                 for _ in range(agent2_item[1]):
-                    item_to_trade = agent2.inventory_manager.remove_item(agent2_item[0])
+                    item_to_trade = agent2.inventory.remove_item(agent2_item[0])
                     if item_to_trade:  # Ensure the item was successfully removed
-                        agent1.inventory_manager.add_item(item_to_trade)
+                        agent1.inventory.add_item(item_to_trade)
                 # Deduct capital from agent1 and add to agent2
                 for _ in range(total_cost):
-                    capital_to_trade = agent1.inventory_manager.remove_item("capital")
+                    capital_to_trade = agent1.inventory.remove_item("capital")
                     if capital_to_trade:
-                        agent2.inventory_manager.add_item(capital_to_trade)
+                        agent2.inventory.add_item(capital_to_trade)
 
         # Handle the case where agent2 is buying items from agent1 using capital
         elif agent2_item[0] == "capital":
             total_cost = agent2_item[1] * agent1_item[1]  # price per item * number of items
-            if agent2.inventory_manager.get_quantity("capital") >= total_cost:
+            if agent2.inventory.get_quantity("capital") >= total_cost:
                 for _ in range(agent1_item[1]):
-                    item_to_trade = agent1.inventory_manager.remove_item(agent1_item[0])
+                    item_to_trade = agent1.inventory.remove_item(agent1_item[0])
                     if item_to_trade:  # Ensure the item was successfully removed
-                        agent2.inventory_manager.add_item(item_to_trade)
+                        agent2.inventory.add_item(item_to_trade)
                 # Deduct capital from agent2 and add to agent1
                 for _ in range(total_cost):
-                    capital_to_trade = agent2.inventory_manager.remove_item("capital")
+                    capital_to_trade = agent2.inventory.remove_item("capital")
                     if capital_to_trade:
-                        agent1.inventory_manager.add_item(capital_to_trade)
+                        agent1.inventory.add_item(capital_to_trade)
 
         # Handle the general case where agents are trading items
         else:
             # Transfer items from agent1 to agent2
             for _ in range(agent1_item[1]):
-                item_to_trade = agent1.inventory_manager.remove_item(agent1_item[0])
+                item_to_trade = agent1.inventory.remove_item(agent1_item[0])
                 if item_to_trade:  # Ensure the item was successfully removed
-                    agent2.inventory_manager.add_item(item_to_trade)
+                    agent2.inventory.add_item(item_to_trade)
 
             # Transfer items from agent2 to agent1
             for _ in range(agent2_item[1]):
-                item_to_trade = agent2.inventory_manager.remove_item(agent2_item[0])
+                item_to_trade = agent2.inventory.remove_item(agent2_item[0])
                 if item_to_trade:  # Ensure the item was successfully removed
-                    agent1.inventory_manager.add_item(item_to_trade)
+                    agent1.inventory.add_item(item_to_trade)

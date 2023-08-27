@@ -7,7 +7,7 @@ from typing import Union
 from src.CAES.agents.agent import Agent
 from src.CAES.artifacts.artifact import Artifact
 from src.CAES.prompts.prompt import Prompt
-from src.CAES.environment.query import Query
+from src.CAES.queries.query import Query
 from src.CAES.environment.event import Event
 
 
@@ -27,16 +27,6 @@ class Order:
     good: str
     price: int
     quantity: int
-    agent: Agent
-    id: int = None
-
-    @staticmethod
-    def create_prompt():
-        return """{"action": "Order", "action_parameters": {"good": <str>, "price": <int>, "quantity": <int> for buy order, -<int> for sell order}"""
-
-    @staticmethod
-    def get_name():
-        return "order"
 
 
 @dataclass
@@ -69,8 +59,8 @@ class OrderBook:
         # Initialize lists to hold buy and sell orders
         self.sell_orders = []
         self.buy_orders = []
-        self.highest_bid_order: Order = Order(self.product_name, -np.inf, 1, Agent())
-        self.lowest_offer_order: Order = Order(self.product_name, np.inf, -1, Agent())
+        self.highest_bid_order: Order = Order(self.product_name, -np.inf, 1)
+        self.lowest_offer_order: Order = Order(self.product_name, np.inf, -1)
         self.order_count = 0
         self.num_transactions = 0
         # store transaction history in a pandas DataFrame for easy data manipulation and analysis
@@ -86,8 +76,8 @@ class OrderBook:
         self.sell_orders = []
         self.buy_orders = []
         # Reset bid/offer orders
-        self.highest_bid_order: Order = Order(self.product_name, -np.inf, 1, Agent())
-        self.lowest_offer_order: Order = Order(self.product_name, np.inf, -1, Agent())
+        self.highest_bid_order: Order = Order(self.product_name, -np.inf, 1)
+        self.lowest_offer_order: Order = Order(self.product_name, np.inf, -1)
         # Reset counters
         self.order_count = 0
         self.num_transactions = 0
@@ -163,10 +153,11 @@ class OrderBook:
         transaction_quantity = min(abs(incoming_order.quantity), abs(book_order.quantity))
 
         if is_incoming_buy_order:
-            incoming_order.agent.trade(
+            self.environment.item_handler.trade(
+                incoming_order.agent,
                 ("capital", transaction_price),
-                (self.product_name, transaction_quantity),
-                book_order.agent
+                book_order.agent,
+                (self.product_name, transaction_quantity)
             )
 
             self.sell_orders.remove(book_order)
@@ -182,11 +173,13 @@ class OrderBook:
                 )
             )
         else:
-            incoming_order.agent.trade(
+            self.environment.item_handler.trade(
+                incoming_order.agent,
                 (self.product_name, transaction_quantity),
+                book_order.agent,
                 ("capital", transaction_price),
-                book_order.agent
             )
+
             self.buy_orders.remove(book_order)
 
             self.event_history.append(
@@ -252,7 +245,7 @@ class Marketplace(Artifact):
 
         self.query_space.append(Query)
 
-    def execute_action(self, agent, action: Union[list, Order]):
+    def process_action(self, agent, action: Union[list, Order]):
         if isinstance(action, tuple):
             market = action[0]
             self.markets[market].add(Order(market, action[1], action[2], agent))
@@ -264,7 +257,7 @@ class Marketplace(Artifact):
         else:
             raise TypeError("action should either be a ")
 
-    def execute_query(self, agent, query):
+    def process_query(self, agent, query):
         observation = ""
         for m in self.markets.values():
             observation += m.product_name + "\n"
@@ -279,7 +272,7 @@ class Marketplace(Artifact):
         for name, market in self.markets.items():
             market.step()
 
-    def set_up(self):
+    def set_up(self, environment):
         self.system_prompt = Prompt(
             f"""This is a marketplace where agents can buy and sell goods. A positive quantity represents a buy order, while a negative quantity represents a sell order. If there are no other orders in the marketplace, you are required to submit an order (you may choose parameters that are unrealistic, but valid)"""
         )

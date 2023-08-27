@@ -165,7 +165,7 @@ class Visualizer:
         self.current_tab = next_tab
 
     def create_information_window(self):
-        self.artifact_names = list(self.environment.artifact_controller.artifacts.keys())
+        self.artifact_names = list(self.environment.action_handler.artifacts.keys())
         with dpg.window(
             label="Information", tag="Info",
             height=self.info_tab_height,
