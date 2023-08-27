@@ -38,6 +38,7 @@ class Order:
     def get_name():
         return "order"
 
+
 @dataclass
 class MarketPlaceTransaction(Event):
     seller_agent: Agent

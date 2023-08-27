@@ -5,15 +5,15 @@ import h5py
 import names
 import random
 import dearpygui.dearpygui as dpg
-import multiprocessing
 
 
 from src.CAES.agents.agent import Agent
 from src.CAES.agents.population import Population
-from src.CAES.artifacts.artifact import Artifact, ArtifactController
+from src.CAES.artifacts.artifact import Artifact
+from src.CAES.actions.action_controller import ActionController
 from src.CAES.visualization.visualizer import Visualizer
 from src.CAES.environment.calander import Calender
-from src.CAES.agents.items import ItemGenerator
+from src.CAES.agents.item import ItemHandler
 from src.CAES.prompts.prompt import SystemPrompt, ObservationPrompt
 
 
@@ -73,12 +73,6 @@ class Environment:
         self.current_episode = 0
         self.max_episodes = 1
 
-        # artifacts
-        self.n_artifacts = 0
-        self.artifact_controller = ArtifactController(self)
-        self.calender = Calender()
-        self.item_generator = ItemGenerator
-
         # agent attributes
         self.agents = []
         self.agent_names = []
@@ -89,6 +83,12 @@ class Environment:
 
         self.action_space = {}
         self.query_space = {}
+
+        # artifacts
+        self.n_artifacts = 0
+        self.artifact_controller = ActionController(self)
+        self.calender = Calender()
+        self.item_handler = ItemHandler(self)
 
         # logger
         console_handler.setLevel(logging.CRITICAL)
@@ -191,7 +191,7 @@ class Environment:
 
             agent_system_prompt = system_prompt.copy()
 
-            agent_system_prompt.set_starting_inventory(str(agent.starting_inventory))
+            agent_system_prompt.set_starting_inventory(str(agent.inventory.starting_inventory))
 
             agent_system_prompt.set_action_restrictions(agent.action_restrictions)
 
@@ -238,8 +238,6 @@ class Environment:
         if self.visualization:
             self.visualizer.reset(self)
 
-        self.item_generator = ItemGenerator(self.agents)
-        self.item_generator.generate_agent_items()
         return 0
 
     def update_simulation_state(self):
@@ -348,58 +346,3 @@ Step: {self.current_step} / {self.max_steps}
                         Agents
 {newline.join([f"{idx}. "+ str(agent.name) for idx, agent in enumerate(self.agents)])}
 """
-
-
-class RecordedEnvironment:
-    def __init__(self, filename):
-        self.file = h5py.File(filename, 'w')
-
-    def save_agent(self, agent):
-        try:
-            agent_group = self.file[str(agent.id)]
-        except KeyError:
-            agent_group = self.file.create_group(str(agent.id))
-        print(agent.inventory.values())
-        print(agent.observations)
-        action_ds = agent_group.create_dataset(
-            f'{agent.name}_{len(agent_group)}',
-            data=np.array(list(agent.inventory.values())))
-        action_ds.attrs['action'] = agent.action_queue
-        for idx, item in enumerate(agent.inventory.inventory.keys()):
-            action_ds.attrs[f'item_{idx}'] = item
-
-    def save_environment(self, env):
-        try:
-            env_group = self.file["environment"]
-        except KeyError:
-            env_group = self.file.create_group("environment")
-
-        env_ds = env_group.create_group(f"env_{len(env_group)}")
-        for key, value in env_to_dict(env).items():
-            env_ds.create_dataset(key, data=value)
-
-    def save_step(self, env: Environment):
-        self.save_environment(env)
-
-    def close(self):
-        self.file.close()
-
-    def print_items(self):
-        def print_attrs(name, obj):
-            print(name)
-            for key, val in obj.attrs.items():
-                print("    %s: %s" % (key, val))
-            if isinstance(obj, h5py.Dataset):  # check if the object is a dataset
-                print("    value:", obj[()])
-
-        with h5py.File("env_record.hdf5", "r") as f:
-            f.visititems(print_attrs)
-
-
-
-
-if __name__ == '__main__':
-    # Initialize environment
-    env = Environment(visualization=False)
-
-    env.run()

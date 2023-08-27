@@ -110,7 +110,8 @@ class Visualizer:
         dpg.set_value(self.environment_overview_text, f"episode: {self.environment.current_episode} / {self.environment.max_episodes}\nstep: {self.environment.current_step} / {self.environment.max_steps}")
         dpg.set_value(self.environment_date, f"date: {self.environment.calender.current_date}")
         self.update()
-        self.agent_overview.update()
+        if is_new_step:
+            self.agent_overview.update()
         for name, artifact_tab in artifact_tabs.items():
             artifact_tab.step()
         dpg.render_dearpygui_frame()
