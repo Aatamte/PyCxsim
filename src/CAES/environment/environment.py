@@ -49,6 +49,7 @@ class Environment:
         self.verbose = verbose
         self.seed = seed
         self.visualization = visualization
+        self.start_time = None
 
         self.should_stop_simulation = False
         self.is_first_step = True
@@ -162,7 +163,7 @@ class Environment:
         pass
 
     def set_up(self):
-
+        self.start_time = time.perf_counter()
         # assert that all agents have necessary functionality
         self.validate_agents()
 
@@ -291,9 +292,14 @@ class Environment:
         self._current_time = time.perf_counter()
 
         # execute actions for each agent all actions are processed
+        num_tokens = []
         for agent in self.agents:
             self.process_agent_turn(agent)
-
+            tokens = agent.usage_statistics["total_tokens"]
+            print(tokens)
+            num_tokens.append(agent.usage_statistics["total_tokens"])
+        print(sum(num_tokens))
+        print(sum(num_tokens) / (time.perf_counter() - self.start_time) * 60)
         self.action_handler.step()
 
         # should simulation stop based on response from artifacts

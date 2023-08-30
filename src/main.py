@@ -1,3 +1,5 @@
+import os
+
 from CAES import Environment, Query, Order, Marketplace
 from CAES import Population
 from CAES import ActionRestriction
@@ -28,7 +30,7 @@ def sell_restriction(agent, order: Order):
 
 
 if __name__ == '__main__':
-    openai.api_key = ""
+    openai.api_key = os.environ["open_ai_key"]
 
     env = Environment(visualization=True)
 
@@ -61,8 +63,8 @@ if __name__ == '__main__':
     marketplace = Marketplace()
     env.add(marketplace)
 
-    dialogue = Dialogue()
-    env.add(dialogue)
+    #dialogue = Dialogue()
+    #env.add(dialogue)
 
     env.step_delay = 2
 

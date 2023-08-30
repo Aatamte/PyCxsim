@@ -1,7 +1,4 @@
-import ast
 import openai
-import json
-
 
 from src.CAES.agents.language_model_agents.language_model_agent import LanguageModelAgent
 from src.CAES.background_jobs.decorators import background_task
@@ -49,9 +46,12 @@ class OAIAgent(LanguageModelAgent):
             messages=self.messages,
             temperature=self.temperature
         )
+
         self.messages.append(
             {'role': response.choices[0].message.role, 'content': response.choices[0].message.content}
         )
+        usage = response["usage"]
+        self.usage_statistics["total_tokens"] = usage["total_tokens"]
 
     def get_result(self):
         pass

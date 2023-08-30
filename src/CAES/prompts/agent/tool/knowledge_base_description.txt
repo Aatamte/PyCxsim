@@ -1,0 +1,9 @@
+The KnowledgeBase class is a foundational tool designed to store, retrieve, modify, and manage pieces of information or facts. It offers a structured way to organize knowledge using key-value pairs. The class provides basic CRUD (Create, Read, Update, Delete) operations, allowing you to:
+
+- `add_entry(key, value)`: Store a new piece of information.
+- `get_entry(key)`: Retrieve information based on a specific key.
+- `update_entry(key, value)`: Modify existing information.
+- `delete_entry(key)`: Remove a specific piece of information.
+- `list_entries()`: List all the keys or topics available in the knowledge base.
+
+This class serves as a simple and efficient way to manage and reference knowledge, making it a valuable tool for any agent that requires access to a repository of information.

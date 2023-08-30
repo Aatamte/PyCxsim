@@ -1,0 +1,21 @@
+The `Journal` class serves as a structured repository to store, retrieve, and manage textual entries based on their titles. Key features and functionalities of this class include:
+
+- **Capacity Control**: The journal has a predefined capacity, ensuring it only holds a certain number of entries. When this capacity is exceeded, the oldest entry is automatically removed to make room for new ones.
+
+- **TF-IDF Vectorization**: The class utilizes the `TfidfVectorizer` from scikit-learn to convert titles into numerical vectors, enabling advanced text comparison techniques.
+
+- **Cosine Similarity Matching**: If a direct title match isn't found when retrieving an entry, the class employs cosine similarity to find the most similar title in the journal. This ensures that even if the exact title isn't remembered, a closely related entry can still be fetched.
+
+Methods provided by the `Journal` class are:
+
+- `add_entry(title, content)`: Adds a new entry to the journal. Raises errors if the title is empty or already exists.
+
+- `retrieve_entry(title)`: Fetches an entry based on the title. If the exact title isn't found, it returns the entry with the most similar title.
+
+- `remove_entry(title)`: Deletes an entry from the journal based on its title.
+
+- `consolidate_entries()`: A placeholder method, potentially for future enhancements to consolidate or organize entries.
+
+- `__len__()`: Returns the number of current entries in the journal.
+
+This class provides a robust way to manage a collection of textual entries, making it suitable for applications where textual data needs to be stored, retrieved, and managed efficiently.

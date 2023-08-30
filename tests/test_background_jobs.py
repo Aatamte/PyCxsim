@@ -16,6 +16,7 @@ def task_instant():
 
 # Tests
 
+
 def test_task_runs_in_background():
     start_time = time.time()
     task_sleeps()

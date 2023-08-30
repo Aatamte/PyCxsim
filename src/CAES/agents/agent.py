@@ -1,7 +1,14 @@
 from copy import deepcopy
 from src.CAES.actions.action_restrictions import ActionRestriction
-from src.CAES.agents.inventory import Inventory
 from src.CAES.agents.item import Item
+
+from src.CAES.agents.tools.tool import Tool
+
+from src.CAES.agents.features.memory.long_term_memory import LongTermMemory
+
+from src.CAES.agents.tools.knowledge_base import KnowledgeBase
+from src.CAES.agents.tools.journal import Journal
+from src.CAES.agents.features.inventory import Inventory
 
 
 class Agent:
@@ -45,6 +52,18 @@ class Agent:
         self.system_prompt = ""
 
         self.inventory = Inventory()
+
+        # agent traits
+        self.long_term_memory = LongTermMemory(100)
+
+        # agent tools
+        self.tools = {}
+
+    def add_tool(self, tool: Tool):
+        if tool.name in self.tools:
+            raise KeyError("Tool is already in the agent")
+        else:
+            self.tools[tool.name] = tool
 
     def execute_action(self):
         raise NotImplementedError("This method should be implemented by subclasses")
