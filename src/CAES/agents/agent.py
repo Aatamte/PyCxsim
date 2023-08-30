@@ -1,3 +1,4 @@
+import random
 from copy import deepcopy
 from src.CAES.actions.action_restrictions import ActionRestriction
 from src.CAES.agents.item import Item
@@ -69,7 +70,7 @@ class Agent:
         raise NotImplementedError("This method should be implemented by subclasses")
 
     def execute_query(self):
-        raise NotImplementedError("This method should be implemented by subclasses")
+        return random.choice(self.query_space)
 
     def reset(self):
         self.inventory.reset()

@@ -1,11 +1,10 @@
 import os
+import openai
 
 from CAES import Environment, Query, Order, Marketplace
 from CAES import Population
 from CAES import ActionRestriction
 from CAES import OAIAgent
-from CAES.artifacts.dialogue import Dialogue
-import openai
 
 
 class MyAgent(OAIAgent):
@@ -34,15 +33,37 @@ if __name__ == '__main__':
 
     env = Environment(visualization=True)
 
-    buyer_population = Population(agent=MyAgent(), number_of_agents=2)
+    buyer_restrictions = [
+        ActionRestriction(
+            action=Order,
+            func=buy_restriction,
+            message_to_agent_on_trigger="You are a buyer, and cannot sell goods, please have a quantity greater than or equal to 1",
+            inform_agent_and_retry_action=True,
+            max_retries=1
+        )
+    ]
 
-    seller_population = Population(agent=MyAgent(), number_of_agents=2)
+    seller_restrictions = [
+        ActionRestriction(
+            action=Order,
+            func=sell_restriction,
+            message_to_agent_on_trigger="You are a seller, and cannot buy goods",
+            inform_agent_and_retry_action=True
+        )
+    ]
+
+    buyer_population = Population(agent=MyAgent(), number_of_agents=2, action_restrictions=buyer_restrictions)
+
+    seller_population = Population(agent=MyAgent(), number_of_agents=2, action_restrictions=seller_restrictions)
 
     env.add(buyer_population)
     env.add(seller_population)
 
     marketplace = Marketplace()
     env.add(marketplace)
+
+    #dialogue = Dialogue()
+    #env.add(dialogue)
 
     env.step_delay = 2
 

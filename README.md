@@ -14,37 +14,55 @@ Artifact:
 # Quickstart
 
 ```Python
-from src import Environment
+import os
+import openai
+
+from CAES import Environment, Marketplace
+from CAES import Population
+from CAES import OAIAgent
+
+
+class MyAgent(OAIAgent):
+    def __init__(self):
+        super(MyAgent, self).__init__()
+        self.inventory.set_starting_inventory(
+            {"capital": 1000, "socks": 10}
+        )
+
+        self.params["max_price"] = 10
 
 if __name__ == '__main__':
-    steps = 1000
+    openai.api_key = os.environ["open_ai_key"]
 
-    # set the environment with a default environment
-    # steps is given for debug purposes for now - will change in the future
-    Env = SimpleEnvironment()
-    Env.max_timesteps = steps
+    env = Environment(visualization=True)
 
-    action_space = Env.action_space
-    state_space = Env.state_space
+    buyer_population = Population(
+        agent=MyAgent(),
+        number_of_agents=2
+    )
 
-    # using four GatheringAgents in the environment
-    agents = [GatheringAgent() for _ in range(4)]
+    seller_population = Population(
+        agent=MyAgent(),
+        number_of_agents=2
+    )
 
-    # provide the environment with the agents for rendering, random starting states, trading, etc
-    Env.set_agents(agents)
+    env.add(buyer_population)
+    env.add(seller_population)
 
-    for episode in range(100000):
-        state, info = Env.reset()
+    marketplace = Marketplace()
+    env.add(marketplace)
 
-        for i in range(steps):
-            # environment is fast - using sleep to slow it down
-            time.sleep(0.25)
+    env.step_delay = 2
 
-            actions = [agent.select_action(state) for agent in agents]
-            state, rewards, done = Env.step(actions)
+    env.max_episodes = 1
+    env.max_steps = 50
 
-            if True in done:
-                break
+    # set up the environment
+    env.set_up()
 
-        print(episode, Env.cumulative_rewards)
+    for step in env.iter_steps():
+        for agent in env.agents:
+            print(agent.inventory)
+        print(step)
+        env.step()
 ```

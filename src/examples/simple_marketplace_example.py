@@ -1,9 +1,11 @@
 import os
-import openai
 
-from CAES import Environment, Marketplace
-from CAES import Population
-from CAES import OAIAgent
+from src.CAES import Environment, Query, Order, Marketplace
+from src.CAES import Population
+from src.CAES import ActionRestriction
+from src.CAES import OAIAgent
+from src.CAES.artifacts.dialogue import Dialogue
+import openai
 
 
 class MyAgent(OAIAgent):
@@ -15,20 +17,26 @@ class MyAgent(OAIAgent):
 
         self.params["max_price"] = 10
 
+    def execute_query(self):
+        return Query()
+
+
+def buy_restriction(agent, order: Order):
+    assert order.quantity <= 0
+
+
+def sell_restriction(agent, order: Order):
+    assert order.quantity >= 0
+
+
 if __name__ == '__main__':
     openai.api_key = os.environ["open_ai_key"]
 
     env = Environment(visualization=True)
 
-    buyer_population = Population(
-        agent=MyAgent(),
-        number_of_agents=2
-    )
+    buyer_population = Population(agent=MyAgent(), number_of_agents=2)
 
-    seller_population = Population(
-        agent=MyAgent(),
-        number_of_agents=2
-    )
+    seller_population = Population(agent=MyAgent(), number_of_agents=2)
 
     env.add(buyer_population)
     env.add(seller_population)
