@@ -11,7 +11,7 @@ pip install git+https://github.com/Aatamte/CAES.git
 
 ## Overview
 
-The CAES (Complex Adaptive Economic Simulator) is a framework designed to simulate interactions between agents and artifacts within a defined environment. This document provides a high-level overview of the core components of the simulation.
+CAES (Complex Adaptive Economic Simulator) is a framework designed to simulate interactions between agents and artifacts within a defined environment. This document provides a high-level overview of the core components of the simulation.
 
 ## Components
 
