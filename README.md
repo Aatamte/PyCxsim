@@ -2,7 +2,7 @@
 
 ## Installation
 
-As the CAES package is currently in development and not yet available on PyPI, you can install it directly from the GitHub repository:
+As the CAES package is currently in development and not yet available on PyPI, you can install it directly from the GitHub repository (>=Python 3.8):
 
 ```bash
 pip install git+https://github.com/Aatamte/CAES.git
