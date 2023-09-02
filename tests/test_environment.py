@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from src.CAES import Environment, Agent, Population
-from src.CAES.environment.environment import UnsupportedItemType, Artifact, ArtifactController
+from src.caes import Environment, Agent, Population
+from src.caes.environment.environment import UnsupportedItemType, Artifact, ArtifactController
 
 
 class TestEnvironment(unittest.TestCase):

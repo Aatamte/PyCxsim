@@ -1,7 +1,7 @@
 import unittest
 import pandas as pd
-from src.CAES import Order, Agent  # Import the necessary classes
-from src.CAES.artifacts.marketplace import OrderBook
+from src.caes import Order, Agent  # Import the necessary classes
+from src.caes.artifacts.marketplace import OrderBook
 
 
 class TestOrderBook(unittest.TestCase):

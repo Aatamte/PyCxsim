@@ -2,7 +2,7 @@
 # test_string_to_dict.py
 
 import unittest
-from src.CAES.utilities.convert_string_to_json import string_to_dict  # Make sure to import your function
+from src.caes.utilities.convert_string_to_json import string_to_dict  # Make sure to import your function
 
 
 class TestStringToDict(unittest.TestCase):

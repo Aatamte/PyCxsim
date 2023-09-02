@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 import unittest
 
-from src.CAES import Population, Agent
+from src.caes import Population, Agent
 
 
 class TestPopulation(unittest.TestCase):
