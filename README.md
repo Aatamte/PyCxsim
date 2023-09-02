@@ -1,4 +1,4 @@
-# CAES Simulation Documentation
+# CAES Documentation
 
 ## Installation
 
