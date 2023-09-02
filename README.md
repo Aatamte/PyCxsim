@@ -80,7 +80,7 @@ if __name__ == '__main__':
     openai.api_key = os.environ["open_ai_key"]
 
     # Define the environment, and enable the gui
-    env = Environment(visualization=True)
+    env = Environment(gui=True)
     
     # add an agent
     env.add(MyAgent())

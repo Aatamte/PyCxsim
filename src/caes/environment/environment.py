@@ -256,7 +256,7 @@ class Environment:
 
         self.calender.step()
 
-    def process_agent_turn(self, agent):
+    def process_turn(self, agent):
         # agent makes a query for information
         query = agent.execute_query()
 
@@ -303,7 +303,7 @@ class Environment:
         # execute actions for each agent all actions are processed
         num_tokens = []
         for agent in self.agents:
-            self.process_agent_turn(agent)
+            self.process_turn(agent)
             tokens = agent.usage_statistics["total_tokens"]
             print(tokens)
             num_tokens.append(agent.usage_statistics["total_tokens"])
