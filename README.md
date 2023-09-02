@@ -16,12 +16,8 @@ The `Environment` represents the main context of the simulation where agents and
 - Facilitating interactions: It processes agent actions, queries, and ensures smooth interactions between agents and artifacts.
 
 **Core Methods**:
-- `add_agent(agent: Agent)`: Adds an agent to the environment.
-- `add_artifact(artifact: Artifact)`: Adds an artifact to the environment.
-- `validate_agents()`: Ensures that all agents in the environment adhere to the required interface.
-- `validate_artifacts()`: Ensures that all artifacts in the environment adhere to the required interface.
-- `process_agent_turn(agent: Agent)`: Processes the actions and queries of a given agent during its turn.
-- `run(close_on_end: bool = True)`: Initiates and controls the main simulation loop, processing each agent's turn in sequence.
+- `process_turn(agent: Agent)`: Processes the actions and queries of a given agent during its turn.
+
 
 ### 2. Artifact
 
@@ -33,12 +29,9 @@ The `Artifact` represents objects or entities within the simulation that agents 
 - Providing interaction interfaces: Artifacts define the actions that can be performed on them and the queries that can retrieve information about them.
 
 **Core Methods**:
-- `set_up(environment)`: Initializes the artifact within the given environment.
 - `process_action(agent: Agent, action)`: Processes an action performed by an agent on the artifact.
 - `process_query(agent: Agent, query)`: Processes a query made by an agent about the artifact.
 - `step()`: Executes a step or update for the artifact, potentially changing its state or triggering events.
-- `get_action_space()`: Retrieves the set of actions that can be performed on the artifact.
-- `get_query_space()`: Retrieves the set of queries that can be made about the artifact.
 
 ### 3. Agent
 
@@ -50,11 +43,9 @@ The `Agent` represents individual actors in the simulation. They can perform act
 - Interacting with the environment and artifacts: Agents can perform actions on artifacts, make queries, and process observations.
 
 **Core Methods**:
-- `add_tool(tool: Tool)`: Adds a tool or utility to the agent's set of tools.
 - `execute_action()`: Determines and performs an action based on the agent's state, observations, and strategy.
 - `execute_query()`: Determines and makes a query based on the agent's state and observations.
-- `observe()`: Processes observations from the environment or artifacts, updating the agent's state or knowledge.
-- `display()`: Provides a summary or representation of the agent's current state or status.
+
 # Quickstart
 
 ```Python
