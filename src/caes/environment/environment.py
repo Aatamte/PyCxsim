@@ -41,11 +41,9 @@ class Environment:
     def __init__(
         self,
         name: str = "default environment",
-        visualization: bool = False,
-        save_to_file: bool = False,
+        gui: bool = False,
         verbose: int = 0,
         seed: int = None,
-        log: bool = False
     ):
         """
         Initialize the environment.
@@ -59,7 +57,7 @@ class Environment:
         self.name = name
         self.verbose = verbose
         self.seed = seed
-        self.visualization = visualization
+        self.gui = gui
         self.start_time = None
 
         self.should_stop_simulation = False
@@ -93,7 +91,7 @@ class Environment:
         self.calender = Calender()
         self.item_handler = ItemHandler(self)
 
-        if self.visualization:
+        if self.gui:
             self.visualizer = Visualizer(self)
 
         self._current_time = time.perf_counter()
@@ -243,7 +241,7 @@ class Environment:
         # reset artifacts
         self.action_handler.reset(self)
 
-        if self.visualization:
+        if self.gui:
             self.visualizer.reset(self)
 
         return 0
@@ -287,7 +285,7 @@ class Environment:
         agent.step()
 
     def step(self) -> [np.ndarray, list, list]:
-        if self.visualization:
+        if self.gui:
             if self.visualizer.skip_steps > 0:
                 self.visualizer.skip_steps -= 1
                 self.visualizer.step(True)
@@ -323,7 +321,7 @@ class Environment:
         return self.action_handler.action_logs
 
     def is_running(self):
-        if self.visualization:
+        if self.gui:
             if self.should_stop_simulation:
                 del self.visualizer
                 return False

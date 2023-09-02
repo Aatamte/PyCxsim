@@ -79,7 +79,7 @@ class MyAgent(OAIAgent):
 if __name__ == '__main__':
     openai.api_key = os.environ["open_ai_key"]
 
-    # Define the environment
+    # Define the environment, and enable the gui
     env = Environment(visualization=True)
     
     # add an agent
