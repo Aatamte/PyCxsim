@@ -27,6 +27,17 @@ class UnsupportedItemType(Exception):
 
 
 class Environment:
+    """
+    Represents the simulation environment, managing agents, artifacts, actions, and the overall state.
+
+    Attributes:
+        name (str): Name of the environment.
+        verbose (int): Verbosity level.
+        seed (int): Seed for random number generation.
+        visualization (bool): Whether to visualize the environment.
+        start_time (float): Start time of the simulation.
+        ... [other attributes]
+    """
     def __init__(
         self,
         name: str = "default environment",
@@ -39,11 +50,11 @@ class Environment:
         """
         Initialize the environment.
 
-        :param name: Name of the environment
-        :param record_environment: Whether to record the environment
-        :param verbose: Verbosity level
-        :param seed: Seed for random number generation
-        :param filename: Name of the file to record the environment
+        :param name: Name of the environment.
+        :param visualization: Whether to visualize the environment.
+        :param verbose: Verbosity level.
+        :param seed: Seed for random number generation.
+        ... [other parameters]
         """
         self.name = name
         self.verbose = verbose

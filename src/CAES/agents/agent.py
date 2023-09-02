@@ -1,12 +1,12 @@
 import random
 from copy import deepcopy
+from abc import ABC, abstractmethod
+
 from src.CAES.actions.action_restrictions import ActionRestriction
 from src.CAES.agents.item import Item
 
 from src.CAES.agents.tools.tool import Tool
-
 from src.CAES.agents.features.memory.long_term_memory import LongTermMemory
-
 from src.CAES.agents.tools.knowledge_base import KnowledgeBase
 from src.CAES.agents.tools.journal import Journal
 from src.CAES.agents.features.inventory import Inventory
@@ -14,11 +14,31 @@ from src.CAES.agents.features.inventory import Inventory
 
 class Agent:
     """
-    Agent represents the lowest-level abstraction in Agent Based Modeling (ABM)
+    Represents an individual agent in the simulation, encapsulating attributes, behaviors, tools, and interactions.
 
-    :param name: name of the agent
+    Attributes:
+        name (str): Name of the agent.
+        id (int): Unique identifier for the agent, initialized by the environment class.
+        x_pos, y_pos (int): Positional coordinates of the agent.
+        color (tuple): RGB color representation of the agent.
+        role: Role or type of the agent.
+        observations (list): List of observations made by the agent.
+        messages (list): Messages received or sent by the agent.
+        params (dict): Parameters or settings specific to the agent.
+        action_history (list): Record of past actions taken by the agent.
+        action_restrictions, query_restrictions (dict): Restrictions on actions and queries.
+        action_space, query_space (dict): Available actions and queries for the agent.
+        system_prompt (str): Prompt or message from the system.
+        inventory (Inventory): Inventory of items held by the agent.
+        long_term_memory (LongTermMemory): Long-term memory storage of the agent.
+        tools (dict): Tools or utilities available to the agent.
     """
     def __init__(self, name: str = "default"):
+        """
+        Initialize an agent with a given name and default attributes.
+
+        :param name: Name of the agent.
+        """
         self.name = name
         self.id = None  # None, initialized before the first episode by the environment class
         self.x_pos = None
@@ -61,15 +81,32 @@ class Agent:
         self.tools = {}
 
     def add_tool(self, tool: Tool):
+        """
+        Add a tool to the agent's collection of tools.
+
+        :param tool: Tool object to be added.
+        :raises KeyError: If the tool is already present.
+        """
         if tool.name in self.tools:
             raise KeyError("Tool is already in the agent")
         else:
             self.tools[tool.name] = tool
 
+    @abstractmethod
     def execute_action(self):
+        """
+        Execute an action by the agent.
+        This method should be implemented by subclasses.
+        """
         raise NotImplementedError("This method should be implemented by subclasses")
 
+    @abstractmethod
     def execute_query(self):
+        """
+        Execute a query and return a random choice from the query space.
+
+        :return: A random query from the query space.
+        """
         return random.choice(self.query_space)
 
     def reset(self):
