@@ -1,9 +1,9 @@
 import os
-
-from src.CAES import Environment, Query, Order, Marketplace
-from src.CAES import Population
-from src.CAES import OAIAgent
 import openai
+
+from src.CAES import Environment
+from src.CAES.agents import OAIAgent, Population
+from src.CAES.artifacts import Marketplace
 
 
 class MyAgent(OAIAgent):
@@ -15,9 +15,6 @@ class MyAgent(OAIAgent):
 
         self.params["max_price"] = 10
 
-    def execute_query(self):
-        return Query()
-
 
 def buy_restriction(agent, order: Order):
     assert order.quantity <= 0
@@ -25,6 +22,7 @@ def buy_restriction(agent, order: Order):
 
 def sell_restriction(agent, order: Order):
     assert order.quantity >= 0
+
 
 if __name__ == '__main__':
     openai.api_key = os.environ["open_ai_key"]

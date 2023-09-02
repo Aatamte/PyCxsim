@@ -1,5 +1,14 @@
 # CAES Simulation Documentation
 
+## Installation
+
+As the CAES package is currently in development and not yet available on PyPI, you can install it directly from the GitHub repository:
+
+```bash
+pip install git+https://github.com/Aatamte/CAES.git
+```
+
+
 ## Overview
 
 The CAES (Complex Adaptive Economic Simulator) is a framework designed to simulate interactions between agents and artifacts within a defined environment. This document provides a high-level overview of the core components of the simulation.
@@ -61,10 +70,11 @@ class MyAgent(OAIAgent):
     def __init__(self):
         super(MyAgent, self).__init__()
         self.inventory.set_starting_inventory(
-            {"capital": 1000, "socks": 10}
+            {
+                "capital": 1000, 
+                "socks": 10
+            }
         )
-
-        self.params["max_price"] = 10
 
 if __name__ == '__main__':
     openai.api_key = os.environ["open_ai_key"]
