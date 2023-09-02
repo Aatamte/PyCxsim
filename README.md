@@ -101,32 +101,3 @@ if __name__ == '__main__':
         print(step)
         env.step()
 ```
-
-
-Environment:
-The Environment represents the simulation's main context where agents and artifacts interact. It manages the state of the simulation, including the current step, episode, and other parameters. The environment provides methods to add agents and artifacts, process agent actions and queries, and control the simulation's progression. It also integrates with visualization tools and handles the flow of information between agents and artifacts.
-
-Key Responsibilities:
-
-Managing agents and artifacts.
-Processing agent actions and queries.
-Controlling the simulation's progression (steps and episodes).
-Handling communication and information flow.
-Integrating with visualization tools.
-Artifact:
-The Artifact represents objects or entities within the simulation environment that agents can interact with. Artifacts have a defined set of actions that can be performed on them and queries that can retrieve information about them. Each artifact has its own state, behavior, and set of interactions that it supports.
-
-Key Responsibilities:
-
-Maintaining its own state and behavior.
-Defining and processing actions and queries.
-Interacting with agents and the environment.
-Agent:
-The Agent represents individual actors or entities within the simulation that can perform actions, make queries, and interact with artifacts and the environment. Agents have their own state, inventory, and set of capabilities. They can execute actions, make queries, and process observations based on the environment's state and their interactions with artifacts.
-
-Key Responsibilities:
-
-Maintaining its own state, inventory, and capabilities.
-Executing actions and making queries.
-Processing observations and information from the environment and artifacts.
-Interacting with artifacts and the environment.
