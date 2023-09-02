@@ -102,3 +102,10 @@ if __name__ == '__main__':
     for step in env.iter_steps():
         env.step()
 ```
+
+## Standard Artifacts
+
+Below are the standard artifacts provided with the CAES package:
+
+- [marketplace](https://github.com/Aatamte/CAES/blob/main/src/caes/artifacts/marketplace.py)
+- [dialogue](https://github.com/Aatamte/CAES/blob/main/src/caes/artifacts/dialogue.py)
