@@ -1,10 +1,9 @@
 import os
 import openai
 
-from CAES import Environment, Marketplace
-from CAES import Population
-from CAES import OAIAgent
-
+from src.CAES import Environment
+from src.CAES.agents import Population, OAIAgent
+from src.CAES.
 
 class MyAgent(OAIAgent):
     def __init__(self):
