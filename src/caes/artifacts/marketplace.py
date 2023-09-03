@@ -238,8 +238,9 @@ f"""===================================
 
 
 class Marketplace(Artifact):
-    def __init__(self, infer_from_agents:  bool = True):
+    def __init__(self, infer_goods_from_agents:  bool = True):
         super(Marketplace, self).__init__("Marketplace")
+        self.infer_goods_from_agents = infer_goods_from_agents
         self.markets: Dict[str, OrderBook] = {}
 
         self.action_space.append(Order)
@@ -275,12 +276,13 @@ class Marketplace(Artifact):
             market.step()
 
     def set_up(self, environment):
-        for agent in environment.agents:
-            for good in agent.inventory.keys():
-                if good == "capital":
-                    pass
-                elif good not in self.markets.keys():
-                    self.markets[good] = OrderBook(good, self.environment)
+        if self.infer_goods_from_agents:
+            for agent in environment.agents:
+                for good in agent.inventory.keys():
+                    if good == "capital":
+                        pass
+                    elif good not in self.markets.keys():
+                        self.markets[good] = OrderBook(good, self.environment)
         self.system_prompt = Prompt(
             f"""This is a marketplace where agents can buy and sell goods. A positive quantity represents a buy order, while a negative quantity represents a sell order. If there are no other orders in the marketplace, you are required to submit an order (you may choose parameters that are unrealistic, but valid). Current markets include: {[market for market in self.markets]}"""
         )

@@ -89,7 +89,7 @@ if __name__ == '__main__':
     env.add(Population(agent=MyAgent(),number_of_agents=2))
     
     # add a pre-configured artifact or your own artifact
-    marketplace = Marketplace()
+    marketplace = Marketplace(infer_goods_from_agents=True)
     env.add(marketplace)
 
     # similar to reinforcement learning styled environments, you can specify maximum episodes and steps
@@ -102,6 +102,9 @@ if __name__ == '__main__':
     for step in env.iter_steps():
         env.step()
 ```
+
+## GUI
+
 
 ## Standard Artifacts
 
