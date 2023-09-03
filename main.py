@@ -15,10 +15,11 @@ class MyAgent(OAIAgent):
 
         self.params["max_price"] = 10
 
+
 if __name__ == '__main__':
     openai.api_key = os.environ["open_ai_key"]
 
-    env = Environment(visualization=True)
+    env = Environment(gui=True)
 
     buyer_population = Population(
         agent=MyAgent(),

@@ -41,6 +41,7 @@ class ActionHandler:
 
     def process_action(self, agent, action):
         action_log = [self.environment.current_step, None, None]
+        agent.state_of_mind = action["state_of_mind"]
 
         if action["action"] == "skip":
             action = None
@@ -66,6 +67,7 @@ class ActionHandler:
                 raise Warning("An agents action must be either a tuple or an action class")
         agent.action_history.append(action)
         self.action_logs.append((agent.name, *action_log))
+        print(action)
 
     def process_query(self, agent, query):
         artifact = self.map_query_to_artifact[type(query)]

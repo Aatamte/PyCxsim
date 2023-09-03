@@ -6,10 +6,10 @@ from src.caes.actions.action_restrictions import ActionRestriction
 from src.caes.agents.item import Item
 
 from src.caes.agents.tools.tool import Tool
-from src.caes.agents.features.memory.long_term_memory import LongTermMemory
+from src.caes.agents.traits.memory.long_term_memory import LongTermMemory
 from src.caes.agents.tools.knowledge_base import KnowledgeBase
 from src.caes.agents.tools.journal import Journal
-from src.caes.agents.features.inventory import Inventory
+from src.caes.agents.traits.inventory import Inventory
 
 
 class Agent:
@@ -79,6 +79,9 @@ class Agent:
 
         # agent tools
         self.tools = {}
+
+        # agent state of mind
+        self.state_of_mind = ""
 
     def add_tool(self, tool: Tool):
         """

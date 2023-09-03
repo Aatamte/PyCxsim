@@ -112,7 +112,7 @@ class Artifact:
         return self.query_space
 
     def get_query_space_prompt(self):
-        return [query.create_prompt() for query in self.query_space]
+        return [generate_prompt(query) for query in self.query_space]
 
     @abstractmethod
     def reset(self, environment):

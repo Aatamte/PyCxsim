@@ -20,23 +20,6 @@ class OAIAgent(LanguageModelAgent):
     def execute_action(self):
         self.create_ChatCompletion()
 
-        try:
-            # Get the last message's content
-            response = self.messages[-1]["content"]
-
-            # Process the response to get action_string
-            action_string = response.strip("\n").split("\n")[0]
-            action_dict = string_to_dict(action_string)
-
-            # Append the action to the action queue
-            self.action_queue.append(action_dict)
-            return action_dict
-
-        except (ValueError, SyntaxError, TypeError):
-            # This will catch errors from ast.literal_eval and any type issues
-            # Handle or log the error here if necessary
-            pass
-
         # In case of errors, you might want to return a default action or None
         return None
 
@@ -52,6 +35,28 @@ class OAIAgent(LanguageModelAgent):
         )
         usage = response["usage"]
         self.usage_statistics["total_tokens"] = usage["total_tokens"]
+        try:
+            # Get the last message's content
+            response = self.messages[-1]["content"]
+
+            # Process the response to get action_string
+            action_string = response.strip("\n").split("\n")[0]
+            action_dict = string_to_dict(action_string)
+
+            self.state_of_mind = action_dict["state_of_mind"]
+            print(self.state_of_mind)
+            # Append the action to the action queue
+            self.action_queue.append(action_dict)
+
+            return action_dict
+
+        except (ValueError, SyntaxError, TypeError):
+            # This will catch errors from ast.literal_eval and any type issues
+            # Handle or log the error here if necessary
+            pass
+
+        # In case of errors, you might want to return a default action or None
+        return None
 
     def get_result(self):
         pass

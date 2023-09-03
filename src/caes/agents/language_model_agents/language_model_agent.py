@@ -3,7 +3,7 @@ from queue import Queue
 
 # NOTES
 #
-# a language model agent should have the following features:
+# a language model agent should have the following traits:
 #   - strict enforcement of following actions specified by the environment
 #       - class would automatically recall select action if the agent took an invalid action
 

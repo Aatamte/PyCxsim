@@ -264,8 +264,8 @@ class Marketplace(Artifact):
             highest_bid = m.highest_bid_order if m.highest_bid_order.price != -np.inf else None
             lowest_offer = m.lowest_offer_order if m.lowest_offer_order.price != np.inf else None
 
-            observation += "Best bid order: " + str(highest_bid) + "\n"
-            observation += "Best bid order: " + str(lowest_offer)
+            observation += "Lowest ask order: " + str(lowest_offer) + "\n"
+            observation += "highest bid order: " + str(highest_bid)
         return observation
 
     def step(self):

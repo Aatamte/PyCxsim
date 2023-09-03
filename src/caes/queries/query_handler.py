@@ -33,9 +33,12 @@ class QueryHandler:
         return False
 
     def process_query(self, agent, query):
+        print(agent, query)
+        print(self.map_query_to_artifact)
         artifact = self.map_query_to_artifact[type(query)]
         observation = self.artifacts[artifact].process_query(agent, query)
         return observation
+
 
 if __name__ == '__main__':
     pass

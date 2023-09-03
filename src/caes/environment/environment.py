@@ -78,6 +78,8 @@ class Environment:
         self.agent_name_lookup = {}
         self.agent_id_lookup = {}
 
+        self.max_queries = 1
+        self.max_actions = 1
         self.action_space = {}
         self.query_space = {}
 
@@ -171,6 +173,32 @@ class Environment:
     def _set_up_artifacts(self):
         pass
 
+    def _construct_system_prompt(self, agent: Agent, system_prompt: SystemPrompt):
+        agent.action_space = self.action_space.copy()
+        agent.query_space = self.query_space.copy()
+        print(self.query_space)
+
+        agent_system_prompt = system_prompt.copy()
+
+        agent_system_prompt.query_space = agent.query_space
+        agent_system_prompt.action_space = agent.action_space
+
+        agent_system_prompt.set_starting_inventory(str(agent.inventory.starting_inventory))
+
+        agent_system_prompt.set_action_restrictions(agent.action_restrictions)
+
+        agent_system_prompt.set_environment_information(str(len(self.agents)), str(self.max_steps))
+
+        agent_system_prompt.set_num_artifacts(str(len(self.action_handler.artifacts)))
+
+        agent_system_prompt.set_artifact_descriptions()
+
+        agent_system_prompt.set_global_actions()
+
+        agent.system_prompt = agent_system_prompt
+
+        agent.set_up()
+
     def set_up(self):
         self.start_time = time.perf_counter()
         # assert that all agents have necessary functionality
@@ -191,33 +219,12 @@ class Environment:
             artifact.environment = self
             artifact.agents = self.agent_id_lookup
 
-            system_prompt.insert_artifact_description(artifact.system_prompt.content)
+            system_prompt.insert_artifact(artifact)
 
-            system_prompt.insert_global_action(artifact.get_action_space_prompt())
+            #system_prompt.insert_global_action(artifact.get_action_space_prompt())
 
         for agent in self.agents:
-
-            agent.action_space = self.action_space.copy()
-
-            agent.query_space = self.query_space.copy()
-
-            agent_system_prompt = system_prompt.copy()
-
-            agent_system_prompt.set_starting_inventory(str(agent.inventory.starting_inventory))
-
-            agent_system_prompt.set_action_restrictions(agent.action_restrictions)
-
-            agent_system_prompt.set_environment_information(str(len(self.agents)), str(self.max_steps))
-
-            agent_system_prompt.set_num_artifacts(str(len(self.action_handler.artifacts)))
-
-            agent_system_prompt.set_artifact_descriptions()
-
-            agent_system_prompt.set_global_actions()
-
-            agent.system_prompt = agent_system_prompt
-
-            agent.set_up()
+            self._construct_system_prompt(agent, system_prompt)
 
         self.n_artifacts = len(self.action_handler.artifacts)
         # give agents the system prompt
@@ -257,10 +264,15 @@ class Environment:
         self.calender.step()
 
     def process_turn(self, agent):
-        # agent makes a query for information
-        query = agent.execute_query()
 
-        observation = self.query_handler.process_query(agent, query)
+        # present the agent with its state of mind and ask the agent for a query action
+        print(agent.state_of_mind)
+
+        # agent makes a query for information
+        for query in range(self.max_queries):
+            query = agent.execute_query()
+            print(query)
+            observation = self.query_handler.process_query(agent, query)
 
         observation_prompt = ObservationPrompt()
         observation_prompt.set_current_step(str(self.current_step))

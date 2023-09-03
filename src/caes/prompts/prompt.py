@@ -4,11 +4,11 @@ import copy
 import inspect
 
 # Open the file (replace 'your_package_name' with the actual name of your package)
-with importlib_resources.open_text('src.caes.prompts', 'environment_system_prompt.txt') as file:
+with importlib_resources.open_text('src.caes.prompts', 'system_prompt.txt') as file:
     system_prompt = file.read()
 
 # Open the file (replace 'your_package_name' with the actual name of your package)
-with importlib_resources.open_text('src.caes.prompts', 'observation_template_prompt.txt') as file:
+with importlib_resources.open_text('src.caes.prompts', 'observation_prompt.txt') as file:
     observation_prompt = file.read()
 
 
@@ -53,11 +53,15 @@ class SystemPrompt:
     def __init__(self):
         self.content = system_prompt
 
-        self.artifact_descriptions = []
-        self.global_actions = []
+        self.query_space = None
+        self.action_space = None
 
-    def insert_artifact_description(self, prompt: Prompt):
-        self.artifact_descriptions.append(prompt)
+        self.artifact_descriptions = {}
+        self.global_actions = []
+        self.artifacts = []
+
+    def insert_artifact(self, artifact):
+        self.artifacts.append(artifact)
 
     def insert_global_action(self, action_string):
         self.global_actions.extend(action_string)
@@ -79,8 +83,15 @@ class SystemPrompt:
 
     def set_artifact_descriptions(self):
         descriptions = ""
-        for idx, artifact_description in enumerate(self.artifact_descriptions):
-            descriptions += f"{idx + 1}: " + artifact_description + "\n"
+        for idx, artifact in enumerate(self.artifacts):
+            descriptions += f"{idx + 1}: " + artifact.name + "\n" + artifact.system_prompt.content \
+                + "\n"
+            descriptions += "ACTIONS:" + "\n"
+            for action in artifact.get_action_space_prompt():
+                descriptions += str({"action": action, "state_of_mind": "<content>"}) + "\n"
+            descriptions += "QUERIES:" + "\n"
+            for query in artifact.get_query_space_prompt():
+                descriptions += str({"action": query}) + "\n"
 
         self.content = self.content.replace("#!artifact_descriptions!#", descriptions)
 
