@@ -14,6 +14,8 @@ class ActionHandler:
 
         self.action_lookup = {}
 
+        self.agent_lookup = self.environment.agent_name_lookup
+
     def add_artifact(self, artifact: Artifact):
         self.artifacts[artifact.name] = artifact
 

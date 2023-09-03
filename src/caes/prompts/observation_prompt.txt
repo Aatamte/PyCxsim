@@ -3,8 +3,6 @@ It is your turn.
 CURRENT STEP: #!current_step!#
 INVENTORY:
 #!inventory!#
-ARTIFACTS INFORMATION:
-#!artifact_information!#
 
 Think step by step to decide which action best furthers your goals.
 Remember your restrictions and the rules of the artifacts.

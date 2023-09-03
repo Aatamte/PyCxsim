@@ -11,6 +11,9 @@ with importlib_resources.open_text('src.caes.prompts', 'system_prompt.txt') as f
 with importlib_resources.open_text('src.caes.prompts', 'observation_prompt.txt') as file:
     observation_prompt = file.read()
 
+with importlib_resources.open_text('src.caes.prompts', 'state_of_mind_prompt.txt') as file:
+    state_of_mind_prompt = file.read()
+
 
 @dataclass
 class Prompt:
@@ -25,6 +28,11 @@ class Prompt:
     def merge(self, other):
         self.content += "\n"
         self.content += other.content
+
+
+class ObservationResponse:
+    def __init__(self):
+        pass
 
 
 class ObservationPrompt:
@@ -49,6 +57,14 @@ class ObservationPrompt:
         self.artifact_information_list.append(artifact_information)
 
 
+class StateOfMindPrompt:
+    def __init__(self):
+        self.content = state_of_mind_prompt
+
+    def insert_state_of_mind(self, state_of_mind):
+        self.content = self.content.replace("#!state_of_mind!#", state_of_mind)
+
+
 class SystemPrompt:
     def __init__(self):
         self.content = system_prompt
@@ -68,6 +84,9 @@ class SystemPrompt:
 
     def set_starting_inventory(self, inventory):
         self.content = self.content.replace("#!inventory!#", inventory)
+
+    def set_name(self, name):
+        self.content = self.content.replace("#!agent_name!#", name)
 
     def set_action_restrictions(self, restrictions):
         restriction_string = ""

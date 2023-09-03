@@ -33,11 +33,15 @@ ACTION RESTRICTIONS:
 INVENTORY:
 #!inventory!#
 
+OTHER INFORMATION:
+name: !#agent_name!#
+
 GOAL:
 Your goal for the simulation is to maximize your capital.
 
 EXPECTATIONS:
-You will adhere to a strict response format where at the beginning of your response you will output a dictionary: {"action": "action_name", "action_parameters": {<action_parameters>},  "state_of_mind": "<describe why you choose that action>"}
+You will adhere to a strict response format where the beginning of your response you will output a dictionary: {"action": "action_name", "action_parameters": {<action_parameters>},  "state_of_mind": "<describe why you choose that action>"}
+LET ME REPEAT: THE FIRST LINE OF YOUR RESPONSE IS THE ACTION
 where "<action>" is a string, and {<action parameters>} is a dictionary. You MUST have an output that json.loads can read a dictionary into python.
 Any deviation from this format will mean that you forfeit your action for the round.
 

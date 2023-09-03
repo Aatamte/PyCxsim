@@ -15,6 +15,7 @@ class OAIAgent(LanguageModelAgent):
         self.language_model_logs = []
 
         self.action_queue = []
+        self.query_queue = []
 
     @background_task
     def execute_action(self):
@@ -23,7 +24,13 @@ class OAIAgent(LanguageModelAgent):
         # In case of errors, you might want to return a default action or None
         return None
 
-    def create_ChatCompletion(self):
+    @background_task
+    def execute_query(self):
+        self.create_ChatCompletion(False)
+
+        return None
+
+    def create_ChatCompletion(self, action: bool = True):
         response = openai.ChatCompletion.create(
             model=self.model_id,
             messages=self.messages,
@@ -40,15 +47,18 @@ class OAIAgent(LanguageModelAgent):
             response = self.messages[-1]["content"]
 
             # Process the response to get action_string
-            action_string = response.strip("\n").split("\n")[0]
-            action_dict = string_to_dict(action_string)
+            response_string = response.strip("\n").split("\n")[0]
+            response_dict = string_to_dict(response_string)
 
-            self.state_of_mind = action_dict["state_of_mind"]
-            print(self.state_of_mind)
-            # Append the action to the action queue
-            self.action_queue.append(action_dict)
+            self.state_of_mind = response_dict["state_of_mind"]
+            print(response)
+            if action:
+                # Append the action to the action queue
+                self.action_queue.append(response_dict)
+            else:
+                self.query_queue.append(response_dict)
 
-            return action_dict
+            return response_dict
 
         except (ValueError, SyntaxError, TypeError):
             # This will catch errors from ast.literal_eval and any type issues
@@ -69,3 +79,5 @@ class OAIAgent(LanguageModelAgent):
             }
         )
         self.create_ChatCompletion()
+
+        self.action_queue.pop(0)

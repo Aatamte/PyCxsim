@@ -1,17 +1,16 @@
 from typing import Dict
 from dataclasses import dataclass
-import numpy as np
 import pandas as pd
 from typing import Union
+from pydantic import BaseModel
+
 
 from src.caes.agents.agent import Agent
 from src.caes.artifacts.artifact import Artifact
 from src.caes.prompts.prompt import Prompt
-from src.caes.queries.query import Query
 from src.caes.environment.event import Event
 
 
-# An Order is represented as a dataclass for simplicity and ease of use
 @dataclass
 class Order:
     """
@@ -21,12 +20,14 @@ class Order:
     price: The price of the order.
     quantity: The quantity of the order.
     agent: The agent placing the order.
-    id: The order id, None by default.
-    duration: The order duration, None by default.
     """
     good: str
     price: int
     quantity: int
+
+
+class MarketPlaceQuery(BaseModel):
+    good: str
 
 
 @dataclass
@@ -59,8 +60,8 @@ class OrderBook:
         # Initialize lists to hold buy and sell orders
         self.sell_orders = []
         self.buy_orders = []
-        self.highest_bid_order: Order = Order(self.product_name, -np.inf, 1)
-        self.lowest_offer_order: Order = Order(self.product_name, np.inf, -1)
+        self.highest_bid_order: Order = Order(good=self.product_name, price=-1000000, quantity=1)
+        self.lowest_offer_order: Order = Order(good=self.product_name, price=1000000, quantity=-1)
         self.order_count = 0
         self.num_transactions = 0
         # store transaction history in a pandas DataFrame for easy data manipulation and analysis
@@ -76,8 +77,8 @@ class OrderBook:
         self.sell_orders = []
         self.buy_orders = []
         # Reset bid/offer orders
-        self.highest_bid_order: Order = Order(self.product_name, -np.inf, 1)
-        self.lowest_offer_order: Order = Order(self.product_name, np.inf, -1)
+        self.highest_bid_order: Order = Order(good=self.product_name, price=-1000000, quantity=1)
+        self.lowest_offer_order: Order = Order(good=self.product_name, price=1000000, quantity=-1)
         # Reset counters
         self.order_count = 0
         self.num_transactions = 0
@@ -243,7 +244,7 @@ class Marketplace(Artifact):
 
         self.action_space.append(Order)
 
-        self.query_space.append(Query)
+        self.query_space.append(MarketPlaceQuery)
 
     def process_action(self, agent, action: Union[list, Order]):
         if isinstance(action, tuple):
@@ -261,11 +262,12 @@ class Marketplace(Artifact):
         observation = ""
         for m in self.markets.values():
             observation += m.product_name + "\n"
-            highest_bid = m.highest_bid_order if m.highest_bid_order.price != -np.inf else None
-            lowest_offer = m.lowest_offer_order if m.lowest_offer_order.price != np.inf else None
+            highest_bid = m.highest_bid_order if m.highest_bid_order.price != -1000000 else None
+            lowest_offer = m.lowest_offer_order if m.lowest_offer_order.price != 1000000 else None
 
             observation += "Lowest ask order: " + str(lowest_offer) + "\n"
             observation += "highest bid order: " + str(highest_bid)
+
         return observation
 
     def step(self):
@@ -273,8 +275,14 @@ class Marketplace(Artifact):
             market.step()
 
     def set_up(self, environment):
+        for agent in environment.agents:
+            for good in agent.inventory.keys():
+                if good == "capital":
+                    pass
+                elif good not in self.markets.keys():
+                    self.markets[good] = OrderBook(good, self.environment)
         self.system_prompt = Prompt(
-            f"""This is a marketplace where agents can buy and sell goods. A positive quantity represents a buy order, while a negative quantity represents a sell order. If there are no other orders in the marketplace, you are required to submit an order (you may choose parameters that are unrealistic, but valid)"""
+            f"""This is a marketplace where agents can buy and sell goods. A positive quantity represents a buy order, while a negative quantity represents a sell order. If there are no other orders in the marketplace, you are required to submit an order (you may choose parameters that are unrealistic, but valid). Current markets include: {[market for market in self.markets]}"""
         )
 
     def reset(self, environment):

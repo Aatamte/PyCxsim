@@ -1,4 +1,5 @@
 from src.caes.artifacts.artifact import Artifact
+from src.caes.prompts.prompt import ObservationPrompt
 
 
 class QueryHandler:
@@ -10,7 +11,7 @@ class QueryHandler:
 
         self.map_query_to_artifact = {}
 
-        self.action_lookup = {}
+        self.query_lookup = {}
 
     def add_artifact(self, artifact: Artifact):
         self.artifacts[artifact.name] = artifact
@@ -18,7 +19,7 @@ class QueryHandler:
         # add queries to map_query_to_artifact
         for query in artifact.get_query_space():
             self.map_query_to_artifact[query] = artifact.name
-            self.action_lookup[query.__name__] = query
+            self.query_lookup[query.__name__] = query
 
     @staticmethod
     def is_restricted_query(agent, action):
@@ -33,10 +34,16 @@ class QueryHandler:
         return False
 
     def process_query(self, agent, query):
-        print(agent, query)
-        print(self.map_query_to_artifact)
+        query = self.query_lookup[query["action"]](**query["action_parameters"])
         artifact = self.map_query_to_artifact[type(query)]
         observation = self.artifacts[artifact].process_query(agent, query)
+
+        agent.messages.append(
+            {
+                "role": "system",
+                "content": observation
+            }
+        )
         return observation
 
 

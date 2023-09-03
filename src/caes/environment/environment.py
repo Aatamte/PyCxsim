@@ -13,7 +13,8 @@ from src.caes.queries.query_handler import QueryHandler
 from src.caes.visualization.visualizer import Visualizer
 from src.caes.environment.calander import Calender
 from src.caes.agents.item import ItemHandler
-from src.caes.prompts.prompt import SystemPrompt, ObservationPrompt
+
+from src.caes.prompts.prompt import SystemPrompt, ObservationPrompt, StateOfMindPrompt
 
 
 logger = logging.getLogger(__name__)
@@ -195,6 +196,8 @@ class Environment:
 
         agent_system_prompt.set_global_actions()
 
+        agent_system_prompt.set_name(agent.name)
+
         agent.system_prompt = agent_system_prompt
 
         agent.set_up()
@@ -216,12 +219,9 @@ class Environment:
 
             self.query_space[artifact.name] = artifact.get_query_space()
 
-            artifact.environment = self
             artifact.agents = self.agent_id_lookup
 
             system_prompt.insert_artifact(artifact)
-
-            #system_prompt.insert_global_action(artifact.get_action_space_prompt())
 
         for agent in self.agents:
             self._construct_system_prompt(agent, system_prompt)
@@ -266,19 +266,34 @@ class Environment:
     def process_turn(self, agent):
 
         # present the agent with its state of mind and ask the agent for a query action
-        print(agent.state_of_mind)
+
+        state_of_mind_prompt = StateOfMindPrompt()
+        state_of_mind_prompt.insert_state_of_mind(agent.state_of_mind)
+        agent.messages.append(
+            {
+                "role": "user",
+                "content": state_of_mind_prompt.content
+            }
+        )
+        # wait until background tasks are complete
 
         # agent makes a query for information
         for query in range(self.max_queries):
-            query = agent.execute_query()
-            print(query)
-            observation = self.query_handler.process_query(agent, query)
+            agent.execute_query()
+            time.sleep(0.4)
+
+            self.visualizer.running_background_tasks()
+
+            query_response = agent.query_queue.pop(0)
+
+            self.query_handler.process_query(agent, query_response)
+
+            # wait until background tasks are complete
+            self.visualizer.running_background_tasks()
 
         observation_prompt = ObservationPrompt()
         observation_prompt.set_current_step(str(self.current_step))
         observation_prompt.set_inventory(str(agent.display_inventory()))
-        observation_prompt.insert_artifact_information(observation)
-        observation_prompt.set_artifact_information()
 
         # append observation to the agents messages
         agent.messages.append({"role": "user", "content": observation_prompt.content})
@@ -289,6 +304,7 @@ class Environment:
         # wait until background tasks are complete
         self.visualizer.running_background_tasks()
 
+        print(agent.action_queue)
         action = agent.action_queue.pop(0)
 
         # process logic for the action

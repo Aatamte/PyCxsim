@@ -228,13 +228,16 @@ class MessageBox:
 
         for idx, message in enumerate(self.agent.messages):
             if message["role"] == "user":
+                message["content"] = "User: " + message["content"]
                 indent = 0
                 color = color_dict["green"]
             elif message["role"] == "system":
                 indent = 0
+                message["content"] = "System: " + message["content"]
                 color = color_dict["red"]
             else:
                 indent = 0
+                message["content"] = self.agent.name + ": " + message["content"]
                 color = color_dict["orange"]
 
             new_message = dpg.add_text(
@@ -246,6 +249,7 @@ class MessageBox:
                 #pos=(10 + indent, idx * 25)
             )
             self.existing_messages.append(new_message)
+
         if include_input_text:
             self.input_text = dpg.add_input_text(
                 label="",

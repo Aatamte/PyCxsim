@@ -1,0 +1,4 @@
+This was your state of mind from last round:
+#!state_of_mind!#
+
+What query do you want to make?
