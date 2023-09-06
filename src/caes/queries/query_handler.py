@@ -10,6 +10,7 @@ class QueryHandler:
         self.query_logs = []
 
         self.map_query_to_artifact = {}
+        self.action_list = []
 
         self.query_lookup = {}
 
@@ -20,6 +21,9 @@ class QueryHandler:
         for query in artifact.get_query_space():
             self.map_query_to_artifact[query] = artifact.name
             self.query_lookup[query.__name__] = query
+
+        for action in artifact.get_action_space():
+            self.action_list.append(action.__name__)
 
     @staticmethod
     def is_restricted_query(agent, action):
@@ -34,17 +38,21 @@ class QueryHandler:
         return False
 
     def process_query(self, agent, query):
-        query = self.query_lookup[query["action"]](**query["action_parameters"])
+        print(agent, query)
+        if query["action"] == "skip":
+            return False, None, False
+
+        try:
+            query = self.query_lookup[query["action"]](**query["action_parameters"])
+        except KeyError as error:
+            if query["action"] in self.action_list:
+                return False, None, True
+            else:
+                raise error
+
         artifact = self.map_query_to_artifact[type(query)]
         observation = self.artifacts[artifact].process_query(agent, query)
-
-        agent.messages.append(
-            {
-                "role": "system",
-                "content": observation
-            }
-        )
-        return observation
+        return True, observation, False
 
 
 if __name__ == '__main__':

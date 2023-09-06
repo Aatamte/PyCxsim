@@ -10,7 +10,7 @@ class MyAgent(OAIAgent):
     def __init__(self):
         super(MyAgent, self).__init__()
         self.inventory.set_starting_inventory(
-            {"capital": 1000, "socks": 10}
+            {"capital": 1000, "socks": 10, "shirts": 5}
         )
 
         self.params["max_price"] = 10
@@ -23,12 +23,12 @@ if __name__ == '__main__':
 
     buyer_population = Population(
         agent=MyAgent(),
-        number_of_agents=2
+        number_of_agents=5
     )
 
     seller_population = Population(
         agent=MyAgent(),
-        number_of_agents=2
+        number_of_agents=5
     )
 
     env.add(buyer_population)
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     marketplace = Marketplace()
     env.add(marketplace)
 
-    env.step_delay = 2
+    env.step_delay = 5
 
     env.max_episodes = 1
     env.max_steps = 50
@@ -46,8 +46,6 @@ if __name__ == '__main__':
     env.set_up()
 
     for step in env.iter_steps():
-        for agent in env.agents:
-            print(agent.inventory)
         print(step)
         env.step()
 

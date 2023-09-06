@@ -4,6 +4,14 @@ import re
 
 
 def string_to_dict(s: str) -> dict:
+    # Extract the substring between the first '{' and the last '}'
+    start_idx = s.find('{')
+    end_idx = s.rfind('}')
+
+    if start_idx == -1 or end_idx == -1:
+        raise ValueError(f"String does not contain valid brackets: {s}")
+
+    s = s[start_idx:end_idx + 1]
     s = s.strip()
 
     try:
@@ -26,3 +34,4 @@ def string_to_dict(s: str) -> dict:
         raise ValueError(f"Unable to parse string as dictionary: {s}")
 
     return result
+

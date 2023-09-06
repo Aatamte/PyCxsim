@@ -79,7 +79,7 @@ class Environment:
         self.agent_name_lookup = {}
         self.agent_id_lookup = {}
 
-        self.max_queries = 1
+        self.max_queries = 2
         self.max_actions = 1
         self.action_space = {}
         self.query_space = {}
@@ -177,7 +177,6 @@ class Environment:
     def _construct_system_prompt(self, agent: Agent, system_prompt: SystemPrompt):
         agent.action_space = self.action_space.copy()
         agent.query_space = self.query_space.copy()
-        print(self.query_space)
 
         agent_system_prompt = system_prompt.copy()
 
@@ -264,53 +263,58 @@ class Environment:
         self.calender.step()
 
     def process_turn(self, agent):
-
-        # present the agent with its state of mind and ask the agent for a query action
-
-        state_of_mind_prompt = StateOfMindPrompt()
-        state_of_mind_prompt.insert_state_of_mind(agent.state_of_mind)
-        agent.messages.append(
-            {
-                "role": "user",
-                "content": state_of_mind_prompt.content
-            }
-        )
-        # wait until background tasks are complete
-
-        # agent makes a query for information
-        for query in range(self.max_queries):
-            agent.execute_query()
-            time.sleep(0.4)
-
-            self.visualizer.running_background_tasks()
-
-            query_response = agent.query_queue.pop(0)
-
-            self.query_handler.process_query(agent, query_response)
+        # present the agent with its working memory
+      #  try:
+            agent.working_memory.show(self.current_step)
 
             # wait until background tasks are complete
-            self.visualizer.running_background_tasks()
+            queries_should_continue = True
 
-        observation_prompt = ObservationPrompt()
-        observation_prompt.set_current_step(str(self.current_step))
-        observation_prompt.set_inventory(str(agent.display_inventory()))
+            # agent
+            is_action = True
 
-        # append observation to the agents messages
-        agent.messages.append({"role": "user", "content": observation_prompt.content})
+            # agent makes a query for information
+            for query in range(self.max_queries):
 
-        # agent chooses action based on the observation
-        agent.execute_action()
+                if not queries_should_continue:
+                    break
 
-        # wait until background tasks are complete
-        self.visualizer.running_background_tasks()
+                agent.execute_query()
+                time.sleep(0.4)
 
-        print(agent.action_queue)
-        action = agent.action_queue.pop(0)
+                self.visualizer.running_background_tasks()
 
-        # process logic for the action
-        self.action_handler.process_action(agent, action)
+                query_response = agent.query_queue.pop(0)
 
-        agent.step()
+                queries_should_continue, obs, is_action = self.query_handler.process_query(agent, query_response)
+
+                if obs:
+                    agent.add_message("user", obs)
+
+            if not is_action:
+                observation_prompt = ObservationPrompt()
+                observation_prompt.set_current_step(str(self.current_step))
+                observation_prompt.set_inventory(str(agent.display_inventory()))
+
+                # append observation to the agents messages
+                agent.add_message("user", observation_prompt.content)
+
+                # agent chooses action based on the observation
+                agent.execute_action()
+
+                # wait until background tasks are complete
+                self.visualizer.running_background_tasks()
+
+                action = agent.action_queue.pop(0)
+            else:
+                action = query_response
+
+            # process logic for the action
+            self.action_handler.process_action(agent, action)
+ #       except Exception as e:
+  #          print(e)
+  #          print(agent.messages)
+            agent.step()
 
     def step(self) -> [np.ndarray, list, list]:
         if self.gui:
@@ -333,10 +337,10 @@ class Environment:
         for agent in self.agents:
             self.process_turn(agent)
             tokens = agent.usage_statistics["total_tokens"]
-            print(tokens)
+          #  print(tokens)
             num_tokens.append(agent.usage_statistics["total_tokens"])
-        print(sum(num_tokens))
-        print(sum(num_tokens) / (time.perf_counter() - self.start_time) * 60)
+        #print(sum(num_tokens))
+        #print(sum(num_tokens) / (time.perf_counter() - self.start_time) * 60)
         self.action_handler.step()
 
         # should simulation stop based on response from artifacts

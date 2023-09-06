@@ -16,6 +16,14 @@ class OAIAgent(LanguageModelAgent):
 
         self.action_queue = []
         self.query_queue = []
+        self.keep_last_n = 10
+
+    def step(self):
+        print("length of messages: ", len(self.messages))
+        if len(self.messages) <= self.keep_last_n + 1:
+            pass
+        else:
+            self.messages = [self.messages[0]] + self.messages[self.keep_last_n:]
 
     @background_task
     def execute_action(self):
@@ -50,8 +58,8 @@ class OAIAgent(LanguageModelAgent):
             response_string = response.strip("\n").split("\n")[0]
             response_dict = string_to_dict(response_string)
 
-            self.state_of_mind = response_dict["state_of_mind"]
-            print(response)
+            self.working_memory.content = response_dict["working_memory"]
+
             if action:
                 # Append the action to the action queue
                 self.action_queue.append(response_dict)
@@ -72,12 +80,9 @@ class OAIAgent(LanguageModelAgent):
         pass
 
     def set_up(self):
-        self.messages.append(
-            {
-                "role": "system",
-                "content": self.system_prompt.content
-            }
-        )
-        self.create_ChatCompletion()
-
-        self.action_queue.pop(0)
+        self.add_message("system", self.system_prompt.content)
+        self.create_ChatCompletion(True)
+        try:
+            self.action_queue.pop(0)
+        except:
+            pass

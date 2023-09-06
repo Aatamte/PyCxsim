@@ -43,7 +43,6 @@ class ActionHandler:
 
     def process_action(self, agent, action):
         action_log = [self.environment.current_step, None, None]
-        agent.state_of_mind = action["state_of_mind"]
 
         if action["action"] == "skip":
             action = None

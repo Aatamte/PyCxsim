@@ -10,6 +10,7 @@ from src.caes.agents.traits.memory.long_term_memory import LongTermMemory
 from src.caes.agents.tools.knowledge_base import KnowledgeBase
 from src.caes.agents.tools.journal import Journal
 from src.caes.agents.traits.inventory import Inventory
+from src.caes.agents.traits.memory.working_memory import WorkingMemory
 
 
 class Agent:
@@ -76,12 +77,10 @@ class Agent:
 
         # agent traits
         self.long_term_memory = LongTermMemory(100)
+        self.working_memory = WorkingMemory(self)
 
         # agent tools
         self.tools = {}
-
-        # agent state of mind
-        self.state_of_mind = ""
 
     def add_tool(self, tool: Tool):
         """
@@ -94,6 +93,14 @@ class Agent:
             raise KeyError("Tool is already in the agent")
         else:
             self.tools[tool.name] = tool
+
+    def add_message(self, role: str, content: str):
+        self.messages.append(
+            {
+                "role": role,
+                "content": content
+            }
+        )
 
     @abstractmethod
     def execute_action(self):

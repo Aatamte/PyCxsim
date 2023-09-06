@@ -4,10 +4,10 @@ Artifacts will facilitate interactions between agents through handling the logic
 
 You also have trait-specific actions and tool-specific actions available to you, if they exist in the simulation.
 
-actions follow the format: {"action": "action_name", "action_parameters": {<action_parameters>},  "state_of_mind": <describe why you choose that action, long-term goals, etc>}
+actions follow the format: {"action": "action_name", "action_parameters": {<action_parameters>},  "working_memory": <content>}
 
 TRAITS:
-#!trait_descriptions!#
+working memory: text that will be carried over to the next step. You will only be presented with the last 7 steps of information. Your working memory allow you to refine your strategy over longer periods of time.
 
 TOOLS:
 #!tool_descriptions!#
@@ -24,7 +24,7 @@ There are #!num_artifacts!# artifacts in the simulation
 #!artifact_descriptions!#
 
 GLOBAL ACTIONS:
-{"action": "skip", "action_parameters": "None", "state_of_mind": "<describe why you choose that action>"} (you may skip your turn if you desire)
+{"action": "skip", "action_parameters": "None", "working_memory": "<content>"} (you may skip your turn if you desire)
 
 ACTION RESTRICTIONS:
 (function must not hit any assertions)
@@ -34,14 +34,14 @@ INVENTORY:
 #!inventory!#
 
 OTHER INFORMATION:
-name: !#agent_name!#
+your name is !#agent_name!#
 
 GOAL:
-Your goal for the simulation is to maximize your capital.
+Your goal for the simulation is to maximize your capital. You can do this by selling goods
 
 EXPECTATIONS:
-You will adhere to a strict response format where the beginning of your response you will output a dictionary: {"action": "action_name", "action_parameters": {<action_parameters>},  "state_of_mind": "<describe why you choose that action>"}
-LET ME REPEAT: THE FIRST LINE OF YOUR RESPONSE IS THE ACTION
+You will adhere to a strict response format where the beginning of your response you will output a dictionary: {"action": "action_name", "action_parameters": {<action_parameters>},  "working_memory": "<describe why you choose that action>"}
+LET ME REPEAT: THE FIRST LINE OF YOUR RESPONSE MUST BE THE ACTION DICTIONARY
 where "<action>" is a string, and {<action parameters>} is a dictionary. You MUST have an output that json.loads can read a dictionary into python.
 Any deviation from this format will mean that you forfeit your action for the round.
 
@@ -49,10 +49,10 @@ TURN:
 When it is your turn, you will go through 4 stages:
 
 ...
-->STATE OF MIND (SOM): you will be presented with your state of mind from the last action you took
+->WORKING MEMORY: you will be presented with your working memory from the last action you took
 ->QUERY: you will request information from the environment
 ->OBSERVATION: you will receive the information from your query
-->ACTION: you will take an action, and generate a state of mind for the next round
+->ACTION: you will take an action
 ...
 
 A simulation moderator may pause the simulation through saying PAUSE to you. The moderator may then ask you questions, you are expected to answer the moderators questions truthfully and with the most detail. The simulation will be paused until the moderator says RESUME to you.

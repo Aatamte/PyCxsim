@@ -231,6 +231,8 @@ class OrderBook:
         return \
 f"""===================================
 {self.product_name} Order Book
+Buy order = positive quantity
+Sell order = negative quantity
 (price, quantity, name)
 {new_line.join(map(str, sell_order_list))}
 {new_line.join(map(str, buy_order_list))}
@@ -260,16 +262,8 @@ class Marketplace(Artifact):
             raise TypeError("action should either be a ")
 
     def process_query(self, agent, query):
-        observation = ""
-        for m in self.markets.values():
-            observation += m.product_name + "\n"
-            highest_bid = m.highest_bid_order if m.highest_bid_order.price != -1000000 else None
-            lowest_offer = m.lowest_offer_order if m.lowest_offer_order.price != 1000000 else None
-
-            observation += "Lowest ask order: " + str(lowest_offer) + "\n"
-            observation += "highest bid order: " + str(highest_bid)
-
-        return observation
+        m = self.markets[query.good]
+        return m.__repr__()
 
     def step(self):
         for name, market in self.markets.items():
@@ -282,9 +276,10 @@ class Marketplace(Artifact):
                     if good == "capital":
                         pass
                     elif good not in self.markets.keys():
-                        self.markets[good] = OrderBook(good, self.environment)
+                        self.markets[good] = OrderBook(good, environment)
+
         self.system_prompt = Prompt(
-            f"""This is a marketplace where agents can buy and sell goods. A positive quantity represents a buy order, while a negative quantity represents a sell order. If there are no other orders in the marketplace, you are required to submit an order (you may choose parameters that are unrealistic, but valid). Current markets include: {[market for market in self.markets]}"""
+            f"""This is a marketplace where agents can buy and sell goods. Current markets include: {[market for market in self.markets]}. To place a buy order, use a positive quantity in your order(int). To place a sell order, use a negative quantity in your order(-int)."""
         )
 
     def reset(self, environment):

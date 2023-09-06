@@ -107,10 +107,10 @@ class SystemPrompt:
                 + "\n"
             descriptions += "ACTIONS:" + "\n"
             for action in artifact.get_action_space_prompt():
-                descriptions += str({"action": action, "state_of_mind": "<content>"}) + "\n"
+                descriptions += str({"action": action, "working_memory": "<content>"}) + "\n"
             descriptions += "QUERIES:" + "\n"
             for query in artifact.get_query_space_prompt():
-                descriptions += str({"action": query}) + "\n"
+                descriptions += str({"action": query,"working_memory": "<content>"}) + "\n"
 
         self.content = self.content.replace("#!artifact_descriptions!#", descriptions)
 
