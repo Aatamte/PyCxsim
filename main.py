@@ -20,7 +20,7 @@ if __name__ == '__main__':
     openai.api_key = os.environ["open_ai_key"]
 
     env = Environment(gui=True)
-
+    d = 0
     buyer_population = Population(
         agent=MyAgent(),
         number_of_agents=5
