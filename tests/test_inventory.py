@@ -1,5 +1,5 @@
 import unittest
-from src.caes.agents.inventory import Inventory
+from src.cxsim.agents.inventory import Inventory
 
 class Item:
     id_counter = 0

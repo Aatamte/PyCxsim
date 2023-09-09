@@ -61,9 +61,9 @@ The `Agent` represents individual actors in the simulation. They can perform act
 import os
 import openai
 
-from caes import Environment
-from caes.artifacts import Marketplace
-from caes.agents import OAIAgent, Population
+from cxsim import Environment
+from cxsim.artifacts import Marketplace
+from cxsim.agents import OAIAgent, Population
 
 
 class MyAgent(OAIAgent):
@@ -71,23 +71,24 @@ class MyAgent(OAIAgent):
         super(MyAgent, self).__init__()
         self.inventory.set_starting_inventory(
             {
-                "capital": 1000, 
+                "capital": 1000,
                 "socks": 10
             }
         )
+
 
 if __name__ == '__main__':
     openai.api_key = os.environ["open_ai_key"]
 
     # Define the environment, and enable the gui
     env = Environment(gui=True)
-    
+
     # add an agent
     env.add(MyAgent())
-    
+
     # or add a population of agents
-    env.add(Population(agent=MyAgent(),number_of_agents=2))
-    
+    env.add(Population(agent=MyAgent(), number_of_agents=2))
+
     # add a pre-configured artifact or your own artifact
     marketplace = Marketplace(infer_goods_from_agents=True)
     env.add(marketplace)
@@ -95,10 +96,10 @@ if __name__ == '__main__':
     # similar to reinforcement learning styled environments, you can specify maximum episodes and steps
     env.max_episodes = 1
     env.max_steps = 50
-    
+
     # set up the environment (done adding stuff to the environment)
     env.set_up()
-    
+
     for step in env.iter_steps():
         env.step()
 ```

@@ -1,9 +1,9 @@
 import os
 import openai
 
-from src.caes import Environment
-from src.caes.agents import Population, OAIAgent
-from src.caes.artifacts import Marketplace
+from src.cxsim import Environment
+from src.cxsim.agents import Population, OAIAgent
+from src.cxsim.artifacts import Marketplace
 
 
 class MyAgent(OAIAgent):

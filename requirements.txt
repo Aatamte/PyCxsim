@@ -1,8 +1,7 @@
-pandas~=1.5.2
-numpy~=1.19.5
-h5py
-dearpygui~=1.9.1
-names~=0.3.0
+pandas>=1.5.2
+numpy>=1.19.5
+dearpygui>=1.9.1
+names>=0.3.0
 openai~=0.27.8
 scikit-learn~=1.2.0
 importlib_resources~=5.2.0
