@@ -1,5 +1,5 @@
 # PyCxsim Documentation
-
+![Tests](https://github.com/Aatamte/PyCxsim/actions/workflows/python-test.yml/badge.svg)
 ## Installation
 
 As the PyCxsim package is currently in development and not yet available on PyPI, you can install it directly from the GitHub repository (>=Python 3.8):
