@@ -1,6 +1,6 @@
 # PyCxsim Documentation
 ![Tests](https://github.com/Aatamte/PyCxsim/actions/workflows/python-tests.yml/badge.svg)
-![](https://github.com/Aatamte/PyCxsim/workflows/docs/badge.svg)
+![docs](https://github.com/Aatamte/PyCxsim/workflows/docs/badge.svg)
 
 ## Installation
 
