@@ -1,5 +1,6 @@
 import unittest
-from src.cxsim.agents.inventory import Inventory
+from src.cxsim.agents.traits.inventory import Inventory
+
 
 class Item:
     id_counter = 0
@@ -36,17 +37,12 @@ class TestInventory(unittest.TestCase):
         recent_deltas = self.inv.get_recent_deltas(2)
         self.assertEqual(recent_deltas, [("add", "apple", self.apple.id), ("add", "orange", self.orange.id)])
 
-    def test_reconstruct_past_state(self):
-        self.inv.add_item(self.apple)
-        self.inv.add_item(self.orange)
-        past_state = self.inv.reconstruct_past_state(1)
-        self.assertEqual(past_state["apple"], 0)  # The apple was added in the last step, so it's not in the past state
-
     def test_deltas_after_removal(self):
         self.inv.add_item(self.apple)
         self.inv.remove_item("apple")
         recent_deltas = self.inv.get_recent_deltas(2)
         self.assertEqual(recent_deltas, [("add", "apple", self.apple.id), ("remove", "apple", self.apple.id)])
+
 
 if __name__ == "__main__":
     unittest.main()

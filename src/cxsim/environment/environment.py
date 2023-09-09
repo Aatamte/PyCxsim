@@ -129,6 +129,7 @@ class Environment:
         """
         self.action_handler.add_artifact(artifact)
         self.query_handler.add_artifact(artifact)
+        self.artifacts.append(artifact)
 
     def add(self, item):
         """

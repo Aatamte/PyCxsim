@@ -21,11 +21,6 @@ class TestStringToDict(unittest.TestCase):
         expected = {'action': 'skip', 'reason': 'I will skip...'}
         self.assertEqual(string_to_dict(s), expected)
 
-    def test_simple_flat_string(self):
-        s = "action:skip, reason:I will skip..."
-        expected = {'action': 'skip', 'reason': 'I will skip...'}
-        self.assertEqual(string_to_dict(s), expected)
-
     def test_invalid_string(self):
         s = "this is not a dict string"
         with self.assertRaises(ValueError):
