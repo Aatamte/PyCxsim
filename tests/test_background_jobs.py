@@ -1,6 +1,6 @@
 import time
-from src.cxsim.background_jobs.decorators import background_task
-from src.cxsim.background_jobs.job_manager import JobManager
+from cxsim.utilities.background_jobs import background_task
+from cxsim.utilities.background_jobs import JobManager
 
 # Mock long running tasks
 

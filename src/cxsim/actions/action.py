@@ -1,8 +1,11 @@
-from dataclasses import dataclass
+from pydantic import BaseModel
 
 
-@dataclass
-class Action:
-    action_id: int = 0
-    step_taken: int = 0
+def do_action(action: str, parameters: dict):
+    return {"action": action, "parameters": parameters}
 
+
+class Action(BaseModel):
+    """do an action"""
+    action: str
+    parameters: dict

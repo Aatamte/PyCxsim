@@ -1,9 +1,11 @@
-from dataclasses import dataclass
+from pydantic import BaseModel
 
 
-@dataclass
-class Query:
-    content: str = "default"
+def do_query(query: str, parameters: dict):
+    return {"query": query, "parameters": parameters}
 
-    def create_prompt(self):
-        pass
+
+class Query(BaseModel):
+    """"""
+    query: str
+    parameters: dict

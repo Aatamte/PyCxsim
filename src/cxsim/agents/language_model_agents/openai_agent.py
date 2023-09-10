@@ -1,7 +1,7 @@
 import openai
 
 from src.cxsim.agents.language_model_agents.language_model_agent import LanguageModelAgent
-from src.cxsim.background_jobs.decorators import background_task
+from cxsim.utilities.background_jobs.decorators import background_task
 from src.cxsim.utilities.convert_string_to_json import string_to_dict
 
 
@@ -28,6 +28,7 @@ class OAIAgent(LanguageModelAgent):
     @background_task
     def execute_action(self):
         self.create_ChatCompletion()
+        print(self.messages)
 
         # In case of errors, you might want to return a default action or None
         return None
@@ -42,8 +43,10 @@ class OAIAgent(LanguageModelAgent):
         response = openai.ChatCompletion.create(
             model=self.model_id,
             messages=self.messages,
+            functions = self.functions,
             temperature=self.temperature
         )
+        print(response)
 
         self.messages.append(
             {'role': response.choices[0].message.role, 'content': response.choices[0].message.content}

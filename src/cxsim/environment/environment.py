@@ -202,7 +202,7 @@ class Environment:
 
         agent.set_up()
 
-    def set_up(self):
+    def prepare(self):
         self.start_time = time.perf_counter()
         # assert that all agents have necessary functionality
         self.validate_agents()
@@ -263,59 +263,59 @@ class Environment:
 
         self.calender.step()
 
-    def process_turn(self, agent):
-        # present the agent with its working memory
-      #  try:
-            agent.working_memory.show(self.current_step)
+    def process_queries(self, agent: Agent):
+        queries_should_continue = True
+        for query in range(agent.max_queries):
 
-            # wait until background tasks are complete
-            queries_should_continue = True
+            if not queries_should_continue:
+                break
 
-            # agent
-            is_action = True
+            agent.execute_query()
+            time.sleep(0.4)
 
-            # agent makes a query for information
-            for query in range(self.max_queries):
+            self.visualizer.running_background_tasks()
 
-                if not queries_should_continue:
-                    break
+            query_response = agent.query_queue.pop(0)
 
-                agent.execute_query()
-                time.sleep(0.4)
+            queries_should_continue, obs, is_action = self.query_handler.process_query(agent, query_response)
 
-                self.visualizer.running_background_tasks()
+            if obs:
+                agent.add_message("user", obs)
 
-                query_response = agent.query_queue.pop(0)
+    def process_actions(self, agent: Agent):
+        observation_prompt = ObservationPrompt()
+        observation_prompt.set_current_step(str(self.current_step))
+        observation_prompt.set_inventory(str(agent.display_inventory()))
 
-                queries_should_continue, obs, is_action = self.query_handler.process_query(agent, query_response)
+        # append observation to the agents messages
+        agent.add_message("user", observation_prompt.content)
 
-                if obs:
-                    agent.add_message("user", obs)
+        # agent chooses action based on the observation
+        agent.execute_action()
 
-            if not is_action:
-                observation_prompt = ObservationPrompt()
-                observation_prompt.set_current_step(str(self.current_step))
-                observation_prompt.set_inventory(str(agent.display_inventory()))
+        # wait until background tasks are complete
+        self.visualizer.running_background_tasks()
 
-                # append observation to the agents messages
-                agent.add_message("user", observation_prompt.content)
+        action = agent.action_queue.pop(0)
 
-                # agent chooses action based on the observation
-                agent.execute_action()
+        self.action_handler.process_action(agent, action)
 
-                # wait until background tasks are complete
-                self.visualizer.running_background_tasks()
+    def process_turn(self, agent: Agent):
+        print(agent.action_functions)
+        print(agent.query_functions)
 
-                action = agent.action_queue.pop(0)
-            else:
-                action = query_response
+        for func in agent.before_turn_methods:
+            func()
 
-            # process logic for the action
-            self.action_handler.process_action(agent, action)
- #       except Exception as e:
-  #          print(e)
-  #          print(agent.messages)
-            agent.step()
+        agent.working_memory.show(self.current_step)
+
+        self.process_queries(agent)
+        self.process_actions(agent)
+
+        agent.step()
+
+        for func in agent.after_turn_methods:
+            func()
 
     def step(self) -> [np.ndarray, list, list]:
         if self.gui:

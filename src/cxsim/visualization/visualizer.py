@@ -3,7 +3,7 @@ from src.cxsim.visualization.tabs.market_tab import MarketplaceTab
 from src.cxsim.visualization.agent_overview import AgentOverview
 from src.cxsim.visualization.worldview import World
 from src.cxsim.visualization.top_panel import TopPanel
-from src.cxsim.background_jobs.job_manager import JobManager
+from cxsim.utilities.background_jobs.job_manager import JobManager
 
 dpg.create_context()
 

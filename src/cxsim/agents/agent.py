@@ -1,16 +1,26 @@
 import random
 from copy import deepcopy
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 from src.cxsim.actions.action_restrictions import ActionRestriction
 from src.cxsim.agents.item import Item
+from src.cxsim.actions.action import Action, do_action
+from src.cxsim.queries.query import Query
 
 from src.cxsim.agents.tools.tool import Tool
 from src.cxsim.agents.traits.memory.long_term_memory import LongTermMemory
-from src.cxsim.agents.tools.knowledge_base import KnowledgeBase
-from src.cxsim.agents.tools.journal import Journal
 from src.cxsim.agents.traits.inventory import Inventory
 from src.cxsim.agents.traits.memory.working_memory import WorkingMemory
+
+
+def before_turn(func):
+    setattr(func, "_before_turn", True)
+    return func
+
+
+def after_turn(func):
+    setattr(func, "_after_turn", True)
+    return func
 
 
 class Agent:
@@ -47,6 +57,9 @@ class Agent:
         self.color: tuple = (0, 0, 0)
         self.role = None
 
+        self.max_actions = 1
+        self.max_queries = 10
+
         # holds the observations for each artifact
         self.observations = []
 
@@ -81,6 +94,78 @@ class Agent:
 
         # agent tools
         self.tools = {}
+
+        # agent functions
+        self.functions = [
+            {
+                "name": "do_action",
+                "description": Action.model_json_schema()["description"],
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "action": {"type": "string", "description": "The name of the action you want to take.", "enum": []},
+                        "parameters": {"type": "JSON", "description": "The arguments for the action you want to take"}
+                    },
+                    "required": ["action", "parameters"]
+                }
+
+            },
+            {
+                "name": "do_query",
+                "description": "Allows you to make a Query",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The name of the query you want to take."
+                        },
+                        "parameters": {
+                            "type": "dictionary",
+                            "description": "The arguments for the query you want to take"
+                        }
+                    },
+                    "required": ["action", "parameters"]
+                }
+
+            },
+        ]
+        print(self.functions)
+
+        self.before_turn_methods = [
+            getattr(self, method_name) for method_name in dir(self)
+            if callable(getattr(self, method_name))
+            and getattr(getattr(self, method_name), "_before_turn", False)
+        ]
+
+        self.after_turn_methods = [
+            getattr(self, method_name) for method_name in dir(self)
+            if callable(getattr(self, method_name))
+            and getattr(getattr(self, method_name), "_after_turn", False)
+        ]
+
+    def add_function(self, func):
+        """
+
+        Args:
+            func:
+            func_type:
+
+        Returns: None
+
+        """
+        name = func.__name__
+        print(name)
+        description = func
+
+        func_dict = {
+            "name": name,
+            "description": description,
+            "parameters": {
+                "type": "object"
+            }
+        }
+        self.functions.append(func_dict)
 
     def add_tool(self, tool: Tool):
         """
@@ -117,7 +202,7 @@ class Agent:
 
         :return: A random query from the query space.
         """
-        return random.choice(self.query_space)
+        raise NotImplementedError("This method should be implemented by subclasses")
 
     def reset(self):
         self.inventory.reset()

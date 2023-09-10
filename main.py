@@ -5,6 +5,8 @@ from src.cxsim import Environment
 from src.cxsim.agents import Population, OAIAgent
 from src.cxsim.artifacts import Marketplace
 
+from src.cxsim.agents.agent import before_turn
+
 
 class MyAgent(OAIAgent):
     def __init__(self):
@@ -13,22 +15,24 @@ class MyAgent(OAIAgent):
             {"capital": 1000, "socks": 10, "shirts": 5}
         )
 
-        self.params["max_price"] = 10
+    @before_turn
+    def say_hello(self):
+        print("hello")
 
 
 if __name__ == '__main__':
-    openai.api_key = os.environ["open_ai_key"]
-
+    openai.api_key = os.environ["openai_api_key"]
+    print("starting")
     env = Environment(gui=True)
 
     buyer_population = Population(
         agent=MyAgent(),
-        number_of_agents=5
+        number_of_agents=1
     )
 
     seller_population = Population(
         agent=MyAgent(),
-        number_of_agents=5
+        number_of_agents=1
     )
 
     env.add(buyer_population)
@@ -42,8 +46,8 @@ if __name__ == '__main__':
     env.max_episodes = 1
     env.max_steps = 50
 
-    # set up the environment
-    env.set_up()
+    # prepare the environment to be run
+    env.prepare()
 
     for step in env.iter_steps():
         print(step)
