@@ -25,8 +25,8 @@ class Order:
     price: int
     quantity: int
 
-
-class MarketPlaceQuery(BaseModel):
+@dataclass
+class MarketPlaceQuery:
     good: str
 
 

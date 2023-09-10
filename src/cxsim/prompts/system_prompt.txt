@@ -4,7 +4,8 @@ Artifacts will facilitate interactions between agents through handling the logic
 
 You also have trait-specific actions and tool-specific actions available to you, if they exist in the simulation.
 
-actions follow the format: {"action": "action_name", "action_parameters": {<action_parameters>},  "working_memory": <content>}
+actions follow the format: {"action": <action name> <str>, "parameters": <action parameters> <List[str]>}
+queries follow the format: {"query": <query name> <str>, "parameters": <query parameters> <List[str]>}
 
 TRAITS:
 working memory: text that will be carried over to the next step. You will only be presented with the last 7 steps of information. Your working memory allow you to refine your strategy over longer periods of time.
@@ -24,7 +25,7 @@ There are #!num_artifacts!# artifacts in the simulation
 #!artifact_descriptions!#
 
 GLOBAL ACTIONS:
-{"action": "skip", "action_parameters": "None", "working_memory": "<content>"} (you may skip your turn if you desire)
+do_action(action="skip", parameters=["None"]) (you may skip your turn if you desire)
 
 ACTION RESTRICTIONS:
 (function must not hit any assertions)
@@ -40,10 +41,8 @@ GOAL:
 Your goal for the simulation is to maximize your capital. You can do this by selling goods
 
 EXPECTATIONS:
-You will adhere to a strict response format where the beginning of your response you will output a dictionary: {"action": "action_name", "action_parameters": {<action_parameters>},  "working_memory": "<describe why you choose that action>"}
-LET ME REPEAT: THE FIRST LINE OF YOUR RESPONSE MUST BE THE ACTION DICTIONARY
-where "<action>" is a string, and {<action parameters>} is a dictionary. You MUST have an output that json.loads can read a dictionary into python.
-Any deviation from this format will mean that you forfeit your action for the round.
+You will call the do_action function to perform an action.
+You will call the do_query function to perform a query.
 
 TURN:
 When it is your turn, you will go through 4 stages:

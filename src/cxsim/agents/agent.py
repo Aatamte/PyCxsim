@@ -1,6 +1,6 @@
-import random
 from copy import deepcopy
 from abc import abstractmethod
+from typing import List
 
 from src.cxsim.actions.action_restrictions import ActionRestriction
 from src.cxsim.agents.item import Item
@@ -31,8 +31,8 @@ class Agent:
         name (str): Name of the agent.
         id (int): Unique identifier for the agent, initialized by the environment class.
         x_pos, y_pos (int): Positional coordinates of the agent.
-        color (tuple): RGB color representation of the agent.
-        role: Role or type of the agent.
+        color (tuple): RGB color representation of the agent that would be used in the GUI
+        role: Role of the agent.
         observations (list): List of observations made by the agent.
         messages (list): Messages received or sent by the agent.
         params (dict): Parameters or settings specific to the agent.
@@ -103,12 +103,23 @@ class Agent:
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "action": {"type": "string", "description": "The name of the action you want to take.", "enum": []},
-                        "parameters": {"type": "JSON", "description": "The arguments for the action you want to take"}
+                        "action": {
+                            "type": "string",
+                            "description": "The name of the action you want to take.",
+                            "enum": ["Order", "Skip"]
+                        },
+                        "parameters":
+                            {
+                                "type": "array",
+                                "description": "The arguments for the action you want to take, structure as a list of arguments",
+                                "items":
+                                    {
+                                        "type": "string"
+                                    }
+                            }
                     },
                     "required": ["action", "parameters"]
                 }
-
             },
             {
                 "name": "do_query",
@@ -121,8 +132,12 @@ class Agent:
                             "description": "The name of the query you want to take."
                         },
                         "parameters": {
-                            "type": "dictionary",
-                            "description": "The arguments for the query you want to take"
+                            "type": "array",
+                            "description": "The arguments for the query you want to take",
+                            "items":
+                                {
+                                    "type": "string"
+                                }
                         }
                     },
                     "required": ["action", "parameters"]

@@ -40,13 +40,18 @@ class OAIAgent(LanguageModelAgent):
         return None
 
     def create_ChatCompletion(self, action: bool = True):
-        response = openai.ChatCompletion.create(
+        try:
+            response = openai.ChatCompletion.create(
             model=self.model_id,
             messages=self.messages,
             functions = self.functions,
             temperature=self.temperature
-        )
-        print(response)
+            )
+            print(response)
+        except openai.error.InvalidRequestError as e:
+            print(e.json_body)
+            print(e.http_status)
+            print(e.request_id)
 
         self.messages.append(
             {'role': response.choices[0].message.role, 'content': response.choices[0].message.content}

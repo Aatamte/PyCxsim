@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import importlib_resources
 import copy
 import inspect
+from dataclasses import fields
 
 # Open the file (replace 'your_package_name' with the actual name of your package)
 with importlib_resources.open_text('src.cxsim.prompts', 'system_prompt.txt') as file:
@@ -106,12 +107,18 @@ class SystemPrompt:
             descriptions += f"{idx + 1}: " + artifact.name + "\n" + artifact.system_prompt.content \
                 + "\n"
             descriptions += "ACTIONS:" + "\n"
-            for action in artifact.get_action_space_prompt():
-                descriptions += str({"action": action, "working_memory": "<content>"}) + "\n"
+            for action in artifact.get_action_space():
+                action_name = str(action.__name__)
+                action_parameters = [f"{field.name} {field.type}" for field in fields(action)]
+                print(action_parameters)
+                descriptions += "do_action(action=" + str(action_name) + ", parameters=" + str(action_parameters) + "\n"
             descriptions += "QUERIES:" + "\n"
-            for query in artifact.get_query_space_prompt():
-                descriptions += str({"action": query,"working_memory": "<content>"}) + "\n"
+            for query in artifact.get_query_space():
+                query_name = str(query.__name__)
+                query_parameters = [f"{field.name} {field.type}" for field in fields(query)]
+                descriptions += "do_query(query=" + str(query_name) + ", parameters=" + str(query_parameters) + "\n"
 
+        print(descriptions)
         self.content = self.content.replace("#!artifact_descriptions!#", descriptions)
 
     def set_global_actions(self):
