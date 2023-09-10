@@ -1,4 +1,4 @@
-cxsim package
+PyCxsim package
 =============
 
 Subpackages
