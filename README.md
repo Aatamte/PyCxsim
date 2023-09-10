@@ -1,3 +1,5 @@
+![PyCxsim Logo](docs/assets/pycxsim_full_logo.png)
+
 # PyCxsim Documentation
 ![Tests](https://github.com/Aatamte/PyCxsim/actions/workflows/python-tests.yml/badge.svg)
 ![docs](https://github.com/Aatamte/PyCxsim/workflows/docs/badge.svg)
@@ -10,10 +12,9 @@ As the PyCxsim package is currently in development and not yet available on PyPI
 pip install git+https://github.com/Aatamte/PyCxsim.git
 ```
 
-
 ## Overview
 
-CAES (Complex Adaptive Economic Simulator) is a framework designed to simulate interactions between agents and artifacts within a defined environment. This document provides a high-level overview of the core components of the simulation.
+PyCxsim is a framework designed to simulate interactions between agents and artifacts within a defined environment. This document provides a high-level overview of the core components of the simulation.
 
 ## Components
 
