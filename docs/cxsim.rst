@@ -5,18 +5,19 @@ Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
-   cxsim.actions
-   cxsim.agents
-   cxsim.artifacts
-   cxsim.background_jobs
-   cxsim.environment
-   cxsim.prompts
-   cxsim.queries
-   cxsim.templates
-   cxsim.utilities
-   cxsim.visualization
+   environment
+   actions
+   agents
+   artifacts
+   background_jobs
+   environment
+   prompts
+   queries
+   templates
+   utilities
+   visualization
 
 Module contents
 ---------------
