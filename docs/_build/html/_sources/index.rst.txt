@@ -6,16 +6,31 @@
 Welcome to PyCxsim's documentation!
 ===================================
 
+PyCxsim (Python Complex Simulation) is a python package to develop complex simulations utilizing language models.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    modules.rst
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Quickstart:
 
-Indices and tables
-==================
+   modules.rst
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. toctree::
+   :maxdepth: 2
+   :caption: Artifacts:
+
+   modules.rst
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Tutorials:
+
+   modules.rst
+
+

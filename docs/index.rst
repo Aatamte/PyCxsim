@@ -3,22 +3,58 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to PyCxsim's documentation!
-===================================
+=====================
+PyCxsim Documentation
+=====================
 
-PyCxsim (Python Complex Simulation) is a python package to develop complex simulations utilizing language models.
+Welcome to the PyCxsim documentation! This documentation provides detailed information about the PyCxsim package, its modules, and functionalities.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Table of Contents
 
-   modules.rst
+   cxsim
+   cxsim.actions
+   cxsim.agents
+   cxsim.agents.language_model_agents
+   cxsim.artifacts
+   cxsim.background_jobs
+   cxsim.environment
+   cxsim.prompts
+   cxsim.queries
+   cxsim.templates
+   cxsim.utilities
+   cxsim.visualization
+   cxsim.visualization.tabs
 
+Overview
+========
 
-Quickstart
+PyCxsim is a comprehensive package designed for [brief description of the package's main purpose]. It offers a range of modules and functionalities to cater to [specific use cases or functionalities].
 
+Features
+--------
 
+* Comprehensive agent modeling
+* Advanced visualization tools
+* Extensive environment configurations
+* [Other notable features]
 
+Getting Started
+===============
 
-Tutorials
+To get started with PyCxsim, [brief instructions or link to a getting started guide].
+
+Contribute
+==========
+
+Contributions are welcome! Check out our `GitHub repository <https://github.com/Aatamte/PyCxsim>`_ for more details.
+
+Indices and Tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
 
