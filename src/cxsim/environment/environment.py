@@ -301,8 +301,6 @@ class Environment:
         self.action_handler.process_action(agent, action)
 
     def process_turn(self, agent: Agent):
-        print(agent.action_functions)
-        print(agent.query_functions)
 
         for func in agent.before_turn_methods:
             func()

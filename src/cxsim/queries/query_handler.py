@@ -38,18 +38,12 @@ class QueryHandler:
         return False
 
     def process_query(self, agent, query):
-        print(agent, query)
-        if query["action"] == "skip":
+        name = query["query"]
+        if name == "Skip":
             return False, None, False
-
-        try:
-            query = self.query_lookup[query["action"]](**query["action_parameters"])
-        except KeyError as error:
-            if query["action"] in self.action_list:
-                return False, None, True
-            else:
-                raise error
-
+        else:
+            query = self.query_lookup[name](*query["parameters"])
+        print(query)
         artifact = self.map_query_to_artifact[type(query)]
         observation = self.artifacts[artifact].process_query(agent, query)
         return True, observation, False

@@ -236,7 +236,7 @@ class Visualizer:
                 dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 0, category=dpg.mvThemeCat_Core)
 
         dpg.set_viewport_resize_callback(self.resize)
-        dpg.create_viewport(title='Complex Adaptive Economic Simulator', width=self.WIDTH, height=self.HEIGHT)
+        dpg.create_viewport(title='Complex Adaptive Economic Simulator', width=self.WIDTH, height=self.HEIGHT, )
         dpg.setup_dearpygui()
         dpg.show_viewport()
 

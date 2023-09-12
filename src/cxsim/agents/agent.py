@@ -96,56 +96,7 @@ class Agent:
         self.tools = {}
 
         # agent functions
-        self.functions = [
-            {
-                "name": "do_action",
-                "description": Action.model_json_schema()["description"],
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "action": {
-                            "type": "string",
-                            "description": "The name of the action you want to take.",
-                            "enum": ["Order", "Skip"]
-                        },
-                        "parameters":
-                            {
-                                "type": "array",
-                                "description": "The arguments for the action you want to take, structure as a list of arguments",
-                                "items":
-                                    {
-                                        "type": "string"
-                                    }
-                            }
-                    },
-                    "required": ["action", "parameters"]
-                }
-            },
-            {
-                "name": "do_query",
-                "description": "Allows you to make a Query",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "The name of the query you want to take."
-                        },
-                        "parameters": {
-                            "type": "array",
-                            "description": "The arguments for the query you want to take",
-                            "items":
-                                {
-                                    "type": "string"
-                                }
-                        }
-                    },
-                    "required": ["action", "parameters"]
-                }
-
-            },
-        ]
-        print(self.functions)
+        self.functions = []
 
         self.before_turn_methods = [
             getattr(self, method_name) for method_name in dir(self)
@@ -170,7 +121,7 @@ class Agent:
 
         """
         name = func.__name__
-        print(name)
+
         description = func
 
         func_dict = {

@@ -3,7 +3,7 @@ import openai
 from src.cxsim.agents.language_model_agents.language_model_agent import LanguageModelAgent
 from cxsim.utilities.background_jobs.decorators import background_task
 from src.cxsim.utilities.convert_string_to_json import string_to_dict
-
+import json
 
 class OAIAgent(LanguageModelAgent):
     def __init__(
@@ -40,57 +40,106 @@ class OAIAgent(LanguageModelAgent):
         return None
 
     def create_ChatCompletion(self, action: bool = True):
-        try:
-            response = openai.ChatCompletion.create(
+        response = openai.ChatCompletion.create(
             model=self.model_id,
             messages=self.messages,
             functions = self.functions,
             temperature=self.temperature
-            )
-            print(response)
-        except openai.error.InvalidRequestError as e:
-            print(e.json_body)
-            print(e.http_status)
-            print(e.request_id)
+        )
+        print(response)
 
         self.messages.append(
             {'role': response.choices[0].message.role, 'content': response.choices[0].message.content}
         )
         usage = response["usage"]
         self.usage_statistics["total_tokens"] = usage["total_tokens"]
-        try:
-            # Get the last message's content
-            response = self.messages[-1]["content"]
 
-            # Process the response to get action_string
-            response_string = response.strip("\n").split("\n")[0]
-            response_dict = string_to_dict(response_string)
+        if "function_call" in response.choices[0].message:
+            name = response.choices[0].message["function_call"]["name"]
+            parameters = json.loads(response.choices[0].message["function_call"]["arguments"])
 
-            self.working_memory.content = response_dict["working_memory"]
-
-            if action:
-                # Append the action to the action queue
-                self.action_queue.append(response_dict)
+            if name == "do_action":
+                self.action_queue.append(parameters)
             else:
-                self.query_queue.append(response_dict)
+                self.query_queue.append(parameters)
 
-            return response_dict
-
-        except (ValueError, SyntaxError, TypeError):
-            # This will catch errors from ast.literal_eval and any type issues
-            # Handle or log the error here if necessary
-            pass
-
-        # In case of errors, you might want to return a default action or None
+        if "content" in response.choices[0].message:
+            self.working_memory.content = response.choices[0].message["content"]
+        print(self.action_queue)
+        print(self.query_queue)
         return None
 
     def get_result(self):
         pass
 
     def set_up(self):
+        print(self.action_space)
+
+        action_names = ["Skip"]
+        for key, action_list in self.action_space.items():
+            for action in action_list:
+                action_names.append(action.__name__)
+
+        query_names = ["Skip"]
+        for key, query_list in self.query_space.items():
+            for query in query_list:
+                query_names.append(query.__name__)
+
+        self.functions.append(
+            {
+                "name": "do_query",
+                "description": "Allows you to make a Query",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The name of the query you want to take.",
+                            "enum": query_names
+                        },
+                        "parameters": {
+                            "type": "array",
+                            "description": "The arguments for the query you want to take",
+                            "items":
+                                {
+                                    "type": "string"
+                                }
+                        }
+                    },
+                    "required": ["action", "parameters"]
+                }
+
+            }
+        )
+
+        self.functions.append(
+            {
+                "name": "do_action",
+                "description": "",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                            "type": "string",
+                            "description": "The name of the action you want to take.",
+                            "enum": action_names
+                        },
+                        "parameters":
+                            {
+                                "type": "array",
+                                "description": "The arguments for the action you want to take, structure as a list of arguments",
+                                "items":
+                                    {
+                                        "type": "string"
+                                    }
+                            }
+                    },
+                    "required": ["action", "parameters"]
+                }
+            },
+        )
         self.add_message("system", self.system_prompt.content)
         self.create_ChatCompletion(True)
-        try:
-            self.action_queue.pop(0)
-        except:
-            pass
+
+        self.action_queue.clear()
+        self.query_queue.clear()
