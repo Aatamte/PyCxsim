@@ -1,9 +1,14 @@
 import dearpygui.dearpygui as dpg
+
+
 from src.cxsim.visualization.tabs.market_tab import MarketplaceTab
 from src.cxsim.visualization.agent_overview import AgentOverview
 from src.cxsim.visualization.worldview import World
 from src.cxsim.visualization.top_panel import TopPanel
-from cxsim.utilities.background_jobs.job_manager import JobManager
+from src.cxsim.utilities.background_jobs.job_manager import JobManager
+from src.cxsim.visualization.assets.path_definition import ASSET_PATH
+
+print(ASSET_PATH)
 
 dpg.create_context()
 
@@ -236,7 +241,13 @@ class Visualizer:
                 dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 0, category=dpg.mvThemeCat_Core)
 
         dpg.set_viewport_resize_callback(self.resize)
-        dpg.create_viewport(title='Complex Adaptive Economic Simulator', width=self.WIDTH, height=self.HEIGHT, )
+        dpg.create_viewport(
+            title='PyCxsim',
+            width=self.WIDTH,
+            height=self.HEIGHT,
+            small_icon=ASSET_PATH.joinpath("large_icon.ico").__str__(),
+            large_icon=ASSET_PATH.joinpath("large_icon.ico").__str__()
+        )
         dpg.setup_dearpygui()
         dpg.show_viewport()
 
