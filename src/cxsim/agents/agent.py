@@ -4,8 +4,7 @@ from typing import List
 
 from src.cxsim.actions.action_restrictions import ActionRestriction
 from src.cxsim.agents.item import Item
-from src.cxsim.actions.action import Action, do_action
-from src.cxsim.queries.query import Query
+from src.cxsim.utilities.background_jobs.decorators import background_task
 
 from src.cxsim.agents.tools.tool import Tool
 from src.cxsim.agents.traits.memory.long_term_memory import LongTermMemory
@@ -59,6 +58,9 @@ class Agent:
 
         self.max_actions = 1
         self.max_queries = 10
+
+        self.action_queue = []
+        self.query_queue = []
 
         # holds the observations for each artifact
         self.observations = []
@@ -154,6 +156,7 @@ class Agent:
         )
 
     @abstractmethod
+    @background_task
     def execute_action(self):
         """
         Execute an action by the agent.
@@ -162,6 +165,7 @@ class Agent:
         raise NotImplementedError("This method should be implemented by subclasses")
 
     @abstractmethod
+    @background_task
     def execute_query(self):
         """
         Execute a query and return a random choice from the query space.

@@ -8,8 +8,6 @@ from src.cxsim.visualization.top_panel import TopPanel
 from src.cxsim.utilities.background_jobs.job_manager import JobManager
 from src.cxsim.visualization.assets.path_definition import ASSET_PATH
 
-print(ASSET_PATH)
-
 dpg.create_context()
 
 artifact_tabs = {

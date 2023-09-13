@@ -79,7 +79,7 @@ class Environment:
         self.agent_name_lookup = {}
         self.agent_id_lookup = {}
 
-        self.max_queries = 2
+        self.max_queries = 1
         self.max_actions = 1
         self.action_space = {}
         self.query_space = {}
@@ -152,11 +152,7 @@ class Environment:
 
     def validate_agents(self):
         for agent in self.agents:
-
-            # make sure that all agents have an execute_action
-            assert agent.execute_action.__code__ != Agent.execute_action.__code__, "execute_action method must be implemented by subclass"
-
-            assert agent.execute_query.__code__ != Agent.execute_query.__code__, "execute_query method must be implemented by subclass"
+            pass
 
     def validate_artifacts(self):
         for name, artifact in self.action_handler.artifacts.items():
@@ -264,23 +260,23 @@ class Environment:
         self.calender.step()
 
     def process_queries(self, agent: Agent):
-        queries_should_continue = True
+        agent.working_memory.show(self.current_step)
         for query in range(agent.max_queries):
-
-            if not queries_should_continue:
-                break
-
             agent.execute_query()
-            time.sleep(0.4)
 
             self.visualizer.running_background_tasks()
+            try:
+                query = agent.query_queue.pop(0)
+            except Exception as e:
+                print(agent.name, agent.language_model_logs)
+                raise ValueError(e)
 
-            query_response = agent.query_queue.pop(0)
-
-            queries_should_continue, obs, is_action = self.query_handler.process_query(agent, query_response)
+            queries_should_continue, obs, is_action = self.query_handler.process_query(agent, query)
 
             if obs:
-                agent.add_message("user", obs)
+                pass
+            else:
+                break
 
     def process_actions(self, agent: Agent):
         observation_prompt = ObservationPrompt()
@@ -288,24 +284,23 @@ class Environment:
         observation_prompt.set_inventory(str(agent.display_inventory()))
 
         # append observation to the agents messages
-        agent.add_message("user", observation_prompt.content)
+        #agent.add_message("user", observation_prompt.content)
 
         # agent chooses action based on the observation
         agent.execute_action()
 
         # wait until background tasks are complete
         self.visualizer.running_background_tasks()
-
-        action = agent.action_queue.pop(0)
-
-        self.action_handler.process_action(agent, action)
+        try:
+            action = agent.action_queue.pop(0)
+            self.action_handler.process_action(agent, action)
+        except:
+            print(agent.query_queue, agent.action_queue)
 
     def process_turn(self, agent: Agent):
 
         for func in agent.before_turn_methods:
             func()
-
-        agent.working_memory.show(self.current_step)
 
         self.process_queries(agent)
         self.process_actions(agent)

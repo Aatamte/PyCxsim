@@ -39,7 +39,7 @@ class QueryHandler:
 
     def process_query(self, agent, query):
         name = query["query"]
-        if name == "Skip":
+        if name == "Skip" or name == "skip":
             return False, None, False
         else:
             query = self.query_lookup[name](*query["parameters"])

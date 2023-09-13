@@ -5,6 +5,7 @@ from cxsim.utilities.background_jobs.decorators import background_task
 from src.cxsim.utilities.convert_string_to_json import string_to_dict
 import json
 
+
 class OAIAgent(LanguageModelAgent):
     def __init__(
             self,
@@ -14,8 +15,6 @@ class OAIAgent(LanguageModelAgent):
         self.model_id = model_id
         self.language_model_logs = []
 
-        self.action_queue = []
-        self.query_queue = []
         self.keep_last_n = 10
 
     def step(self):
@@ -28,29 +27,32 @@ class OAIAgent(LanguageModelAgent):
     @background_task
     def execute_action(self):
         self.create_ChatCompletion()
-        print(self.messages)
 
         # In case of errors, you might want to return a default action or None
         return None
 
     @background_task
     def execute_query(self):
-        self.create_ChatCompletion(False)
+        self.create_ChatCompletion()
 
         return None
 
-    def create_ChatCompletion(self, action: bool = True):
+    @background_task
+    def create_ChatCompletion(self):
         response = openai.ChatCompletion.create(
             model=self.model_id,
             messages=self.messages,
             functions = self.functions,
             temperature=self.temperature
         )
-        print(response)
+        print(self.name, response)
+        self.add_message(response.choices[0].message.role, response.choices[0].message.content)
 
-        self.messages.append(
-            {'role': response.choices[0].message.role, 'content': response.choices[0].message.content}
-        )
+        self.language_model_logs.append(response)
+
+        for message in self.messages:
+            print(message)
+
         usage = response["usage"]
         self.usage_statistics["total_tokens"] = usage["total_tokens"]
 
@@ -73,7 +75,6 @@ class OAIAgent(LanguageModelAgent):
         pass
 
     def set_up(self):
-        print(self.action_space)
 
         action_names = ["Skip"]
         for key, action_list in self.action_space.items():
@@ -139,7 +140,7 @@ class OAIAgent(LanguageModelAgent):
             },
         )
         self.add_message("system", self.system_prompt.content)
-        self.create_ChatCompletion(True)
+        self.create_ChatCompletion()
 
         self.action_queue.clear()
         self.query_queue.clear()

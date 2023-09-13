@@ -36,7 +36,6 @@ if __name__ == '__main__':
     )
 
     env.add(buyer_population)
-    env.add(seller_population)
 
     marketplace = Marketplace()
     env.add(marketplace)

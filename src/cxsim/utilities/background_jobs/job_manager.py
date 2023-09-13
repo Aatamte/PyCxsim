@@ -12,6 +12,7 @@ class JobManager:
 
     @classmethod
     def cleanup_jobs(cls):
+        print(cls.jobs)
         for job in cls.jobs:
             if not job.is_alive():
                 cls.jobs.remove(job)

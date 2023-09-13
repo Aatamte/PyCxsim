@@ -110,7 +110,7 @@ class SystemPrompt:
             for action in artifact.get_action_space():
                 action_name = str(action.__name__)
                 action_parameters = [f"{field.name} {field.type}" for field in fields(action)]
-                print(action_parameters)
+
                 descriptions += "do_action(action=" + str(action_name) + ", parameters=" + str(action_parameters) + "\n"
             descriptions += "QUERIES:" + "\n"
             for query in artifact.get_query_space():
@@ -118,7 +118,6 @@ class SystemPrompt:
                 query_parameters = [f"{field.name} {field.type}" for field in fields(query)]
                 descriptions += "do_query(query=" + str(query_name) + ", parameters=" + str(query_parameters) + "\n"
 
-        print(descriptions)
         self.content = self.content.replace("#!artifact_descriptions!#", descriptions)
 
     def set_global_actions(self):
