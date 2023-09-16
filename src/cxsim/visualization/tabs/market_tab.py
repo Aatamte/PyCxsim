@@ -21,8 +21,6 @@ class MarketplaceTab(Tab):
     def step(self):
         dpg.set_value(self.best_bid, [[n for n in range(len(self.best_bid_plot))], self.best_bid_plot])
         dpg.set_value(self.best_ask, [[n for n in range(len(self.best_ask_plot))], self.best_ask_plot])
-        dpg.fit_axis_data("y_axis")
-        dpg.fit_axis_data("x_axis")
         dpg.set_value(self.text, self.marketplace[self.current_market])
         dpg.set_value(self.market_history, self.marketplace[self.current_market].history)
 
@@ -33,12 +31,10 @@ class MarketplaceTab(Tab):
         dpg.show_item(self.window)
 
     def show_good_plot_callback(self, sender, data):
-        print(sender, data)
         self.current_market = data
         self.best_bid_plot = self.marketplace[data].best_bid_history
         self.best_ask_plot = self.marketplace[data].best_ask_history
         #self.text = self.marketplace[data]
-        print(self.text)
 
     def draw(self):
         self.current_market = list(self.marketplace.markets.keys())[0]
@@ -51,6 +47,7 @@ class MarketplaceTab(Tab):
                 dpg.add_plot_legend()
                 dpg.add_plot_axis(dpg.mvXAxis, label="step", tag="x_axis")
                 dpg.add_plot_axis(dpg.mvYAxis, label="price", tag="y_axis")
+                dpg.set_axis_limits_auto("y_axis")
 
                 self.best_bid = dpg.add_line_series(
                     [n for n in range(len(self.best_bid_plot))],

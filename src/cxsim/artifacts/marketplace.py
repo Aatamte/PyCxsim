@@ -39,6 +39,22 @@ class MarketPlaceTransaction(Event):
     price: int
 
 
+@dataclass
+class InternalOrder:
+    good: str
+    price: int
+    quantity: int
+    agent: None
+
+    def __eq__(self, other):
+        if isinstance(other, InternalOrder):
+            return (self.good == other.good and
+                    self.price == other.price and
+                    self.quantity == other.quantity and
+                    self.agent == other.agent)
+        return False
+
+
 # The OrderBook class represents the order book in a market
 class OrderBook:
     """
@@ -60,8 +76,8 @@ class OrderBook:
         # Initialize lists to hold buy and sell orders
         self.sell_orders = []
         self.buy_orders = []
-        self.highest_bid_order: Order = Order(good=self.product_name, price=-1000000, quantity=1)
-        self.lowest_offer_order: Order = Order(good=self.product_name, price=1000000, quantity=-1)
+        self.highest_bid_order = None
+        self.lowest_offer_order = None
         self.order_count = 0
         self.num_transactions = 0
         # store transaction history in a pandas DataFrame for easy data manipulation and analysis
@@ -72,13 +88,15 @@ class OrderBook:
 
         self.event_history = []
 
+        self.order_history = []
+
     def reset(self):
         # Clear orders
         self.sell_orders = []
         self.buy_orders = []
         # Reset bid/offer orders
-        self.highest_bid_order: Order = Order(good=self.product_name, price=-1000000, quantity=1)
-        self.lowest_offer_order: Order = Order(good=self.product_name, price=1000000, quantity=-1)
+        self.highest_bid_order = None
+        self.lowest_offer_order = None
         # Reset counters
         self.order_count = 0
         self.num_transactions = 0
@@ -87,9 +105,9 @@ class OrderBook:
             columns=["transaction_id", "price", "quantity", "buyer", "seller"]
         )
 
-    def _can_order_be_executed(self, order: Order, is_buy_order: bool) -> bool:
-        if not isinstance(order, Order):
-            raise TypeError("order should be of type <Order>")
+    def _can_order_be_executed(self, order: InternalOrder, is_buy_order: bool) -> bool:
+        if not isinstance(order, InternalOrder):
+            raise TypeError("order should be of type <InternalOrder>")
         # no matching order exists in the order book
         if (is_buy_order and len(self.sell_orders) == 0) or (not is_buy_order and len(self.buy_orders) == 0):
             return False
@@ -101,34 +119,89 @@ class OrderBook:
                 return self.execute(order, self.highest_bid_order)
         return False
 
-    def is_order_legitimate(self, order: Order, is_buy_order: bool):
+    def is_order_legitimate(self, order: InternalOrder, is_buy_order: bool):
+        # If the order quantity is zero, it's invalid
         if order.quantity == 0:
             return False
-        # if agent is buying,
-        if is_buy_order and order.agent.get_amounts("capital") >= order.price:
-            return True
-        if not is_buy_order and order.agent.get_amounts(self.product_name) >= abs(order.quantity):
-            return True
-        return False
 
-    def should_remove_existing_order(self, order: Order):
-        for existing_order in self.sell_orders:
-            if existing_order.agent == order.agent:
-                self.sell_orders.remove(existing_order)
-        for existing_order in self.buy_orders:
-            if existing_order.agent == order.agent:
-                self.buy_orders.remove(existing_order)
+        if order.price <= 0:
+            return False
 
-    def add(self, order: Order):
+        # Check for an existing order from the same agent in the opposite direction
+        if is_buy_order:
+            existing_order_cost = sum([o.price for o in self.buy_orders if o.agent == order.agent])
+            total_order_cost = order.price + existing_order_cost
+
+            if order.agent.get_inventory("capital") < total_order_cost:
+                return False
+
+            for existing_order in self.sell_orders:
+                if existing_order.agent == order.agent:
+                    # Remove the existing sell order
+                    self.sell_orders.remove(existing_order)
+                    return True
+
+        else:
+            existing_goods_quantity = sum([abs(o.quantity) for o in self.sell_orders if o.agent == order.agent])
+            total_goods_quantity = abs(order.quantity) + existing_goods_quantity
+
+            if order.agent.get_inventory(self.product_name) < total_goods_quantity:
+                return False
+
+            for existing_order in self.buy_orders:
+                if existing_order.agent == order.agent:
+                    # Remove the existing buy order
+                    self.buy_orders.remove(existing_order)
+                    return True
+
+        if is_buy_order:
+            total_buy_value = sum([o.price * o.quantity for o in self.buy_orders if o.agent == order.agent])
+            assert order.agent.get_inventory(
+                "capital") >= total_buy_value, "Agent doesn't have enough capital for all buy orders."
+        else:
+            total_sell_qty = sum([abs(o.quantity) for o in self.sell_orders if o.agent == order.agent])
+            assert order.agent.get_inventory(
+                self.product_name) >= total_sell_qty, "Agent doesn't have enough inventory for all sell orders."
+
+        # Usual legitimacy checks
+        if is_buy_order:
+            return order.agent.get_inventory("capital") >= order.price
+        else:
+            return order.agent.get_inventory(self.product_name) >= abs(order.quantity)
+
+    def update_best_orders(self):
+        if len(self.buy_orders) != 0:
+            self.buy_orders = sorted(self.buy_orders, key=lambda x: x.price, reverse=True)
+            self.highest_bid_order = self.buy_orders[0]
+        else:
+            self.highest_bid_order = None
+
+        if len(self.sell_orders) != 0:
+            self.sell_orders = sorted(self.sell_orders, key=lambda x: x.price)
+            self.lowest_offer_order = self.sell_orders[0]
+        else:
+            self.lowest_offer_order = None
+
+    def should_remove_existing_order(self, order: InternalOrder):
+        self.sell_orders = [o for o in self.sell_orders if o.agent != order.agent]
+        self.buy_orders = [o for o in self.buy_orders if o.agent != order.agent]
+
+        self.update_best_orders()
+
+    def add(self, order: InternalOrder):
+        self.order_history.append(order)
         order.id = self.order_count
         self.order_count += 1
 
         # check if agent has enough capital or quantity of good to make the order
         is_buy_order = True if order.quantity >= 0 else False
 
-        order_is_legitimate = self.is_order_legitimate(order, is_buy_order)
-
+        existing_buy_orders = [o for o in self.buy_orders if o.agent == order.agent]
+        existing_sell_orders = [o for o in self.sell_orders if o.agent == order.agent]
+        assert not (existing_buy_orders and existing_sell_orders), "Agent has orders on both sides of the market."
         self.should_remove_existing_order(order)
+
+        order_is_legitimate = self.is_order_legitimate(order, is_buy_order)
 
         if order_is_legitimate:
             # if order can be executed immediately, do it
@@ -136,19 +209,21 @@ class OrderBook:
 
             if not order_was_executed:
                 if is_buy_order:
+                    assert order.quantity > 0, "Buy order with non-positive quantity detected."
                     self.buy_orders.append(order)
                 else:
+                    assert order.quantity < 0, "Sell order with non-negative quantity detected."
                     self.sell_orders.append(order)
 
-            if len(self.buy_orders) != 0:
-                self.buy_orders = sorted(self.buy_orders, key=lambda x: x.price, reverse=True)
-                self.highest_bid_order = self.buy_orders[0]
+            self.update_best_orders()
 
-            if len(self.sell_orders) != 0:
-                self.sell_orders = sorted(self.sell_orders, key=lambda x: x.price)
-                self.lowest_offer_order = self.sell_orders[0]
+            # At the end of the 'add' method, after updating 'highest_bid_order' and 'lowest_offer_order'
+            if self.buy_orders and self.highest_bid_order:
+                assert self.highest_bid_order == self.buy_orders[0], "highest_bid_order is not consistent with sorted buy_orders."
+            if self.sell_orders and self.lowest_offer_order:
+                assert self.lowest_offer_order == self.sell_orders[0], "lowest_offer_order is not consistent with sorted sell_orders."
 
-    def execute(self, incoming_order: Order, book_order: Order):
+    def execute(self, incoming_order: InternalOrder, book_order: InternalOrder):
         transaction_price = book_order.price
         is_incoming_buy_order = True if incoming_order.quantity >= 0 else False
         transaction_quantity = min(abs(incoming_order.quantity), abs(book_order.quantity))
@@ -160,15 +235,12 @@ class OrderBook:
                 book_order.agent,
                 (self.product_name, transaction_quantity)
             )
-
-            self.sell_orders.remove(book_order)
-
             self.event_history.append(
                 MarketPlaceTransaction(
                     buyer_agent=incoming_order.agent,
-                    seller_agent = book_order.agent,
-                    good = self.product_name,
-                    quantity = transaction_quantity,
+                    seller_agent=book_order.agent,
+                    good=self.product_name,
+                    quantity=transaction_quantity,
                     price=transaction_price,
                     step=0
                 )
@@ -180,9 +252,6 @@ class OrderBook:
                 book_order.agent,
                 ("capital", transaction_price),
             )
-
-            self.buy_orders.remove(book_order)
-
             self.event_history.append(
                 MarketPlaceTransaction(
                     buyer_agent=book_order.agent,
@@ -194,25 +263,59 @@ class OrderBook:
                 )
             )
 
-        self.history = pd.concat([self.history, pd.DataFrame(
-            {
+        # Adjust unmatched parts of the orders for the incoming order
+        if abs(incoming_order.quantity) > transaction_quantity:
+            # If the incoming order was not fully matched
+            incoming_order.quantity -= transaction_quantity if is_incoming_buy_order else -transaction_quantity
+        else:
+            # If the incoming order was fully matched or exceeded
+            if is_incoming_buy_order:
+                if incoming_order in self.buy_orders:
+                    self.buy_orders.remove(incoming_order)
+            else:
+                if incoming_order in self.sell_orders:
+                    self.sell_orders.remove(incoming_order)
+
+        # Adjust unmatched parts of the orders for the book order
+        if abs(book_order.quantity) > transaction_quantity:
+            # If the book order was not fully matched
+            book_order.quantity -= transaction_quantity if book_order.quantity > 0 else -transaction_quantity
+        else:
+            # If the book order was fully matched
+            if book_order.quantity > 0:
+                self.buy_orders.remove(book_order)
+            else:
+                self.sell_orders.remove(book_order)
+
+
+        # Update history and transaction counter
+        self.history = pd.concat([
+            self.history,
+            pd.DataFrame({
                 "transaction_id": [self.num_transactions],
                 "price": [transaction_price],
                 "quantity": [transaction_quantity],
                 "buyer": [incoming_order.agent.name if is_incoming_buy_order else book_order.agent.name],
                 "seller": [incoming_order.agent.name if not is_incoming_buy_order else book_order.agent.name]
-            })]
-                                            )
+            })
+        ])
         self.num_transactions += 1
+
+        assert incoming_order not in self.buy_orders, "Executed buy order still present in buy_orders."
+        assert incoming_order not in self.sell_orders, "Executed sell order still present in sell_orders."
+
         return True
 
     def step(self):
-        self.best_bid_history.append(
-            self.highest_bid_order.price
-        )
-        self.best_ask_history.append(
-            self.lowest_offer_order.price
-        )
+        if self.highest_bid_order:
+            self.best_bid_history.append(
+                self.highest_bid_order.price
+            )
+
+        if self.lowest_offer_order:
+            self.best_ask_history.append(
+                self.lowest_offer_order.price
+            )
 
     def get_full_orderbook(self):
         return [(order.price, order.quantity) for order in self.buy_orders] + [(order.price, order.quantity) for order in self.sell_orders]
@@ -225,9 +328,8 @@ class OrderBook:
 
     def __repr__(self):
         new_line = "\n"
-        sell_order_list = [str((order.price, order.quantity, order.agent.name, order.id)) for order in self.sell_orders]
-        buy_order_list = [str((order.price, order.quantity, order.agent.name, order.id)) for order in self.buy_orders][
-                         ::-1]
+        sell_order_list = [str((order.price, order.quantity, order.agent.name, order.id)) for order in self.sell_orders][-1::][:5]
+        buy_order_list = [str((order.price, order.quantity, order.agent.name, order.id)) for order in self.buy_orders][:5]
         return \
 f"""===================================
 {self.product_name} Order Book
@@ -240,30 +342,38 @@ Sell order = negative quantity
 
 
 class Marketplace(Artifact):
-    def __init__(self, infer_goods_from_agents:  bool = True):
+    def __init__(self, product_names = None, infer_goods_from_agents:  bool = True):
         super(Marketplace, self).__init__("Marketplace")
         self.infer_goods_from_agents = infer_goods_from_agents
         self.markets: Dict[str, OrderBook] = {}
 
-        self.action_space.append(Order)
+        if product_names:
+            self.market_names = product_names
+        else:
+            self.market_names = []
 
+        self.action_space.append(Order)
         self.query_space.append(MarketPlaceQuery)
 
     def process_action(self, agent, action: Union[list, Order]):
         if isinstance(action, tuple):
             market = action[0]
-            self.markets[market].add(Order(market, action[1], action[2], agent))
+            self.markets[market].add(InternalOrder(market, action[1], action[2], agent))
         elif isinstance(action, Order):
+
             market = action.good
-            self.markets[market].add(action)
+            self.markets[market].add(InternalOrder(good=action.good, price=action.price, quantity=action.quantity, agent=agent))
         elif isinstance(action, list):
             raise TypeError("action should be a tuple, not a list.")
         else:
             raise TypeError("action should either be a ")
 
     def process_query(self, agent, query):
-        m = self.markets[query.good]
-        return m.__repr__()
+        if query.good not in self.markets.keys():
+            return f"The good: {query.good}, does not exist in the marketplace"
+        else:
+            m = self.markets[query.good]
+            return m.__repr__()
 
     def step(self):
         for name, market in self.markets.items():
@@ -276,25 +386,21 @@ class Marketplace(Artifact):
                     if good == "capital":
                         pass
                     elif good not in self.markets.keys():
-                        self.markets[good] = OrderBook(good, environment)
+                        self.market_names.append(good)
+
+        for market_name in self.market_names:
+            self.markets[market_name] = OrderBook(market_name, environment)
 
         self.system_prompt = Prompt(
             f"""This is a marketplace where agents can buy and sell goods. Current markets include: {[market for market in self.markets]}. To place a buy order, use a positive quantity in your order(int). To place a sell order, use a negative quantity in your order(-int)."""
         )
 
     def reset(self, environment):
-        for agent in environment.agents:
-            for good in agent.inventory.keys():
-                if good == "capital":
-                    pass
-                elif good not in self.markets.keys():
-                    self.markets[good] = OrderBook(good, self.environment)
-
         for market in self.markets.values():
             market.reset()
 
-    def language_model_starting_prompt(self):
-        return """Marketplace: allows agents in the simulation to make trades with each other """
+    def create_market(self, product_name: str):
+        self.market_names.append(product_name)
 
     def __getitem__(self, item):
         if item not in self.markets.keys():

@@ -57,7 +57,7 @@ class Agent:
         self.role = None
 
         self.max_actions = 1
-        self.max_queries = 10
+        self.max_queries = 3
 
         self.action_queue = []
 
@@ -239,7 +239,7 @@ class Agent:
         else:
             self.inventory[key] = value
 
-    def get_amounts(self, item):
+    def get_inventory(self, item):
         return self.inventory.get_quantity(item)
 
     def values(self):
@@ -250,5 +250,5 @@ class Agent:
             f"""
 -----------------------------
 Agent: {self.name} 
-capital {self.get_amounts("capital")}
+capital {self.get_inventory("capital")}
 -----------------------------"""

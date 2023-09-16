@@ -7,29 +7,34 @@ import json
 import asyncio
 import re
 
+
 def parse_value(val):
+    if not isinstance(val, str):  # Ensure val is a string
+        return val
+
     if re.match(r'^-?\d+$', val):  # Checks if the string is a whole number (positive or negative)
         return int(val)
+
     # You can add more regex checks here for other numerical types, e.g., floats
     return val
+
 
 class OAIAgent(LanguageModelAgent):
     def __init__(
             self,
-            model_id: str = "gpt-4-0613"
+            model_id: str = "gpt-3.5-turbo-0613"
     ):
         super(OAIAgent, self).__init__()
         self.model_id = model_id
         self.language_model_logs = []
 
-        self.keep_last_n = 10
+        self.keep_last_n = 1000
 
     def step(self):
-        print("length of messages: ", len(self.messages))
         if len(self.messages) <= self.keep_last_n + 1:
             pass
         else:
-            self.messages = [self.messages[0]] + self.messages[self.keep_last_n:]
+            self.messages = [self.messages[0]] + self.messages[-self.keep_last_n:]
 
     def execute_action(self):
         self.create_ChatCompletion()
@@ -43,14 +48,18 @@ class OAIAgent(LanguageModelAgent):
         return None
 
     def create_ChatCompletion(self):
-        response = openai.ChatCompletion.create(
-            model=self.model_id,
-            messages=self.messages,
-            functions=self.functions,
-            temperature=self.temperature,
-            function_call={"name": "act"}
-        )
-        print(response)
+        try:
+            response = openai.ChatCompletion.create(
+                model=self.model_id,
+                messages=self.messages,
+                functions=self.functions,
+                temperature=self.temperature,
+                function_call={"name": "act"},
+                request_timeout=5
+            )
+        except openai.error.InvalidRequestError:
+            raise ValueError(self.name, self.messages)
+
         self.language_model_logs.append(response)
 
         usage = response["usage"]
@@ -61,12 +70,12 @@ class OAIAgent(LanguageModelAgent):
             parameters = json.loads(response.choices[0].message["function_call"]["arguments"])
             parameters["parameters"] = [parse_value(param) for param in parameters['parameters']]
             self.action_queue.append(parameters)
-
             self.working_memory.content = parameters["memory"]
+        else:
+            self.action_queue.append({"action": "Skip", "parameters": ["None"], "memory": "Skipped turn"})
 
         self.messages.append(response["choices"][0]["message"])
 
-        print(self.action_queue)
         return None
 
     def get_result(self):

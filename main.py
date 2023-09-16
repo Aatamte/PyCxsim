@@ -1,23 +1,18 @@
 import os
 import openai
+import logging
 
 from src.cxsim import Environment
 from src.cxsim.agents import Population, OAIAgent
 from src.cxsim.artifacts import Marketplace
-
-from src.cxsim.agents.agent import before_turn
 
 
 class MyAgent(OAIAgent):
     def __init__(self):
         super(MyAgent, self).__init__()
         self.inventory.set_starting_inventory(
-            {"capital": 1000, "socks": 10, "shirts": 5}
+            {"capital": 10000, "books": 100}
         )
-
-    @before_turn
-    def say_hello(self):
-        print("hello")
 
 
 if __name__ == '__main__':
@@ -26,13 +21,13 @@ if __name__ == '__main__':
     env = Environment(gui=True)
 
     buyer_population = Population(
-        agent=MyAgent(),
-        number_of_agents=5
+        agent=MyAgent,
+        number_of_agents=25
     )
 
     seller_population = Population(
-        agent=MyAgent(),
-        number_of_agents=5
+        agent=MyAgent,
+        number_of_agents=25
     )
 
     env.add(buyer_population)
@@ -44,8 +39,9 @@ if __name__ == '__main__':
     env.step_delay = 5
 
     env.max_episodes = 1
-    env.max_steps = 50
+    env.max_steps = 10
 
+    env.log(logging.INFO, "The environment is about to be prepared")
     # prepare the environment to be run
     env.prepare()
 

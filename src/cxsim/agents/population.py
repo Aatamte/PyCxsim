@@ -4,7 +4,7 @@ from src.cxsim.agents.agent import Agent
 class Population:
     def __init__(
             self,
-            agent: Agent,
+            agent,
             number_of_agents: int,
             params: dict = None,
             action_restrictions: list = None,
@@ -19,7 +19,7 @@ class Population:
     def generate_agents(self):
         population = []
         for idx in range(self.number_of_agents):
-            agent = self.agent.copy()
+            agent = self.agent()
 
             if self.params:
                 agent.params = self.params

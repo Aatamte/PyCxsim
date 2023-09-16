@@ -135,6 +135,6 @@ class SystemPrompt:
         self.content = self.content.replace("#!max_steps!#", max_steps)
 
     def copy(self):
-        return copy.deepcopy(self)
+        return copy.copy(self)
 
 

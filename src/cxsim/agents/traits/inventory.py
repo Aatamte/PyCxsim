@@ -60,7 +60,6 @@ class Inventory:
         return past_state
 
     def get_quantity(self, item_name):
-        print(item_name, self.inventory)
         return self.inventory.get(item_name, 0)
 
     def __getitem__(self, item_name):

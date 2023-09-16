@@ -14,13 +14,7 @@ from src.cxsim.visualization.visualizer import Visualizer, BackgroundTask
 from src.cxsim.environment.calander import Calender
 from src.cxsim.agents.item import ItemHandler
 
-from src.cxsim.prompts.prompt import SystemPrompt, ObservationPrompt, StateOfMindPrompt
-
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+from src.cxsim.prompts.prompt import SystemPrompt, ObservationPrompt
 
 
 class UnsupportedItemType(Exception):
@@ -61,6 +55,9 @@ class Environment:
         self.gui = gui
         self.start_time = None
 
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
+
         self.should_stop_simulation = False
         self.is_first_step = True
         self.step_delay = 1
@@ -100,9 +97,6 @@ class Environment:
         self._current_time = time.perf_counter()
         self._past_time = time.perf_counter()
 
-        # logger
-        console_handler.setLevel(logging.CRITICAL)
-        logger.addHandler(console_handler)
 
     def add_agent(self, agent: Agent):
         """
@@ -274,18 +268,27 @@ class Environment:
 
             agent.add_message("user", observation_prompt.content)
 
-            with BackgroundTask(self.visualizer):
-                agent.execute_action()
+            with BackgroundTask(agent.execute_action, self.visualizer):
+                pass
+
+            if len(agent.action_queue) == 0:
+                print(agent.messages)
+                agent.action_queue.append({"action": "Skip", "parameters": ["None"], "memory": "Skipped turn"})
 
             action = agent.action_queue.pop(0)
+            self.log(logging.INFO, str(agent) + " " + str(action))
 
-            if action["action"] in [item.__name__ for value in agent.action_space.values() for item in value]:
+            action_names = {(item.__name__.lower()): item.__name__ for value in agent.action_space.values() for item in value}
+
+            if action["action"].lower() in action_names:
+                action["action"] = action_names[action["action"].lower()]
                 self.action_handler.process_action(agent, action)
                 n_actions += 1
             else:
                 observation = self.query_handler.process_query(agent, action)
                 if observation is None:
                     n_actions += 1
+                    observation = "skip was successful"
                 agent.add_message("function", observation, function_name="act")
                 n_queries += 1
 
@@ -314,11 +317,8 @@ class Environment:
         num_tokens = []
         for agent in self.agents:
             self.process_turn(agent)
-            tokens = agent.usage_statistics["total_tokens"]
-          #  print(tokens)
-            num_tokens.append(agent.usage_statistics["total_tokens"])
-        #print(sum(num_tokens))
-        #print(sum(num_tokens) / (time.perf_counter() - self.start_time) * 60)
+            #num_tokens.append(agent.usage_statistics["total_tokens"])
+
         self.action_handler.step()
 
         # should simulation stop based on response from artifacts
@@ -357,6 +357,17 @@ class Environment:
 
     def load(self, filepath):
         pass
+
+    def log(self, level, msg, *args, **kwargs):
+        """
+        Convenience method for logging messages.
+
+        :param level: The logging level.
+        :param msg: The format string for the message.
+        :param args: The arguments to merge into msg.
+        :param kwargs: Other keyword arguments.
+        """
+        self.logger.log(level, msg, *args, **kwargs)
 
     def __repr__(self):
         newline = '\n'

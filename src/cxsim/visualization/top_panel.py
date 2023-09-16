@@ -82,11 +82,11 @@ class TopPanel:
             )
 
             self.next_step = dpg.add_button(
-                label="Skip",
+                label="Next Step",
                 pos=(510, int(self.HEIGHT / 4)),
                 callback=self.skip_simulation_callback,
                 height=self.play_pause_button_sizes["height"],
-                width=self.play_pause_button_sizes["width"]
+                width=self.play_pause_button_sizes["width"] * 2
             )
 
             self.environment_name_text_uuid = dpg.add_text(f"Environment name: {self.environment.name}")

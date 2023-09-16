@@ -1,11 +1,13 @@
 import dearpygui.dearpygui as dpg
-import threading
-import time
+import logging
+
+from concurrent.futures import ThreadPoolExecutor
 
 from src.cxsim.visualization.tabs.market_tab import MarketplaceTab
 from src.cxsim.visualization.agent_overview import AgentOverview
 from src.cxsim.visualization.worldview import World
 from src.cxsim.visualization.top_panel import TopPanel
+from src.cxsim.visualization.logs_popup_window import LogsWindow
 from src.cxsim.utilities.background_jobs.job_manager import JobManager
 from src.cxsim.visualization.assets.path_definition import ASSET_PATH
 
@@ -14,6 +16,7 @@ dpg.create_context()
 artifact_tabs = {
     "Marketplace": MarketplaceTab()
 }
+
 
 color_dict = {
     'red': (255, 0, 0),
@@ -29,25 +32,33 @@ color_dict = {
     'white': (255, 255, 255),
 }
 
+_executor = ThreadPoolExecutor(max_workers=1)
+
 
 class BackgroundTask:
-    def __init__(self, visualizer):
-        self.visualizer: Visualizer = visualizer
-        self._stop_event = threading.Event()
+    def __init__(self, func, visualizer, *args, **kwargs):
+        self.func = func
+        self.visualizer = visualizer
+        self.args = args
+        self.kwargs = kwargs
 
     def run(self):
-        while not self._stop_event.is_set():
-            # Replace with your actual condition check
-            self.visualizer.step(False)
+        self.func(*self.args, **self.kwargs)
 
     def __enter__(self):
-        self.thread = threading.Thread(target=self.run)
-        self.thread.start()
+        self.future = _executor.submit(self.run)
+
+        # Continuously call visualizer.step(False) while the background task is running
+        while not self.future.done():
+            self.visualizer.step(False)
+
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self._stop_event.set()
-        self.thread.join()
+        # Since ThreadPoolExecutor handles the thread lifecycle, we don't have
+        # to manually join the thread. However, if you want to retrieve the result
+        # or handle exceptions, you can use `self.future.result()`.
+        pass
 
 
 class Visualizer:
@@ -97,6 +108,7 @@ class Visualizer:
         self.agent_overview = AgentOverview(environment)
         self.world = World(environment, self.WIDTH, self.HEIGHT)
         self.top_panel = TopPanel(self, environment, self.HEIGHT, self.WIDTH)
+        self.log_window = LogsWindow(environment)
 
         self.last_key_input = None
 
@@ -171,6 +183,8 @@ class Visualizer:
             self.switch_tab(self.current_tab, self.env_logs)
         elif sender == "agent_overview":
             self.switch_tab(self.current_tab, self.agent_overview)
+        elif sender == "show_log_popup":
+            self.switch_tab(self.current_tab, self.log_window)
         elif sender in artifact_tabs.keys():
             self.switch_tab(self.current_tab, artifact_tabs[sender].get_window())
 
@@ -178,11 +192,16 @@ class Visualizer:
         # if a previous tab exists, hide it
         if previous_tab == self.agent_overview:
             self.agent_overview.set_show(False)
+        elif previous_tab == self.log_window:
+            self.log_window.set_show(False)
+
         elif previous_tab:
             dpg.hide_item(previous_tab)
 
         if next_tab == self.agent_overview:
             self.agent_overview.set_show(True)
+        elif next_tab == self.log_window:
+            self.log_window.set_show(True)
         else:
             dpg.show_item(next_tab)
 
@@ -204,7 +223,7 @@ class Visualizer:
             with dpg.menu_bar(label="Information menu bar"):
                 with dpg.menu(label="Environment"):
                     dpg.add_menu_item(label="Overview", tag="show_overview", callback=self.show_callback)
-                    dpg.add_menu_item(label="logs", tag="show_logs", callback=self.show_callback)
+                    dpg.add_menu_item(label="env_logs", tag="show_logs", callback=self.show_callback)
 
                 dpg.add_menu_item(label="Agents", tag="agent_overview", callback=self.show_callback)
 
@@ -214,9 +233,12 @@ class Visualizer:
 
                 dpg.add_menu_item(label="Settings")
 
+                dpg.add_menu_item(label="Logs", tag="show_log_popup", callback=self.show_callback)
+
             self.draw_environment_overview()
             self.draw_action_logs()
             self.agent_overview.draw()
+            self.log_window.draw()
 
             for artifact_name in self.artifact_names:
                 if artifact_name in artifact_tabs.keys():
