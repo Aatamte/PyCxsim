@@ -1,5 +1,6 @@
 import dearpygui.dearpygui as dpg
-
+import threading
+import time
 
 from src.cxsim.visualization.tabs.market_tab import MarketplaceTab
 from src.cxsim.visualization.agent_overview import AgentOverview
@@ -14,7 +15,6 @@ artifact_tabs = {
     "Marketplace": MarketplaceTab()
 }
 
-
 color_dict = {
     'red': (255, 0, 0),
     'green': (0, 255, 0),
@@ -28,6 +28,26 @@ color_dict = {
     'black': (0, 0, 0),
     'white': (255, 255, 255),
 }
+
+
+class BackgroundTask:
+    def __init__(self, visualizer):
+        self.visualizer: Visualizer = visualizer
+        self._stop_event = threading.Event()
+
+    def run(self):
+        while not self._stop_event.is_set():
+            # Replace with your actual condition check
+            self.visualizer.step(False)
+
+    def __enter__(self):
+        self.thread = threading.Thread(target=self.run)
+        self.thread.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._stop_event.set()
+        self.thread.join()
 
 
 class Visualizer:
@@ -110,6 +130,7 @@ class Visualizer:
             self.job_manager.cleanup_jobs()
 
     def step(self, is_new_step):
+        dpg.render_dearpygui_frame()
         dpg.set_value(self.environment_overview_text, f"episode: {self.environment.current_episode} / {self.environment.max_episodes}\nstep: {self.environment.current_step} / {self.environment.max_steps}")
         dpg.set_value(self.environment_date, f"date: {self.environment.calender.current_date}")
         self.update()

@@ -22,20 +22,21 @@ class MyAgent(OAIAgent):
 
 if __name__ == '__main__':
     openai.api_key = os.environ["openai_api_key"]
-    print("starting")
+
     env = Environment(gui=True)
 
     buyer_population = Population(
         agent=MyAgent(),
-        number_of_agents=1
+        number_of_agents=5
     )
 
     seller_population = Population(
         agent=MyAgent(),
-        number_of_agents=1
+        number_of_agents=5
     )
 
     env.add(buyer_population)
+    env.add(seller_population)
 
     marketplace = Marketplace()
     env.add(marketplace)

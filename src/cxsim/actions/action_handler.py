@@ -48,7 +48,7 @@ class ActionHandler:
             action = None
 
         elif action["action"] in self.action_lookup.keys():
-            action = self.action_lookup[action["action"]](**action["action_parameters"])
+            action = self.action_lookup[action["action"]](*action["parameters"])
             action.agent = agent
 
         if action and not self.is_restricted_action(agent, action):
@@ -68,7 +68,6 @@ class ActionHandler:
                 raise Warning("An agents action must be either a tuple or an action class")
         agent.action_history.append(action)
         self.action_logs.append((agent.name, *action_log))
-        print(action)
 
     def process_query(self, agent, query):
         artifact = self.map_query_to_artifact[type(query)]

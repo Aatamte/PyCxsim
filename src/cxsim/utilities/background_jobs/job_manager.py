@@ -1,6 +1,11 @@
 import threading
 
 
+class BackgroundThread:
+    def __init__(self):
+        pass
+
+
 class JobManager:
     jobs = []
     has_background_tasks = False
@@ -12,7 +17,6 @@ class JobManager:
 
     @classmethod
     def cleanup_jobs(cls):
-        print(cls.jobs)
         for job in cls.jobs:
             if not job.is_alive():
                 cls.jobs.remove(job)

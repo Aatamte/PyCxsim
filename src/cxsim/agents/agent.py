@@ -60,7 +60,6 @@ class Agent:
         self.max_queries = 10
 
         self.action_queue = []
-        self.query_queue = []
 
         # holds the observations for each artifact
         self.observations = []
@@ -147,16 +146,13 @@ class Agent:
         else:
             self.tools[tool.name] = tool
 
-    def add_message(self, role: str, content: str):
-        self.messages.append(
-            {
-                "role": role,
-                "content": content
-            }
-        )
+    def add_message(self, role: str, content: str, function_name: str = None):
+        if function_name:
+            self.messages.append({"role": role, "name": function_name, "content": content})
+        else:
+            self.messages.append({"role": role, "content": content})
 
     @abstractmethod
-    @background_task
     def execute_action(self):
         """
         Execute an action by the agent.
@@ -165,7 +161,6 @@ class Agent:
         raise NotImplementedError("This method should be implemented by subclasses")
 
     @abstractmethod
-    @background_task
     def execute_query(self):
         """
         Execute a query and return a random choice from the query space.

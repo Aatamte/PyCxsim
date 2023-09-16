@@ -237,7 +237,10 @@ class MessageBox:
                 color = color_dict["red"]
             else:
                 indent = 0
-                message["content"] = self.agent.name + ": " + message["content"]
+                if message["content"]:
+                    message["content"] = self.agent.name + ": " + message["content"]
+                else:
+                    message["content"] = self.agent.name + ": made function call"
                 color = color_dict["orange"]
 
             new_message = dpg.add_text(

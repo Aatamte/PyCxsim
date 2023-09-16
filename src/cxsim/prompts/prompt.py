@@ -57,6 +57,9 @@ class ObservationPrompt:
     def insert_artifact_information(self, artifact_information):
         self.artifact_information_list.append(artifact_information)
 
+    def set_working_memory(self, memory):
+        self.content = self.content.replace("#!memory!#", memory)
+
 
 class StateOfMindPrompt:
     def __init__(self):
@@ -111,12 +114,12 @@ class SystemPrompt:
                 action_name = str(action.__name__)
                 action_parameters = [f"{field.name} {field.type}" for field in fields(action)]
 
-                descriptions += "do_action(action=" + str(action_name) + ", parameters=" + str(action_parameters) + "\n"
+                descriptions += "act(action=" + str(action_name) + ", parameters=" + str(action_parameters) + ", memory=<your memory>" +  "\n"
             descriptions += "QUERIES:" + "\n"
             for query in artifact.get_query_space():
                 query_name = str(query.__name__)
                 query_parameters = [f"{field.name} {field.type}" for field in fields(query)]
-                descriptions += "do_query(query=" + str(query_name) + ", parameters=" + str(query_parameters) + "\n"
+                descriptions += "act(action=" + str(query_name) + ", parameters=" + str(query_parameters) + ", memory=<your memory>" + "\n"
 
         self.content = self.content.replace("#!artifact_descriptions!#", descriptions)
 
@@ -125,7 +128,7 @@ class SystemPrompt:
         for action in self.global_actions:
             global_action_string += str({"action": action, "reason": "<reason for action>"}) + "\n"
 
-        self.content = self.content.replace("#!global_actions!#", global_action_string)
+        #self.content = self.content.replace("#!global_actions!#", global_action_string)
 
     def set_environment_information(self, num_agents, max_steps):
         self.content = self.content.replace("#!n_agents!#", num_agents)

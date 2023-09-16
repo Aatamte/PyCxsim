@@ -4,6 +4,9 @@ CURRENT STEP: #!current_step!#
 INVENTORY:
 #!inventory!#
 
+Memory:
+#!memory!#
+
 Think step by step to decide which action best furthers your goals.
 Remember your restrictions and the rules of the artifacts.
 Once you have given it some thought, what action do you take?

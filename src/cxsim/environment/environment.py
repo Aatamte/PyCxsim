@@ -10,7 +10,7 @@ from src.cxsim.agents.population import Population
 from src.cxsim.artifacts.artifact import Artifact
 from src.cxsim.actions.action_handler import ActionHandler
 from src.cxsim.queries.query_handler import QueryHandler
-from src.cxsim.visualization.visualizer import Visualizer
+from src.cxsim.visualization.visualizer import Visualizer, BackgroundTask
 from src.cxsim.environment.calander import Calender
 from src.cxsim.agents.item import ItemHandler
 
@@ -259,51 +259,35 @@ class Environment:
 
         self.calender.step()
 
-    def process_queries(self, agent: Agent):
-        agent.working_memory.show(self.current_step)
-        for query in range(agent.max_queries):
-            agent.execute_query()
-
-            self.visualizer.running_background_tasks()
-            try:
-                query = agent.query_queue.pop(0)
-            except Exception as e:
-                print(agent.name, agent.language_model_logs)
-                raise ValueError(e)
-
-            queries_should_continue, obs, is_action = self.query_handler.process_query(agent, query)
-
-            if obs:
-                pass
-            else:
-                break
-
-    def process_actions(self, agent: Agent):
-        observation_prompt = ObservationPrompt()
-        observation_prompt.set_current_step(str(self.current_step))
-        observation_prompt.set_inventory(str(agent.display_inventory()))
-
-        # append observation to the agents messages
-        #agent.add_message("user", observation_prompt.content)
-
-        # agent chooses action based on the observation
-        agent.execute_action()
-
-        # wait until background tasks are complete
-        self.visualizer.running_background_tasks()
-        try:
-            action = agent.action_queue.pop(0)
-            self.action_handler.process_action(agent, action)
-        except:
-            print(agent.query_queue, agent.action_queue)
-
     def process_turn(self, agent: Agent):
-
         for func in agent.before_turn_methods:
             func()
 
-        self.process_queries(agent)
-        self.process_actions(agent)
+        n_queries = 0
+        n_actions = 0
+
+        while n_actions < agent.max_actions and n_queries < agent.max_queries:
+            observation_prompt = ObservationPrompt()
+            observation_prompt.set_current_step(str(self.current_step))
+            observation_prompt.set_inventory(str(agent.display_inventory()))
+            observation_prompt.set_working_memory(agent.working_memory.content)
+
+            agent.add_message("user", observation_prompt.content)
+
+            with BackgroundTask(self.visualizer):
+                agent.execute_action()
+
+            action = agent.action_queue.pop(0)
+
+            if action["action"] in [item.__name__ for value in agent.action_space.values() for item in value]:
+                self.action_handler.process_action(agent, action)
+                n_actions += 1
+            else:
+                observation = self.query_handler.process_query(agent, action)
+                if observation is None:
+                    n_actions += 1
+                agent.add_message("function", observation, function_name="act")
+                n_queries += 1
 
         agent.step()
 

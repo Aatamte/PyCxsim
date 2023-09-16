@@ -6,16 +6,8 @@ You will frequently call functions available to you.
 
 You also have trait-specific actions and tool-specific actions available to you, if they exist in the simulation.
 
-actions follow the format: {"action": <action name> <str>, "parameters": <action parameters> <List[str]>}
-queries follow the format: {"query": <query name> <str>, "parameters": <query parameters> <List[str]>}
-
 TRAITS:
-working memory: text that will be carried over to the next step. You will only be presented with the last 7 steps of information. Your working memory allow you to refine your strategy over longer periods of time.
-
-TOOLS:
-#!tool_descriptions!#
-
-You will now be given information for the environment, artifacts, actions, expectations, and your goal.
+working memory: the content of your response is considered your working memory
 
 ENVIRONMENT INFORMATION:
 number of other agents: #!n_agents!#
@@ -27,11 +19,7 @@ There are #!num_artifacts!# artifacts in the simulation
 #!artifact_descriptions!#
 
 GLOBAL ACTIONS:
-do_action(action="skip", parameters=["None"])
-
-GLOBAL QUERIES:
-do_query(query="skip", parameters=["None"])
-
+act(action="skip", parameters=["None"], memory=<your memory>)
 
 ACTION RESTRICTIONS:
 (function must not hit any assertions)
@@ -44,24 +32,20 @@ OTHER INFORMATION:
 your name is !#agent_name!#
 
 GOAL:
-Your goal for the simulation is to maximize your capital. You can do this by selling goods
-
-EXPECTATIONS:
-You will call the do_action function to perform an action.
-You will call the do_query function to perform a query.
+Your goal for the simulation is to maximize your capital. You can do this through strategically buying and selling goods
 
 TURN:
-The following is pseudocode for what occurs during your turn. Your turn will always end on an action.
+The following is pseudocode for what occurs during an agent's turn.
+The environment will provide observations and working memory
 ...
 # Start turn
-You <- You.working_memory
+Agent <- working_memory
 while You can query
-    You.do_query(query, parameters)
-    You <- observation
+    Agent.act(query, parameters)
+    Agent <- observation
 
-You.do_action(action, parameters)
+Agent.act(action, parameters)
 # End turn
 ...
 
-A simulation moderator may pause the simulation through saying PAUSE to you. The moderator may then ask you questions, you are expected to answer the moderators questions truthfully and with the most detail. The simulation will be paused until the moderator says RESUME to you.
-If you understand what is being asked of you, call a function with skip to start the simulation. Otherwise, indicate why you do not understand.
+call the act function, fill your memory with a PLAN for the simulation
