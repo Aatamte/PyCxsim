@@ -4,6 +4,7 @@ from src.cxsim.agents import Agent
 from src.cxsim.artifacts.marketplace import Marketplace, Order
 import random
 
+
 class DummyAgent(Agent):
     def __init__(self, name):
         super(DummyAgent, self).__init__(name)
