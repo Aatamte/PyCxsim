@@ -10,7 +10,8 @@ from src.cxsim.agents.population import Population
 from src.cxsim.artifacts.artifact import Artifact
 from src.cxsim.actions.action_handler import ActionHandler
 from src.cxsim.queries.query_handler import QueryHandler
-from src.cxsim.visualization.visualizer import Visualizer, BackgroundTask
+from src.cxsim.gui.visualizer import Visualizer
+from src.cxsim.utilities.background_jobs.background_task import BackgroundTask
 from src.cxsim.environment.calander import Calender
 from src.cxsim.agents.item import ItemHandler
 
@@ -96,7 +97,6 @@ class Environment:
 
         self._current_time = time.perf_counter()
         self._past_time = time.perf_counter()
-
 
     def add_agent(self, agent: Agent):
         """
@@ -268,10 +268,11 @@ class Environment:
 
             agent.add_message("user", observation_prompt.content)
 
-            with BackgroundTask(agent.execute_action, self.visualizer):
+            with BackgroundTask(agent.execute_action, self.visualizer, agent_name=agent.name):
                 pass
 
             if len(agent.action_queue) == 0:
+                self.log(logging.WARNING, f"Agent {agent.name, agent.id} did not have an action in the action_queue")
                 print(agent.messages)
                 agent.action_queue.append({"action": "Skip", "parameters": ["None"], "memory": "Skipped turn"})
 
@@ -300,15 +301,18 @@ class Environment:
     def step(self) -> [np.ndarray, list, list]:
         if self.gui:
             if self.visualizer.skip_steps > 0:
+                self.visualizer.top_panel.environment_status = "Skipping Step"
                 self.visualizer.skip_steps -= 1
                 self.visualizer.step(True)
             else:
+                self.visualizer.top_panel.environment_status = "Paused"
                 while (time.perf_counter() - self._current_time <= self.step_delay) or self.visualizer.is_paused:
                     self.visualizer.step(False)
                     if self.visualizer.skip_steps != 0:
                         self.visualizer.skip_steps -= 1
                         break
                 else:
+                    self.visualizer.top_panel.environment_status = "Running"
                     self.visualizer.step(True)
 
         self._current_time = time.perf_counter()
@@ -317,7 +321,6 @@ class Environment:
         num_tokens = []
         for agent in self.agents:
             self.process_turn(agent)
-            #num_tokens.append(agent.usage_statistics["total_tokens"])
 
         self.action_handler.step()
 

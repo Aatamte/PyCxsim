@@ -46,7 +46,7 @@ class QueryHandler:
 
         artifact = self.map_query_to_artifact[type(query)]
         observation = self.artifacts[artifact].process_query(agent, query)
-        agent.action_history.append(query)
+        agent.action_history.append((self.environment.current_step, artifact, query))
         return observation
 
 

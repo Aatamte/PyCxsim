@@ -114,12 +114,12 @@ class SystemPrompt:
                 action_name = str(action.__name__)
                 action_parameters = [f"{field.name} {field.type}" for field in fields(action)]
 
-                descriptions += "act(action=" + str(action_name) + ", parameters=" + str(action_parameters) + ", memory=<your memory>" +  "\n"
+                descriptions += "act(action=" + str(action_name) + ", parameters=" + str(action_parameters) + ", memory=<your memory>)" +  "\n"
             descriptions += "QUERIES:" + "\n"
             for query in artifact.get_query_space():
                 query_name = str(query.__name__)
                 query_parameters = [f"{field.name} {field.type}" for field in fields(query)]
-                descriptions += "act(action=" + str(query_name) + ", parameters=" + str(query_parameters) + ", memory=<your memory>" + "\n"
+                descriptions += "act(action=" + str(query_name) + ", parameters=" + str(query_parameters) + ", memory=<your memory>)" + "\n"
 
         self.content = self.content.replace("#!artifact_descriptions!#", descriptions)
 

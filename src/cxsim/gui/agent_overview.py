@@ -112,9 +112,10 @@ class ActionHistoryVisualization:
 
     def update(self, agent):
         self.agent = agent
-        for idx, row in enumerate(range(len(agent.action_history))):
-            dpg.set_value(self.action_history_uid[idx][2], str(agent.action_history[-(idx + 1)]))
-            dpg.set_value(self.action_history_uid[idx][0], len(agent.action_history) - (idx + 1))
+        for idx, row in enumerate(agent.action_history[::-1]):
+            dpg.set_value(self.action_history_uid[idx][2], str(row[2]))
+            dpg.set_value(self.action_history_uid[idx][1], str(row[1]))
+            dpg.set_value(self.action_history_uid[idx][0], str(row[0]))
 
     def draw(self):
         with dpg.child_window(label="actions", border=False, show=self.show) as self.window:

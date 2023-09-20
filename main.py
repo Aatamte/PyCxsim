@@ -22,12 +22,12 @@ if __name__ == '__main__':
 
     buyer_population = Population(
         agent=MyAgent,
-        number_of_agents=25
+        number_of_agents=5
     )
 
     seller_population = Population(
         agent=MyAgent,
-        number_of_agents=25
+        number_of_agents=5
     )
 
     env.add(buyer_population)

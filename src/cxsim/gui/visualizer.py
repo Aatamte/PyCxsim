@@ -1,15 +1,12 @@
 import dearpygui.dearpygui as dpg
-import logging
 
-from concurrent.futures import ThreadPoolExecutor
-
-from src.cxsim.visualization.tabs.market_tab import MarketplaceTab
-from src.cxsim.visualization.agent_overview import AgentOverview
-from src.cxsim.visualization.worldview import World
-from src.cxsim.visualization.top_panel import TopPanel
-from src.cxsim.visualization.logs_popup_window import LogsWindow
+from src.cxsim.gui.tabs.market_tab import MarketplaceTab
+from src.cxsim.gui.agent_overview import AgentOverview
+from src.cxsim.gui.worldview import World
+from src.cxsim.gui.top_panel import TopPanel
+from src.cxsim.gui.logs_popup_window import LogsWindow
 from src.cxsim.utilities.background_jobs.job_manager import JobManager
-from src.cxsim.visualization.assets.path_definition import ASSET_PATH
+from src.cxsim.gui.assets.path_definition import ASSET_PATH
 
 dpg.create_context()
 
@@ -31,34 +28,6 @@ color_dict = {
     'black': (0, 0, 0),
     'white': (255, 255, 255),
 }
-
-_executor = ThreadPoolExecutor(max_workers=1)
-
-
-class BackgroundTask:
-    def __init__(self, func, visualizer, *args, **kwargs):
-        self.func = func
-        self.visualizer = visualizer
-        self.args = args
-        self.kwargs = kwargs
-
-    def run(self):
-        self.func(*self.args, **self.kwargs)
-
-    def __enter__(self):
-        self.future = _executor.submit(self.run)
-
-        # Continuously call visualizer.step(False) while the background task is running
-        while not self.future.done():
-            self.visualizer.step(False)
-
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        # Since ThreadPoolExecutor handles the thread lifecycle, we don't have
-        # to manually join the thread. However, if you want to retrieve the result
-        # or handle exceptions, you can use `self.future.result()`.
-        pass
 
 
 class Visualizer:
@@ -84,7 +53,7 @@ class Visualizer:
         self.agent_information_table = {}
         self.agent_interaction_table = {}
         self.action_log_size = 30
-        self.action_logs = [["N/A" for _ in range(3)] for _ in range(self.action_log_size)]
+        self.action_logs = [["N/A" for _ in range(4)] for _ in range(self.action_log_size)]
 
         self.artifact_names = []
         self.show_artifacts = []
@@ -136,11 +105,6 @@ class Visualizer:
                     print(source_agent, source_idx, target_agent, target_idx)
                     raise Warning()
 
-    def running_background_tasks(self):
-        while self.job_manager.has_background_tasks:
-            self.step(False)
-            self.job_manager.cleanup_jobs()
-
     def step(self, is_new_step):
         dpg.render_dearpygui_frame()
         dpg.set_value(self.environment_overview_text, f"episode: {self.environment.current_episode} / {self.environment.max_episodes}\nstep: {self.environment.current_step} / {self.environment.max_steps}")
@@ -159,17 +123,19 @@ class Visualizer:
         self.last_key_input = app_data
 
     def draw_action_logs(self):
-        with dpg.child_window(label="Action Logs", show=False) as self.env_logs:
+        with dpg.child_window(label="Action Logs", show=False) as self.actions:
             with dpg.table(header_row=True):
                 # use add_table_column to add columns to the table,
                 # table columns use child slot 0
                 dpg.add_table_column(label="step")
                 dpg.add_table_column(label="agent")
+                dpg.add_table_column(label="artifact")
                 dpg.add_table_column(label="action")
-                for i in range(self.action_log_size):
+                for i in range(len(self.environment.action_handler.action_logs)):
                     with dpg.table_row():
-                        for j in range(0, 3):
-                            self.action_logs[i][j] = dpg.add_text(self.action_logs[i][j], wrap=110)
+                        for j in range(0, 4):
+                            action = self.environment.action_handler.action_logs[i]
+                            self.action_logs[i][j] = dpg.add_text(action[j], wrap=110)
 
     def draw_environment_overview(self):
         with dpg.child_window(label="Environment Overview", show=self.show_environment_overview) as self.environment_overview:
@@ -179,8 +145,8 @@ class Visualizer:
     def show_callback(self, sender):
         if sender == "show_overview":
             self.switch_tab(self.current_tab, self.environment_overview)
-        elif sender == "show_logs":
-            self.switch_tab(self.current_tab, self.env_logs)
+        elif sender == "show_actions":
+            self.switch_tab(self.current_tab, self.actions)
         elif sender == "agent_overview":
             self.switch_tab(self.current_tab, self.agent_overview)
         elif sender == "show_log_popup":
@@ -223,7 +189,7 @@ class Visualizer:
             with dpg.menu_bar(label="Information menu bar"):
                 with dpg.menu(label="Environment"):
                     dpg.add_menu_item(label="Overview", tag="show_overview", callback=self.show_callback)
-                    dpg.add_menu_item(label="env_logs", tag="show_logs", callback=self.show_callback)
+                    dpg.add_menu_item(label="Actions", tag="show_actions", callback=self.show_callback)
 
                 dpg.add_menu_item(label="Agents", tag="agent_overview", callback=self.show_callback)
 

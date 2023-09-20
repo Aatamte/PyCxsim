@@ -66,7 +66,8 @@ class ActionHandler:
                 self.artifacts[self.map_action_to_artifact[type(action)]].process_action(agent, action)
             else:
                 raise Warning("An agents action must be either a tuple or an action class")
-        agent.action_history.append(action)
+
+        agent.action_history.append((self.environment.current_step, action_log[1], action_log[2]))
         self.action_logs.append((agent.name, *action_log))
 
     def process_query(self, agent, query):
