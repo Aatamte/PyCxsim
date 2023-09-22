@@ -8,7 +8,6 @@ from src.cxsim.artifacts import Marketplace
 from src.cxsim.artifacts.gridworld import GridWorld
 from src.cxsim.prompts.prompt import InitializationPrompt
 
-
 class MyAgent(OAIAgent):
     def __init__(self):
         super(MyAgent, self).__init__()
