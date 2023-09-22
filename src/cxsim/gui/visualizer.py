@@ -213,8 +213,13 @@ class Visualizer:
 
     def reset(self, environment):
         self.environment = environment
+        if "Gridworld" in self.environment.artifact_lookup.keys():
+            print(self.environment.artifact_lookup["Gridworld"].x_size)
+            self.world.blocks = self.environment.artifact_lookup["Gridworld"].x_size
+
         for name, artifact in artifact_tabs.items():
             artifact.reset(environment)
+
         self.start()
 
     def update(self):

@@ -86,6 +86,7 @@ class Environment:
         # artifacts
         self.n_artifacts = 0
         self.artifacts = []
+        self.artifact_lookup = {}
 
         self.action_handler = ActionHandler(self)
         self.query_handler = QueryHandler(self)
@@ -125,7 +126,10 @@ class Environment:
         self.action_handler.add_artifact(artifact)
         self.query_handler.add_artifact(artifact)
         self.artifacts.append(artifact)
+        self.artifact_lookup[artifact.name] = artifact
 
+        if artifact.name == "Gridworld":
+            self.visualizer.world.blocks = artifact.x_size
 
     def add(self, item):
         """
@@ -188,7 +192,7 @@ class Environment:
         agent.prompt.set_variable("global_actions", formatted_global_actions, "Action space")
 
         agent.prompt.set_variable("current_position", str((agent.x_pos, agent.y_pos)))
-        agent.prompt.set_variable("goal", "Move to the other side of the map")
+        agent.prompt.set_variable("goal", "The first one to reach the X wins $10 Million")
 
         agent.set_up()
 
@@ -264,6 +268,7 @@ class Environment:
             observation_prompt.set_current_step(str(self.current_step))
             observation_prompt.set_inventory(str(agent.display_inventory()))
             observation_prompt.set_working_memory(agent.working_memory.content)
+            observation_prompt.set_current_map(self.artifact_lookup["Gridworld"].to_text(special_agent=agent))
 
             agent.add_message("user", observation_prompt.content)
 

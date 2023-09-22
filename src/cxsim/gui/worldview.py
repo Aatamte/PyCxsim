@@ -82,26 +82,23 @@ def get_random_unused_color():
 
 
 class World:
-    def __init__(
-            self,
-            environment,
-            starting_WIDTH,
-            starting_HEIGHT,
-            n_blocks: int = 10
-    ):
+    def __init__(self, environment, starting_WIDTH, starting_HEIGHT):
         self.HEIGHT = int(starting_HEIGHT * 0.95)
         self.WIDTH = int(3 * starting_WIDTH / 5)
         self.world = None
         self.grid = None
         self.environment = environment
-        self.blocks = n_blocks
-        self.agent_positions = np.zeros((self.blocks, self.blocks))
+        self.blocks = None
+
         self.agent_circles = {}
         self.agent_names = {}
-        self.tiles = [[dpg.generate_uuid() for _ in range(self.blocks)] for _ in range(self.blocks)]
 
-        self.block_size_x = int(0.5 * self.WIDTH) / self.blocks
-        self.block_size_y = int(0.5 * self.HEIGHT) / self.blocks
+        self.agent_positions = None
+
+        self.tiles = None
+
+        self.block_size_x = None
+        self.block_size_y = None
 
     def get_middle_of_block(self, block_x, block_y, block_size_x, block_size_y):
         middle_x = block_x * block_size_x + block_size_x / 2
@@ -126,6 +123,7 @@ class World:
         return tuple(chosen_position)
 
     def update(self):
+
         for idx, agent in enumerate(self.environment.agents):
             x = agent.x_pos
             y = agent.y_pos
@@ -151,6 +149,9 @@ class World:
                 size=text_size,
                 parent=self.grid
             )
+
+    def reset(self, n_blocks: int = None):
+        pass
 
     def resize(self):
         self.HEIGHT = int(dpg.get_viewport_height() * 0.95)
@@ -234,6 +235,12 @@ class World:
             self.place_agents()
 
     def create(self):
+        self.agent_positions = np.zeros((self.blocks, self.blocks))
+
+        self.tiles = [[dpg.generate_uuid() for _ in range(self.blocks)] for _ in range(self.blocks)]
+
+        self.block_size_x = int(0.5 * self.WIDTH) / self.blocks
+        self.block_size_y = int(0.5 * self.HEIGHT) / self.blocks
         with dpg.window(
             label="Environment",
             tag="World",

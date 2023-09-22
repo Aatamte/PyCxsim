@@ -4,9 +4,9 @@ import logging
 
 from src.cxsim import Environment
 from src.cxsim.agents import Population, OAIAgent
-from src.cxsim.artifacts import Marketplace
-from src.cxsim.artifacts.gridworld import GridWorld
+from src.cxsim.artifacts.gridworld import Gridworld
 from src.cxsim.prompts.prompt import InitializationPrompt
+
 
 class MyAgent(OAIAgent):
     def __init__(self):
@@ -21,27 +21,16 @@ def main():
 
     env = Environment(gui=True)
 
-    buyer_population = Population(
+    pop = Population(
         agent=MyAgent,
         number_of_agents=5,
         prompt=InitializationPrompt("src/cxsim/prompts/system_prompt.txt"),
         prompt_arguments={"role": "mover"}
     )
 
-    seller_population = Population(
-        agent=MyAgent,
-        number_of_agents=5,
-        prompt=InitializationPrompt("src/cxsim/prompts/system_prompt.txt"),
-        prompt_arguments={"role": "mover"}
-    )
+    env.add(pop)
 
-    env.add(buyer_population)
-    env.add(seller_population)
-
-    #marketplace = Marketplace()
-    #env.add(marketplace)
-
-    gridworld = GridWorld()
+    gridworld = Gridworld(10)
     env.add(gridworld)
 
     env.step_delay = 5
@@ -54,6 +43,7 @@ def main():
     env.prepare()
 
     for step in env.iter_steps():
+        print(gridworld.to_text())
         print(step)
         env.step()
 

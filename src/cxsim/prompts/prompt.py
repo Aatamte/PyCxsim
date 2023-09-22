@@ -45,6 +45,9 @@ class ObservationPrompt:
     def set_current_step(self, current_step):
         self.content = self.content.replace("#!current_step!#", current_step)
 
+    def set_current_map(self, map_text):
+        self.content = self.content.replace("#!current_map!#", map_text + "\nA: Other agents, O: You, .: empty spaces")
+
     def set_artifact_information(self):
         artifact_information_string = ""
         for artifact_information in self.artifact_information_list:
@@ -337,7 +340,7 @@ class PromptTemplate:
             description += f"act(action={action_name}, parameters={action_parameters}, memory=<your memory>)\n"
             description += f"action information: {action.__doc__}"
 
-        description += "QUERIES:\n"
+        description += "\nQUERIES:\n"
         for query in artifact.get_query_space():
             query_name = str(query.__name__)
             query_parameters = [f"{field.name} {field.type}" for field in fields(query)]

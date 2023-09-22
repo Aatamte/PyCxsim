@@ -10,7 +10,7 @@ As an agent, your mission is to strategically interact with the environment and 
   - **Name**: {name}
   - **position**: {current_position}
   - **role**: {role}
-  - **Memory**: Consider this as your knowledge bank or strategic plan. For instance, "Plan to buy low, sell high in the first few rounds".
+  - **Memory**: Consider this as your knowledge bank or strategic plan. Keep a record of which actions you choose, and why you chose them.
 
 - **Inventory**: {inventory}
 

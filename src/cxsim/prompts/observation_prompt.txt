@@ -4,6 +4,22 @@ CURRENT STEP: #!current_step!#
 INVENTORY:
 #!inventory!#
 
+This is the current map:
+#!current_map!#
+
+
+The Treasure is:
+. . X . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .
+. . X . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .
+estimate how far you are from the treasure, and devise a sequence of actions to reach the treasure
 Memory:
 #!memory!#
 
