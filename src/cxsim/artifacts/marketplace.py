@@ -1,3 +1,4 @@
+from abc import ABC
 from typing import Dict
 from dataclasses import dataclass
 import pandas as pd
@@ -15,18 +16,17 @@ from src.cxsim.environment.event import Event
 class Order:
     """
     Represents a single order in the order book.
-
-    Attributes:
-    price: The price of the order.
-    quantity: The quantity of the order.
-    agent: The agent placing the order.
     """
     good: str
     price: int
     quantity: int
 
+
 @dataclass
 class MarketPlaceQuery:
+    """
+    Retrieves the market information for a single good
+    """
     good: str
 
 
@@ -341,7 +341,7 @@ Sell order = negative quantity
 ==================================="""
 
 
-class Marketplace(Artifact):
+class Marketplace(Artifact, ABC):
     def __init__(self, product_names = None, infer_goods_from_agents:  bool = True):
         super(Marketplace, self).__init__("Marketplace")
         self.infer_goods_from_agents = infer_goods_from_agents

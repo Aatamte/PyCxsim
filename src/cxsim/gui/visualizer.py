@@ -113,7 +113,8 @@ class Visualizer:
         if is_new_step:
             self.agent_overview.update()
         for name, artifact_tab in artifact_tabs.items():
-            artifact_tab.step()
+            if name in self.environment.action_handler.artifacts.keys():
+                artifact_tab.step()
         dpg.render_dearpygui_frame()
 
     def is_running(self):

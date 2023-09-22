@@ -14,8 +14,9 @@ from src.cxsim.gui.visualizer import Visualizer
 from src.cxsim.utilities.background_jobs.background_task import BackgroundTask
 from src.cxsim.environment.calander import Calender
 from src.cxsim.agents.item import ItemHandler
+from src.cxsim.actions.standard import Skip
 
-from src.cxsim.prompts.prompt import SystemPrompt, ObservationPrompt
+from src.cxsim.prompts.prompt import ObservationPrompt, InitializationPrompt
 
 
 class UnsupportedItemType(Exception):
@@ -125,6 +126,7 @@ class Environment:
         self.query_handler.add_artifact(artifact)
         self.artifacts.append(artifact)
 
+
     def add(self, item):
         """
         Add a new item (agent, artifact, or list) to the environment.
@@ -158,37 +160,35 @@ class Environment:
 
             assert artifact.process_query.__code__ != Artifact.process_query.__code__, "process_query method must be implemented by subclass"
 
-            assert len(artifact.action_space) != 0, "Action space must be greater than 0"
+    def _construct_system_prompt(self, agent: Agent):
 
-            assert len(artifact.query_space) != 0, "Query space must be greater than 0"
 
-    def _set_up_artifacts(self):
-        pass
+        # Setting variables for the agent's prompt sections
+        agent.prompt.set_variable("name", agent.name, "Agent information")
 
-    def _construct_system_prompt(self, agent: Agent, system_prompt: SystemPrompt):
-        agent.action_space = self.action_space.copy()
-        agent.query_space = self.query_space.copy()
+        # Inventory
+        agent.prompt.set_variable("inventory", str(agent.inventory.starting_inventory), "Agent information")
 
-        agent_system_prompt = system_prompt.copy()
+        # Action Restrictions
+        formatted_action_restrictions = agent.prompt.sections["Action Restrictions"].format_list(
+            agent.action_restrictions)
+        agent.prompt.set_variable("action_restrictions", formatted_action_restrictions, "Action Restrictions")
 
-        agent_system_prompt.query_space = agent.query_space
-        agent_system_prompt.action_space = agent.action_space
+        # Environment Information
+        agent.prompt.set_variable("n_agents", str(len(self.agents)), "Environment information")
+        agent.prompt.set_variable("max_steps", str(self.max_steps), "Environment information")
 
-        agent_system_prompt.set_starting_inventory(str(agent.inventory.starting_inventory))
+        # Artifacts
+        num_artifacts = len(self.action_handler.artifacts)
+        agent.prompt.set_variable("num_artifacts", str(num_artifacts), "Artifact information")
+        agent.prompt.set_artifact_descriptions(self.artifacts)
 
-        agent_system_prompt.set_action_restrictions(agent.action_restrictions)
+        # Assuming global actions are a list
+        formatted_global_actions = agent.prompt.format_list(["""act(action="Skip", parameters=["None"])"""])
+        agent.prompt.set_variable("global_actions", formatted_global_actions, "Action space")
 
-        agent_system_prompt.set_environment_information(str(len(self.agents)), str(self.max_steps))
-
-        agent_system_prompt.set_num_artifacts(str(len(self.action_handler.artifacts)))
-
-        agent_system_prompt.set_artifact_descriptions()
-
-        agent_system_prompt.set_global_actions()
-
-        agent_system_prompt.set_name(agent.name)
-
-        agent.system_prompt = agent_system_prompt
+        agent.prompt.set_variable("current_position", str((agent.x_pos, agent.y_pos)))
+        agent.prompt.set_variable("goal", "Move to the other side of the map")
 
         agent.set_up()
 
@@ -200,7 +200,6 @@ class Environment:
         # assert that all artifacts have necessary functionality
         self.validate_artifacts()
 
-        system_prompt = SystemPrompt()
         # go through the artifacts and set them up
         for name, artifact in self.action_handler.artifacts.items():
             artifact.set_up(self)
@@ -211,10 +210,10 @@ class Environment:
 
             artifact.agents = self.agent_id_lookup
 
-            system_prompt.insert_artifact(artifact)
-
-        for agent in self.agents:
-            self._construct_system_prompt(agent, system_prompt)
+            for agent in self.agents:
+                agent.action_space = self.action_space.copy()
+                agent.query_space = self.query_space.copy()
+                self._construct_system_prompt(agent)
 
         self.n_artifacts = len(self.action_handler.artifacts)
         # give agents the system prompt
@@ -273,7 +272,6 @@ class Environment:
 
             if len(agent.action_queue) == 0:
                 self.log(logging.WARNING, f"Agent {agent.name, agent.id} did not have an action in the action_queue")
-                print(agent.messages)
                 agent.action_queue.append({"action": "Skip", "parameters": ["None"], "memory": "Skipped turn"})
 
             action = agent.action_queue.pop(0)

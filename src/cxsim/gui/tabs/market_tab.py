@@ -70,5 +70,6 @@ class MarketplaceTab(Tab):
 
     def reset(self, env):
         self.environment = env
-        self.marketplace = self.environment.action_handler.artifacts["Marketplace"]
+        if "Marketplace" in self.environment.action_handler.artifacts.keys():
+            self.marketplace = self.environment.action_handler.artifacts["Marketplace"]
 

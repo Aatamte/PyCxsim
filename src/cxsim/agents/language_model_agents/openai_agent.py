@@ -20,10 +20,7 @@ def parse_value(val):
 
 
 class OAIAgent(LanguageModelAgent):
-    def __init__(
-            self,
-            model_id: str = "gpt-3.5-turbo-0613"
-    ):
+    def __init__(self, model_id: str = "gpt-3.5-turbo-0613"):
         super(OAIAgent, self).__init__()
         self.model_id = model_id
         self.language_model_logs = []
@@ -38,13 +35,10 @@ class OAIAgent(LanguageModelAgent):
 
     def execute_action(self):
         self.create_ChatCompletion()
-
-        # In case of errors, you might want to return a default action or None
         return None
 
     def execute_query(self):
         self.create_ChatCompletion()
-
         return None
 
     def create_ChatCompletion(self):
@@ -126,5 +120,5 @@ class OAIAgent(LanguageModelAgent):
             }
         )
 
-        self.add_message("system", self.system_prompt.content)
+        self.add_message("system", self.prompt.get_prompt())
 

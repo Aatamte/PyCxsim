@@ -85,7 +85,7 @@ class Agent:
         # query space
         self.query_space = {}
 
-        self.system_prompt = ""
+        self.prompt = None
 
         self.inventory = Inventory()
 
@@ -110,6 +110,9 @@ class Agent:
             if callable(getattr(self, method_name))
             and getattr(getattr(self, method_name), "_after_turn", False)
         ]
+
+    def set_prompt(self, prompt):
+        self.prompt = prompt
 
     def add_function(self, func):
         """

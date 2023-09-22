@@ -5,6 +5,8 @@ import logging
 from src.cxsim import Environment
 from src.cxsim.agents import Population, OAIAgent
 from src.cxsim.artifacts import Marketplace
+from src.cxsim.artifacts.gridworld import GridWorld
+from src.cxsim.prompts.prompt import InitializationPrompt
 
 
 class MyAgent(OAIAgent):
@@ -15,26 +17,33 @@ class MyAgent(OAIAgent):
         )
 
 
-if __name__ == '__main__':
+def main():
     openai.api_key = os.environ["openai_api_key"]
 
     env = Environment(gui=True)
 
     buyer_population = Population(
         agent=MyAgent,
-        number_of_agents=5
+        number_of_agents=5,
+        prompt=InitializationPrompt("src/cxsim/prompts/system_prompt.txt"),
+        prompt_arguments={"role": "mover"}
     )
 
     seller_population = Population(
         agent=MyAgent,
-        number_of_agents=5
+        number_of_agents=5,
+        prompt=InitializationPrompt("src/cxsim/prompts/system_prompt.txt"),
+        prompt_arguments={"role": "mover"}
     )
 
     env.add(buyer_population)
     env.add(seller_population)
 
-    marketplace = Marketplace()
-    env.add(marketplace)
+    #marketplace = Marketplace()
+    #env.add(marketplace)
+
+    gridworld = GridWorld()
+    env.add(gridworld)
 
     env.step_delay = 5
 
@@ -49,3 +58,6 @@ if __name__ == '__main__':
         print(step)
         env.step()
 
+
+if __name__ == '__main__':
+    main()

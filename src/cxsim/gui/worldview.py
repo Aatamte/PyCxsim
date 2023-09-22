@@ -96,6 +96,8 @@ class World:
         self.environment = environment
         self.blocks = n_blocks
         self.agent_positions = np.zeros((self.blocks, self.blocks))
+        self.agent_circles = {}
+        self.agent_names = {}
         self.tiles = [[dpg.generate_uuid() for _ in range(self.blocks)] for _ in range(self.blocks)]
 
         self.block_size_x = int(0.5 * self.WIDTH) / self.blocks
@@ -124,7 +126,31 @@ class World:
         return tuple(chosen_position)
 
     def update(self):
-        pass
+        for idx, agent in enumerate(self.environment.agents):
+            x = agent.x_pos
+            y = agent.y_pos
+            x, y = self.get_middle_of_block(x, y, self.block_size_x, self.block_size_y)
+
+            dpg.delete_item(self.agent_circles[agent.name])
+            dpg.delete_item(self.agent_names[agent.name])
+
+            self.agent_circles[agent.name] = dpg.draw_circle(
+                (x, y),
+                int(self.block_size_y // 2),
+                color=[0, 0, 0],
+                fill=list(agent.color),
+                parent=self.grid
+            )
+
+            text_size = int(self.block_size_x * 0.2)
+
+            self.agent_names[agent.name] = dpg.draw_text(
+                text=agent.name,
+                pos=(int(x - (self.block_size_x / 3)), int(y - (self.block_size_x / 10))),
+                color=[0, 0, 0],
+                size=text_size,
+                parent=self.grid
+            )
 
     def resize(self):
         self.HEIGHT = int(dpg.get_viewport_height() * 0.95)
@@ -180,7 +206,7 @@ class World:
                 name, color = get_random_unused_color()
                 agent.color = color
 
-            dpg.draw_circle(
+            self.agent_circles[agent.name] = dpg.draw_circle(
                 (x, y),
                 int(self.block_size_y // 2),
                 color=[0, 0, 0],
@@ -191,7 +217,7 @@ class World:
 
             agent_name_length = len(agent.name)
 
-            dpg.draw_text(
+            self.agent_names[agent.name] = dpg.draw_text(
                 text=agent.name,
                 pos=(int(x - (self.block_size_x / 3)), int(y - (self.block_size_x / 10))),
                 color=[0, 0, 0],
