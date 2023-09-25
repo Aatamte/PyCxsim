@@ -24,6 +24,7 @@ class OAIAgent(LanguageModelAgent):
         super(OAIAgent, self).__init__()
         self.model_id = model_id
         self.language_model_logs = []
+        self.temperature = 0.85
 
         self.keep_last_n = 1000
 

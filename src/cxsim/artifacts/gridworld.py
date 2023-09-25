@@ -36,14 +36,17 @@ class Gridworld(Artifact):
         # Update the grid with agent positions
         for agent in self.environment.agents:
             if agent == special_agent:
-                grid[agent.y_pos][agent.x_pos] = 'O'  # 'S' for the special agent
+                grid[agent.y_pos][agent.x_pos] = 'O'  # 'O' for the special agent
             else:
-                grid[agent.y_pos][agent.x_pos] = 'A'
+                grid[agent.y_pos][agent.x_pos] = 'X'
 
-        # Convert the grid to a string representation
-        grid_text = '\n'.join([' '.join(row) for row in grid])
+        # Add x-axis integer positions at the top
+        header = '  ' + ' '.join(map(str, range(self.x_size)))
 
-        return grid_text
+        # Add y-axis integer positions on the left side and convert the grid to a string representation
+        grid_text = [header] + ['{} {}'.format(i, ' '.join(row)) for i, row in enumerate(grid)]
+
+        return '\n'.join(grid_text)
 
     def process_query(self, agent, query):
         grid_text = self.to_text(special_agent=agent)
@@ -53,23 +56,30 @@ class Gridworld(Artifact):
     def process_action(self, agent, action):
         print(agent, action)
         print(agent.x_pos, agent.y_pos)
-        if isinstance(action, Move):
-            if action.direction == "up":
-                if agent.y_pos > 0:
-                    agent.y_pos -= 1
-            elif action.direction == "down":
-                if agent.y_pos < self.y_size - 1:
-                    agent.y_pos += 1
 
-            elif action.direction == "right":
-                if agent.x_pos < self.x_size - 1:
-                    agent.x_pos += 1
-            elif action.direction == "left":
-                if agent.x_pos > 0:
-                    agent.x_pos -= 1
-            else:
-                pass
-            print(agent.x_pos, agent.y_pos)
+        new_x_pos = agent.x_pos
+        new_y_pos = agent.y_pos
+
+        if isinstance(action, Move):
+            if action.direction == "up" and agent.y_pos > 0:
+                new_y_pos -= 1
+            elif action.direction == "down" and agent.y_pos < self.y_size - 1:
+                new_y_pos += 1
+            elif action.direction == "right" and agent.x_pos < self.x_size - 1:
+                new_x_pos += 1
+            elif action.direction == "left" and agent.x_pos > 0:
+                new_x_pos -= 1
+
+        # Check if the new position interferes with another agent's position
+        for other_agent in self.environment.agents:
+            if other_agent != agent and other_agent.x_pos == new_x_pos and other_agent.y_pos == new_y_pos:
+                print("Move interferes with another agent!")
+                return  # Exit the function without updating the agent's position
+
+        # Update the agent's position
+        agent.x_pos = new_x_pos
+        agent.y_pos = new_y_pos
+        print(agent.x_pos, agent.y_pos)
 
     def set_up(self, environment):
         self.environment = environment

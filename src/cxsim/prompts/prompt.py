@@ -45,8 +45,11 @@ class ObservationPrompt:
     def set_current_step(self, current_step):
         self.content = self.content.replace("#!current_step!#", current_step)
 
+    def set_current_position(self, current_position):
+        self.content = self.content.replace("#!current_position!#", current_position)
+
     def set_current_map(self, map_text):
-        self.content = self.content.replace("#!current_map!#", map_text + "\nA: Other agents, O: You, .: empty spaces")
+        self.content = self.content.replace("#!current_map!#", map_text + "\nPositions\nO: Your position\nX: Other agents positions")
 
     def set_artifact_information(self):
         artifact_information_string = ""

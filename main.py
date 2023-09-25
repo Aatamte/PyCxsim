@@ -23,20 +23,20 @@ def main():
 
     pop = Population(
         agent=MyAgent,
-        number_of_agents=5,
+        number_of_agents=1,
         prompt=InitializationPrompt("src/cxsim/prompts/system_prompt.txt"),
-        prompt_arguments={"role": "mover"}
+        prompt_arguments={"role": "goal-follower"}
     )
 
     env.add(pop)
 
-    gridworld = Gridworld(10)
+    gridworld = Gridworld(5)
     env.add(gridworld)
 
     env.step_delay = 5
 
     env.max_episodes = 1
-    env.max_steps = 10
+    env.max_steps = 100
 
     env.log(logging.INFO, "The environment is about to be prepared")
     # prepare the environment to be run

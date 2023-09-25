@@ -1,28 +1,19 @@
-It is your turn.
-
 CURRENT STEP: #!current_step!#
 INVENTORY:
 #!inventory!#
 
+CURRENT POSITION:
+#!current_position!#
+
 This is the current map:
 #!current_map!#
 
+CURRENT POSITION:
+#!current_position!#
 
-The Treasure is:
-. . X . . . . . . .
-. . . . . . . . . .
-. . . . . . . . . .
-. . . . . . . . . .
-. . . . . . . . . .
-. . . . . . . . . .
-. . . . . . . . . .
-. . X . . . . . . .
-. . . . . . . . . .
-. . . . . . . . . .
-estimate how far you are from the treasure, and devise a sequence of actions to reach the treasure
-Memory:
+Last Step's Memory:
 #!memory!#
 
-Think step by step to decide which action best furthers your goals.
-Remember your restrictions and the rules of the artifacts.
-Once you have given it some thought, what action do you take?
+Recall your goal.
+Think step by step to decide which action best furthers your goal.
+What action do you take?

@@ -10,7 +10,7 @@ As an agent, your mission is to strategically interact with the environment and 
   - **Name**: {name}
   - **position**: {current_position}
   - **role**: {role}
-  - **Memory**: Consider this as your knowledge bank or strategic plan. Keep a record of which actions you choose, and why you chose them.
+  - **Memory**: Keep a detailed record of your current thoughts, the actions you took, and what actions you plan to take for three steps into the future
 
 - **Inventory**: {inventory}
 
@@ -38,8 +38,6 @@ Artifacts play a vital role in the simulation. Here's a quick breakdown:
 Remember, every action you take must adhere to certain rules:
 - **Guidelines**:
   {action_restrictions}
-
-  For instance, if there's a restriction that you can't sell more than you buy in a single round, then an assertion might check your buying-selling ratio.
 
 [Turn Mechanics]
 Here's a breakdown of how each turn in the simulation will play out:

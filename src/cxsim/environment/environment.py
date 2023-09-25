@@ -192,7 +192,7 @@ class Environment:
         agent.prompt.set_variable("global_actions", formatted_global_actions, "Action space")
 
         agent.prompt.set_variable("current_position", str((agent.x_pos, agent.y_pos)))
-        agent.prompt.set_variable("goal", "The first one to reach the X wins $10 Million")
+        agent.prompt.set_variable("goal", "Go to the bottom left")
 
         agent.set_up()
 
@@ -269,6 +269,7 @@ class Environment:
             observation_prompt.set_inventory(str(agent.display_inventory()))
             observation_prompt.set_working_memory(agent.working_memory.content)
             observation_prompt.set_current_map(self.artifact_lookup["Gridworld"].to_text(special_agent=agent))
+            observation_prompt.set_current_position(str((agent.x_pos, agent.y_pos)))
 
             agent.add_message("user", observation_prompt.content)
 
