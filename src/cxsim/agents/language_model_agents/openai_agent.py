@@ -121,5 +121,5 @@ class OAIAgent(LanguageModelAgent):
             }
         )
 
-        self.add_message("system", self.prompt.get_prompt())
+        self.add_message("system", self.system_prompt.get_prompt())
 

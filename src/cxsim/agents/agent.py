@@ -85,7 +85,9 @@ class Agent:
         # query space
         self.query_space = {}
 
-        self.prompt = None
+        # agent prompts
+        self.system_prompt = None
+        self.cognitive_prompt = None
 
         self.inventory = Inventory()
 

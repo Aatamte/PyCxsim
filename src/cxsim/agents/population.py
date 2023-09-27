@@ -1,13 +1,14 @@
-from src.cxsim.agents.agent import Agent
-from src.cxsim.prompts.prompt import InitializationPrompt
+from src.cxsim.prompts.prompt import PromptTemplate
 import copy
+
 
 class Population:
     def __init__(
             self,
             agent,
             number_of_agents: int,
-            prompt: InitializationPrompt = None,
+            system_prompt: PromptTemplate = None,
+            cognitive_prompt: PromptTemplate = None,
             params: dict = None,
             action_restrictions: list = None,
             query_restrictions: list = None,
@@ -18,8 +19,12 @@ class Population:
         self.params = params
         self.action_restrictions = action_restrictions
         self.query_restrictions = query_restrictions
-        self.prompt = prompt
+
+        self.system_prompt = system_prompt
         self.prompt_arguments = prompt_arguments
+
+        self.cognitive_prompt = cognitive_prompt
+        print(self.cognitive_prompt, cognitive_prompt)
 
     def generate_agents(self):
         population = []
@@ -38,11 +43,21 @@ class Population:
                 agent.query_restrictions = self.query_restrictions
 
             # Assign a personalized InitializationPrompt to the agent
-            if self.prompt:
-                personalized_prompt = copy.deepcopy(self.prompt)
-                for key, value in self.prompt_arguments.items():
-                    personalized_prompt.set_variable(key, value)
-                agent.prompt = personalized_prompt
+            if self.system_prompt:
+                if isinstance(self.system_prompt, PromptTemplate):
+                    personalized_prompt = copy.deepcopy(self.system_prompt)
+                    for key, value in self.prompt_arguments.items():
+                        personalized_prompt.set_variable(key, value)
+                    agent.system_prompt = personalized_prompt
+                elif isinstance(self.system_prompt, str):
+                    agent.system_prompt = self.system_prompt
+
+            if self.cognitive_prompt:
+                if isinstance(self.cognitive_prompt, PromptTemplate):
+                    cognitive_prompt = copy.deepcopy(self.cognitive_prompt)
+                    agent.cognitive_prompt = cognitive_prompt
+                elif isinstance(self.cognitive_prompt, str):
+                    agent.cognitive_prompt = self.cognitive_prompt
 
             population.append(agent)
 

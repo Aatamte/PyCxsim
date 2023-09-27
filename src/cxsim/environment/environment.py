@@ -15,6 +15,7 @@ from src.cxsim.utilities.background_jobs.background_task import BackgroundTask
 from src.cxsim.environment.calander import Calender
 from src.cxsim.agents.item import ItemHandler
 from src.cxsim.actions.standard import Skip
+from src.cxsim.environment.event import Event, EventHandler
 
 from src.cxsim.prompts.prompt import ObservationPrompt, InitializationPrompt
 
@@ -31,7 +32,7 @@ class Environment:
         name (str): Name of the environment.
         verbose (int): Verbosity level.
         seed (int): Seed for random number generation.
-        visualization (bool): Whether to visualize the environment.
+        gui (bool): Whether to visualize the environment.
         start_time (float): Start time of the simulation.
         ... [other attributes]
     """
@@ -88,8 +89,10 @@ class Environment:
         self.artifacts = []
         self.artifact_lookup = {}
 
+        # handlers
         self.action_handler = ActionHandler(self)
         self.query_handler = QueryHandler(self)
+        self.event_handler = EventHandler(self)
 
         self.calender = Calender()
         self.item_handler = ItemHandler(self)
@@ -131,9 +134,12 @@ class Environment:
         if artifact.name == "Gridworld":
             self.visualizer.world.blocks = artifact.x_size
 
+    def add_event(self, event: Event):
+        self.event_handler.add_event(event)
+
     def add(self, item):
         """
-        Add a new item (agent, artifact, or list) to the environment.
+        Add a new item (agent, artifact, population, event, or a list of valid items) to the environment.
 
         :param item: Item to be added
         """
@@ -144,6 +150,9 @@ class Environment:
         elif isinstance(item, Population):
             for it in item.generate_agents():
                 self.add_agent(it)
+        elif isinstance(item, Event):
+            self.add_event(item)
+
         elif isinstance(item, list):
             for it in item:
                 self.add(it)
@@ -168,31 +177,32 @@ class Environment:
 
 
         # Setting variables for the agent's prompt sections
-        agent.prompt.set_variable("name", agent.name, "Agent information")
+        agent.system_prompt.set_variable("name", agent.name, "Agent information")
 
         # Inventory
-        agent.prompt.set_variable("inventory", str(agent.inventory.starting_inventory), "Agent information")
+        agent.system_prompt.set_variable("inventory", str(agent.inventory.starting_inventory), "Agent information")
 
         # Action Restrictions
-        formatted_action_restrictions = agent.prompt.sections["Action Restrictions"].format_list(
+        formatted_action_restrictions = agent.system_prompt.sections["Action Restrictions"].format_list(
             agent.action_restrictions)
-        agent.prompt.set_variable("action_restrictions", formatted_action_restrictions, "Action Restrictions")
+        agent.system_prompt.set_variable("action_restrictions", formatted_action_restrictions, "Action Restrictions")
 
         # Environment Information
-        agent.prompt.set_variable("n_agents", str(len(self.agents)), "Environment information")
-        agent.prompt.set_variable("max_steps", str(self.max_steps), "Environment information")
+        agent.system_prompt.set_variable("n_agents", str(len(self.agents)), "Environment information")
+        agent.system_prompt.set_variable("max_steps", str(self.max_steps), "Environment information")
 
         # Artifacts
         num_artifacts = len(self.action_handler.artifacts)
-        agent.prompt.set_variable("num_artifacts", str(num_artifacts), "Artifact information")
-        agent.prompt.set_artifact_descriptions(self.artifacts)
+        agent.system_prompt.set_variable("num_artifacts", str(num_artifacts), "Artifact information")
+        agent.system_prompt.set_artifact_descriptions(self.artifacts)
 
         # Assuming global actions are a list
-        formatted_global_actions = agent.prompt.format_list(["""act(action="Skip", parameters=["None"])"""])
-        agent.prompt.set_variable("global_actions", formatted_global_actions, "Action space")
+        formatted_global_actions = agent.system_prompt.format_list(["""act(action="Skip", parameters=["None"])"""])
+        agent.system_prompt.set_variable("global_actions", formatted_global_actions, "Action space")
 
-        agent.prompt.set_variable("current_position", str((agent.x_pos, agent.y_pos)))
-        agent.prompt.set_variable("goal", "Go to the bottom left")
+        agent.system_prompt.set_variable("current_position", str((agent.x_pos, agent.y_pos)))
+
+        agent.goal = "Go to position (0, 0)"
 
         agent.set_up()
 
@@ -264,14 +274,14 @@ class Environment:
         n_actions = 0
 
         while n_actions < agent.max_actions and n_queries < agent.max_queries:
-            observation_prompt = ObservationPrompt()
-            observation_prompt.set_current_step(str(self.current_step))
-            observation_prompt.set_inventory(str(agent.display_inventory()))
-            observation_prompt.set_working_memory(agent.working_memory.content)
-            observation_prompt.set_current_map(self.artifact_lookup["Gridworld"].to_text(special_agent=agent))
-            observation_prompt.set_current_position(str((agent.x_pos, agent.y_pos)))
+            agent.cognitive_prompt.set_variable("inventory", str(agent.display_inventory()), "cognitive prompt")
+            agent.cognitive_prompt.set_variable("current_step", self.current_step,  "cognitive prompt")
+            agent.cognitive_prompt.set_variable("current_position", str((agent.x_pos, agent.y_pos)),  "cognitive prompt")
+            agent.cognitive_prompt.set_variable("current_memory", agent.working_memory.content,  "cognitive prompt")
+            agent.cognitive_prompt.set_variable("max_steps", self.max_steps,  "cognitive prompt")
+            agent.cognitive_prompt.set_variable("goal", agent.goal, "cognitive prompt")
 
-            agent.add_message("user", observation_prompt.content)
+            agent.add_message("user", agent.cognitive_prompt.get_prompt())
 
             with BackgroundTask(agent.execute_action, self.visualizer, agent_name=agent.name):
                 pass

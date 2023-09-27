@@ -12,7 +12,7 @@ with importlib_resources.open_text('src.cxsim.prompts', 'system_prompt.txt') as 
     system_prompt = file.read()
 
 # Open the file (replace 'your_package_name' with the actual name of your package)
-with importlib_resources.open_text('src.cxsim.prompts', 'observation_prompt.txt') as file:
+with importlib_resources.open_text('src.cxsim.prompts', 'cognitive_prompt.txt') as file:
     observation_prompt = file.read()
 
 with importlib_resources.open_text('src.cxsim.prompts', 'state_of_mind_prompt.txt') as file:

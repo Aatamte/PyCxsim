@@ -102,7 +102,8 @@ class World:
 
     def get_middle_of_block(self, block_x, block_y, block_size_x, block_size_y):
         middle_x = block_x * block_size_x + block_size_x / 2
-        middle_y = block_y * block_size_y + block_size_y / 2
+        # Invert the y-coordinate
+        middle_y = self.HEIGHT - (block_y * block_size_y + block_size_y / 2)
 
         return middle_x, middle_y
 
@@ -123,7 +124,6 @@ class World:
         return tuple(chosen_position)
 
     def update(self):
-
         for idx, agent in enumerate(self.environment.agents):
             x = agent.x_pos
             y = agent.y_pos
@@ -149,6 +149,7 @@ class World:
                 size=text_size,
                 parent=self.grid
             )
+
 
     def reset(self, n_blocks: int = None):
         pass

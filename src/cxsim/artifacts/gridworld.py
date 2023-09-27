@@ -44,7 +44,8 @@ class Gridworld(Artifact):
         header = '  ' + ' '.join(map(str, range(self.x_size)))
 
         # Add y-axis integer positions on the left side and convert the grid to a string representation
-        grid_text = [header] + ['{} {}'.format(i, ' '.join(row)) for i, row in enumerate(grid)]
+        # Reverse the order of the rows for the desired coordinate system
+        grid_text = [header] + ['{} {}'.format(self.y_size - 1 - i, ' '.join(row)) for i, row in enumerate(reversed(grid))]
 
         return '\n'.join(grid_text)
 
@@ -61,10 +62,10 @@ class Gridworld(Artifact):
         new_y_pos = agent.y_pos
 
         if isinstance(action, Move):
-            if action.direction == "up" and agent.y_pos > 0:
-                new_y_pos -= 1
-            elif action.direction == "down" and agent.y_pos < self.y_size - 1:
+            if action.direction == "up" and agent.y_pos < self.y_size - 1:
                 new_y_pos += 1
+            elif action.direction == "down" and agent.y_pos > 0:
+                new_y_pos -= 1
             elif action.direction == "right" and agent.x_pos < self.x_size - 1:
                 new_x_pos += 1
             elif action.direction == "left" and agent.x_pos > 0:
