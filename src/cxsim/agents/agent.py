@@ -88,7 +88,13 @@ class Agent:
         # agent prompts
         self.system_prompt = None
         self.cognitive_prompt = None
+        self.decision_prompt = None
 
+        # other
+        self.goal = ""
+        self.tasks = []
+
+        self.inbox = []
         self.inventory = Inventory()
 
         # agent traits
@@ -112,9 +118,6 @@ class Agent:
             if callable(getattr(self, method_name))
             and getattr(getattr(self, method_name), "_after_turn", False)
         ]
-
-    def set_prompt(self, prompt):
-        self.prompt = prompt
 
     def add_function(self, func):
         """
@@ -158,7 +161,7 @@ class Agent:
             self.messages.append({"role": role, "content": content})
 
     @abstractmethod
-    def execute_action(self):
+    def decide(self):
         """
         Execute an action by the agent.
         This method should be implemented by subclasses.
@@ -166,11 +169,10 @@ class Agent:
         raise NotImplementedError("This method should be implemented by subclasses")
 
     @abstractmethod
-    def execute_query(self):
+    def reflect(self):
         """
-        Execute a query and return a random choice from the query space.
-
-        :return: A random query from the query space.
+        Execute an action by the agent.
+        This method should be implemented by subclasses.
         """
         raise NotImplementedError("This method should be implemented by subclasses")
 

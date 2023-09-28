@@ -7,8 +7,11 @@ from src.cxsim.prompts.prompt import Prompt
 
 @dataclasses.dataclass
 class Message:
-    recipient: int
-    content: int
+    """Send a message to other agents in the simulation. Be clear and concise in your message. Do not be repetitive. Call out other agents who are repetitive, or who are sending to many messages.
+    recipients: names of the other agent in the simulation, delimited by a comma. (example: 'John,Terry')
+    content: text you want to send"""
+    recipients: str
+    content: str
 
 
 @dataclasses.dataclass
@@ -17,34 +20,31 @@ class DialogueQuery:
 
 
 class Dialogue(Artifact):
+    """Use this artifact to communicate with other agents in the environment"""
     def __init__(self):
         super().__init__("Dialogue")
         self.messages = {}
-        self.action_space = [
-            Message
-        ]
-        self.query_space = [
-            DialogueQuery
-        ]
+        self.action_space = [Message]
+        #self.query_space = [DialogueQuery]
 
     def reset(self, environment):
         self.environment = environment
-        self.messages = {}
+        for agent in self.environment.agents:
+            self.messages[agent.name] = []
 
     def set_up(self, environment):
         self.environment = environment
         for agent in self.environment.agents:
             self.messages[agent.name] = deque()
 
-        self.system_prompt = Prompt(
-            f"""This is a marketplace where agents can buy and sell goods. A positive quantity represents a buy order, while a negative quantity represents a sell order. If there are no other orders in the marketplace, you are required to submit an order (you may choose parameters that are unrealistic, but valid)"""
-        )
-
     def process_action(self, agent, action: Message):
-        self.messages[action.recipient].push(action.content)
+        print(agent, action)
+        for recipient in action.recipients.split(","):
+            recipient = recipient.strip()
+            self.messages[recipient].append(action.content)
+            self.environment.agent_name_lookup[recipient].inbox.append("From: " + agent.name + f"\nTo: {action.recipients}\nContent: " + action.content)
 
-    def process_query(self, agent, query):
-        return self.messages[agent.name]
+        return "Successful"
 
 
 class Inbox:

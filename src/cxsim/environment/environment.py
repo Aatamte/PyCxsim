@@ -14,10 +14,7 @@ from src.cxsim.gui.visualizer import Visualizer
 from src.cxsim.utilities.background_jobs.background_task import BackgroundTask
 from src.cxsim.environment.calander import Calender
 from src.cxsim.agents.item import ItemHandler
-from src.cxsim.actions.standard import Skip
 from src.cxsim.environment.event import Event, EventHandler
-
-from src.cxsim.prompts.prompt import ObservationPrompt, InitializationPrompt
 
 
 class UnsupportedItemType(Exception):
@@ -171,7 +168,7 @@ class Environment:
 
             assert artifact.process_action.__code__ != Artifact.process_action.__code__, "process_action method must be implemented by subclass"
 
-            assert artifact.process_query.__code__ != Artifact.process_query.__code__, "process_query method must be implemented by subclass"
+            #assert artifact.process_query.__code__ != Artifact.process_query.__code__, "process_query method must be implemented by subclass"
 
     def _construct_system_prompt(self, agent: Agent):
 
@@ -190,6 +187,7 @@ class Environment:
         # Environment Information
         agent.system_prompt.set_variable("n_agents", str(len(self.agents)), "Environment information")
         agent.system_prompt.set_variable("max_steps", str(self.max_steps), "Environment information")
+        agent.system_prompt.set_variable("agent_names", str(self.agent_names), "Environment information")
 
         # Artifacts
         num_artifacts = len(self.action_handler.artifacts)
@@ -202,7 +200,7 @@ class Environment:
 
         agent.system_prompt.set_variable("current_position", str((agent.x_pos, agent.y_pos)))
 
-        agent.goal = "Go to position (0, 0)"
+        agent.goal = "Align yourselves alphabetically (according to your name) in a left-to-right line. You may communicate with other agents in the environment if it is absolutely necessary. The simulation will end once you have completed the task. For every step the task is not completed, you lose $5"
 
         agent.set_up()
 
@@ -272,23 +270,25 @@ class Environment:
 
         n_queries = 0
         n_actions = 0
-
+        observation = None
         while n_actions < agent.max_actions and n_queries < agent.max_queries:
-            agent.cognitive_prompt.set_variable("inventory", str(agent.display_inventory()), "cognitive prompt")
-            agent.cognitive_prompt.set_variable("current_step", self.current_step,  "cognitive prompt")
-            agent.cognitive_prompt.set_variable("current_position", str((agent.x_pos, agent.y_pos)),  "cognitive prompt")
-            agent.cognitive_prompt.set_variable("current_memory", agent.working_memory.content,  "cognitive prompt")
-            agent.cognitive_prompt.set_variable("max_steps", self.max_steps,  "cognitive prompt")
-            agent.cognitive_prompt.set_variable("goal", agent.goal, "cognitive prompt")
+            agent.decision_prompt.set_variable("inventory", str(agent.display_inventory()), "decision prompt")
+            agent.decision_prompt.set_variable("inbox", str(agent.inbox), "decision prompt")
+            agent.decision_prompt.set_variable("current_step", self.current_step,  "decision prompt")
+            agent.decision_prompt.set_variable("current_position", str((agent.x_pos, agent.y_pos)),  "decision prompt")
+            agent.decision_prompt.set_variable("max_steps", self.max_steps,  "decision prompt")
+            agent.decision_prompt.set_variable("goal", agent.goal, "decision prompt")
 
-            agent.add_message("user", agent.cognitive_prompt.get_prompt())
+            agent.inbox.clear()
 
-            with BackgroundTask(agent.execute_action, self.visualizer, agent_name=agent.name):
+            agent.add_message("user", agent.decision_prompt.get_prompt())
+
+            with BackgroundTask(agent.decide, self.visualizer, agent_name=agent.name):
                 pass
 
             if len(agent.action_queue) == 0:
                 self.log(logging.WARNING, f"Agent {agent.name, agent.id} did not have an action in the action_queue")
-                agent.action_queue.append({"action": "Skip", "parameters": ["None"], "memory": "Skipped turn"})
+                agent.action_queue.append({"action": "Skip", "parameters": ["None"]})
 
             action = agent.action_queue.pop(0)
             self.log(logging.INFO, str(agent) + " " + str(action))
@@ -297,15 +297,29 @@ class Environment:
 
             if action["action"].lower() in action_names:
                 action["action"] = action_names[action["action"].lower()]
-                self.action_handler.process_action(agent, action)
+                observation = self.action_handler.process_action(agent, action)
                 n_actions += 1
             else:
                 observation = self.query_handler.process_query(agent, action)
                 if observation is None:
                     n_actions += 1
-                    observation = "skip was successful"
+                    observation = "No response from agent"
                 agent.add_message("function", observation, function_name="act")
                 n_queries += 1
+
+        print(observation)
+        # do cognitive step
+        if len(agent.action_history) >= 1:
+            action_history = agent.action_history[-1]
+        else:
+            action_history = agent.action_history
+        agent.cognitive_prompt.set_variable("goal", agent.goal, "cognitive prompt")
+        agent.cognitive_prompt.set_variable("action_history", str(action_history), "cognitive prompt")
+        agent.cognitive_prompt.set_variable("action_result", observation, "cognitive prompt")
+        agent.add_message("user", agent.cognitive_prompt.get_prompt())
+
+        with BackgroundTask(agent.reflect, self.visualizer, agent_name=agent.name):
+            pass
 
         agent.step()
 

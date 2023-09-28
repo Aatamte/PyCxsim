@@ -1,15 +1,15 @@
 [cognitive prompt]
-CURRENT STEP: {current_step}
-MAX STEPS: {max_steps}
-INVENTORY:
-{inventory}
 
-CURRENT POSITION (x, y):
-{current_position}
+Last Action: {action_history}
 
-Last Step's Memory:
-{current_memory}
+RESULT OF ACTION: {action_result}
 
 Goal: {goal}
-Think step by step to decide which action best furthers your goal.
-What action do you take?
+
+This is the reflection step.
+Consider your goal and past actions, and update your future plan and memory.
+Keep any information you might need in the future under INFORMATION
+
+FUTURE MEMORY:
+    - PLAN:
+    - INFORMATION:

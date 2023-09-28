@@ -63,12 +63,14 @@ class ActionHandler:
             elif type(action) in self.map_action_to_artifact.keys():
                 action_log[1] = self.map_action_to_artifact[type(action)]
                 action_log[2] = action
-                self.artifacts[self.map_action_to_artifact[type(action)]].process_action(agent, action)
+                result = self.artifacts[self.map_action_to_artifact[type(action)]].process_action(agent, action)
             else:
                 raise Warning("An agents action must be either a tuple or an action class")
 
         agent.action_history.append((self.environment.current_step, action_log[1], action_log[2]))
         self.action_logs.append((agent.name, *action_log))
+
+        return result
 
     def process_query(self, agent, query):
         artifact = self.map_query_to_artifact[type(query)]

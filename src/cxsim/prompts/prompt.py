@@ -335,25 +335,25 @@ class PromptTemplate:
 
     def format_artifact_description(self, artifact):
         description = f"{artifact.name}\n"
+        description += f"description: {artifact.__doc__}\n"
 
         description += "ACTIONS:\n"
         for action in artifact.get_action_space():
             action_name = str(action.__name__)
             action_parameters = [f"{field.name} {field.type}" for field in fields(action)]
-            description += f"act(action={action_name}, parameters={action_parameters}, memory=<your memory>)\n"
-            description += f"action information: {action.__doc__}"
+            description += f"act(action={action_name}, parameters={action_parameters})\n"
+            description += f"action information: {action.__doc__}\n"
 
         description += "\nQUERIES:\n"
         for query in artifact.get_query_space():
             query_name = str(query.__name__)
             query_parameters = [f"{field.name} {field.type}" for field in fields(query)]
-            description += f"act(action={query_name}, parameters={query_parameters}, memory=<your memory>)\n"
+            description += f"act(action={query_name}, parameters={query_parameters})\n"
 
         return description
 
     def set_artifact_descriptions(self, artifacts):
         formatted_descriptions = "\n".join([self.format_artifact_description(artifact) for artifact in artifacts])
-        print(formatted_descriptions)
         self.set_variable("artifact_descriptions", formatted_descriptions, "Artifact Information")
 
     def format_list(self, items: list, delimiter: str = "\n", formatter_func: callable = None,

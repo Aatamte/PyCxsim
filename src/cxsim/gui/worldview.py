@@ -103,8 +103,7 @@ class World:
     def get_middle_of_block(self, block_x, block_y, block_size_x, block_size_y):
         middle_x = block_x * block_size_x + block_size_x / 2
         # Invert the y-coordinate
-        middle_y = self.HEIGHT - (block_y * block_size_y + block_size_y / 2)
-
+        middle_y = ((self.blocks - (block_y + 1)) * block_size_y + block_size_y / 2)
         return middle_x, middle_y
 
     def choose_and_set_position(self):

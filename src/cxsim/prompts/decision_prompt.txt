@@ -1,0 +1,15 @@
+[decision prompt]
+CURRENT STEP: {current_step}
+MAX STEPS: {max_steps}
+INVENTORY:
+{inventory}
+
+CURRENT POSITION (x, y):
+{current_position}
+
+INBOX: {inbox}
+
+Goal: {goal}
+
+Think step by step to decide which action best furthers your goal.
+What action do you take?

@@ -9,6 +9,7 @@ class Population:
             number_of_agents: int,
             system_prompt: PromptTemplate = None,
             cognitive_prompt: PromptTemplate = None,
+            decision_prompt: PromptTemplate = None,
             params: dict = None,
             action_restrictions: list = None,
             query_restrictions: list = None,
@@ -24,7 +25,7 @@ class Population:
         self.prompt_arguments = prompt_arguments
 
         self.cognitive_prompt = cognitive_prompt
-        print(self.cognitive_prompt, cognitive_prompt)
+        self.decision_prompt = decision_prompt
 
     def generate_agents(self):
         population = []
@@ -58,6 +59,12 @@ class Population:
                     agent.cognitive_prompt = cognitive_prompt
                 elif isinstance(self.cognitive_prompt, str):
                     agent.cognitive_prompt = self.cognitive_prompt
+
+            if self.decision_prompt:
+                if isinstance(self.decision_prompt, PromptTemplate):
+                    agent.decision_prompt = copy.deepcopy(self.decision_prompt)
+                elif isinstance(self.decision_prompt, str):
+                    agent.decision_prompt = self.decision_prompt
 
             population.append(agent)
 
