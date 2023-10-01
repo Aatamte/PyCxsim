@@ -19,6 +19,7 @@ def main():
     supply = Supply(total_agents)
     demand = Demand(total_agents)
 
+
     # Define Supply and Demand Functions
     demand.set_function(lambda x: 150 - (1 * x))
     supply.set_function(lambda x: (1 * x) + 140)
