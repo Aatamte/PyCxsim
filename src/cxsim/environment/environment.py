@@ -200,7 +200,6 @@ class Environment:
 
         agent.system_prompt.set_variable("current_position", str((agent.x_pos, agent.y_pos)))
 
-        agent.goal = "Align yourselves alphabetically (according to your name) in a left-to-right line. You may communicate with other agents in the environment if it is absolutely necessary. The simulation will end once you have completed the task. For every step the task is not completed, you lose $5"
 
         agent.set_up()
 
@@ -275,9 +274,8 @@ class Environment:
             agent.decision_prompt.set_variable("inventory", str(agent.display_inventory()), "decision prompt")
             agent.decision_prompt.set_variable("inbox", str(agent.inbox), "decision prompt")
             agent.decision_prompt.set_variable("current_step", self.current_step,  "decision prompt")
-            agent.decision_prompt.set_variable("current_position", str((agent.x_pos, agent.y_pos)),  "decision prompt")
+            #agent.decision_prompt.set_variable("current_position", self.artifact_lookup["Marketplace"]["shirts"].__repr__(),  "decision prompt")
             agent.decision_prompt.set_variable("max_steps", self.max_steps,  "decision prompt")
-            agent.decision_prompt.set_variable("goal", agent.goal, "decision prompt")
 
             agent.inbox.clear()
 
@@ -307,7 +305,6 @@ class Environment:
                 agent.add_message("function", observation, function_name="act")
                 n_queries += 1
 
-        print(observation)
         # do cognitive step
         if len(agent.action_history) >= 1:
             action_history = agent.action_history[-1]
@@ -316,6 +313,8 @@ class Environment:
         agent.cognitive_prompt.set_variable("goal", agent.goal, "cognitive prompt")
         agent.cognitive_prompt.set_variable("action_history", str(action_history), "cognitive prompt")
         agent.cognitive_prompt.set_variable("action_result", observation, "cognitive prompt")
+        if agent.params:
+            agent.cognitive_prompt.set_variable("params", agent.params, "cognitive prompt")
         agent.add_message("user", agent.cognitive_prompt.get_prompt())
 
         with BackgroundTask(agent.reflect, self.visualizer, agent_name=agent.name):

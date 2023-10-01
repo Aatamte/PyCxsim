@@ -333,27 +333,21 @@ class PromptTemplate:
                 if var_name.lower() in section.get_content().lower():
                     section.set_variable(var_name, value)
 
-    def format_artifact_description(self, artifact):
-        description = f"{artifact.name}\n"
+    def format_artifact_description(self, idx, artifact):
+        description = f"{idx}. {artifact.name}\n"
         description += f"description: {artifact.__doc__}\n"
 
         description += "ACTIONS:\n"
         for action in artifact.get_action_space():
             action_name = str(action.__name__)
             action_parameters = [f"{field.name} {field.type}" for field in fields(action)]
-            description += f"act(action={action_name}, parameters={action_parameters})\n"
-            description += f"action information: {action.__doc__}\n"
-
-        description += "\nQUERIES:\n"
-        for query in artifact.get_query_space():
-            query_name = str(query.__name__)
-            query_parameters = [f"{field.name} {field.type}" for field in fields(query)]
-            description += f"act(action={query_name}, parameters={query_parameters})\n"
+            description += f" - act(action={action_name}, parameters={action_parameters})\n"
+            description += f"\tDescription: {action.__doc__}\n"
 
         return description
 
     def set_artifact_descriptions(self, artifacts):
-        formatted_descriptions = "\n".join([self.format_artifact_description(artifact) for artifact in artifacts])
+        formatted_descriptions = "\n".join([self.format_artifact_description(idx, artifact) for idx, artifact in enumerate(artifacts)])
         self.set_variable("artifact_descriptions", formatted_descriptions, "Artifact Information")
 
     def format_list(self, items: list, delimiter: str = "\n", formatter_func: callable = None,

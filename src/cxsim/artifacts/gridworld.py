@@ -75,7 +75,7 @@ class Gridworld(Artifact):
 
     def process_query(self, agent, query):
         grid_text = self.to_text(special_agent=agent)
-        description = grid_text  + "\nA: Other agents, S: You, .: empty spaces"
+        description = grid_text + "\nA: Other agents, S: You, .: empty spaces"
         return description
 
     def process_action(self, agent, action):

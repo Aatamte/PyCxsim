@@ -235,6 +235,8 @@ class World:
             self.place_agents()
 
     def create(self):
+        if self.blocks is None:
+            self.blocks = 10
         self.agent_positions = np.zeros((self.blocks, self.blocks))
 
         self.tiles = [[dpg.generate_uuid() for _ in range(self.blocks)] for _ in range(self.blocks)]

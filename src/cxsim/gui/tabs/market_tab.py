@@ -19,8 +19,18 @@ class MarketplaceTab(Tab):
         self.best_ask_plot = []
 
     def step(self):
-        dpg.set_value(self.best_bid, [[n for n in range(len(self.best_bid_plot))], self.best_bid_plot])
-        dpg.set_value(self.best_ask, [[n for n in range(len(self.best_ask_plot))], self.best_ask_plot])
+        longest_series = max(len(self.best_bid_plot), len(self.best_ask_plot))
+
+        # Calculate the x-offsets for each series
+        x_offset_bid = longest_series - len(self.best_bid_plot)
+        x_offset_ask = longest_series - len(self.best_ask_plot)
+
+        # Generate the x-coordinates for each series
+        x_coords_bid = [n + x_offset_bid for n in range(len(self.best_bid_plot))]
+        x_coords_ask = [n + x_offset_ask for n in range(len(self.best_ask_plot))]
+
+        dpg.set_value(self.best_bid, [x_coords_bid, self.best_bid_plot])
+        dpg.set_value(self.best_ask, [x_coords_ask, self.best_ask_plot])
         dpg.set_value(self.text, self.marketplace[self.current_market])
         dpg.set_value(self.market_history, self.marketplace[self.current_market].history)
 

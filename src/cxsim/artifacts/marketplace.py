@@ -13,9 +13,19 @@ from src.cxsim.environment.event import Event
 
 
 @dataclass
-class Order:
+class BuyOrder:
     """
-    Represents a single order in the order book.
+    Represents a single buy order in the order book
+    """
+    good: str
+    price: int
+    quantity: int
+
+
+@dataclass
+class SellOrder:
+    """
+    Represents a single sell order in the order book
     """
     good: str
     price: int
@@ -199,7 +209,7 @@ class OrderBook:
         existing_buy_orders = [o for o in self.buy_orders if o.agent == order.agent]
         existing_sell_orders = [o for o in self.sell_orders if o.agent == order.agent]
         assert not (existing_buy_orders and existing_sell_orders), "Agent has orders on both sides of the market."
-        self.should_remove_existing_order(order)
+        #self.should_remove_existing_order(order)
 
         order_is_legitimate = self.is_order_legitimate(order, is_buy_order)
 
@@ -223,6 +233,20 @@ class OrderBook:
             if self.sell_orders and self.lowest_offer_order:
                 assert self.lowest_offer_order == self.sell_orders[0], "lowest_offer_order is not consistent with sorted sell_orders."
 
+        if self.highest_bid_order:
+            self.best_bid_history.append(self.highest_bid_order.price)
+        else:
+            if self.best_bid_history:
+                last_known_bid = self.best_bid_history[-1]
+                self.best_bid_history.append(last_known_bid)
+
+        if self.lowest_offer_order:
+            self.best_ask_history.append(self.lowest_offer_order.price)
+        else:
+            if self.best_ask_history:
+                last_known_ask = self.best_ask_history[-1]
+                self.best_ask_history.append(last_known_ask)
+
     def execute(self, incoming_order: InternalOrder, book_order: InternalOrder):
         transaction_price = book_order.price
         is_incoming_buy_order = True if incoming_order.quantity >= 0 else False
@@ -242,7 +266,6 @@ class OrderBook:
                     good=self.product_name,
                     quantity=transaction_quantity,
                     price=transaction_price,
-                    step=0
                 )
             )
         else:
@@ -259,7 +282,6 @@ class OrderBook:
                     good=self.product_name,
                     quantity=transaction_quantity,
                     price=transaction_price,
-                    step=0
                 )
             )
 
@@ -287,7 +309,6 @@ class OrderBook:
             else:
                 self.sell_orders.remove(book_order)
 
-
         # Update history and transaction counter
         self.history = pd.concat([
             self.history,
@@ -303,19 +324,11 @@ class OrderBook:
 
         assert incoming_order not in self.buy_orders, "Executed buy order still present in buy_orders."
         assert incoming_order not in self.sell_orders, "Executed sell order still present in sell_orders."
-
+        self.update_best_orders()
         return True
 
     def step(self):
-        if self.highest_bid_order:
-            self.best_bid_history.append(
-                self.highest_bid_order.price
-            )
-
-        if self.lowest_offer_order:
-            self.best_ask_history.append(
-                self.lowest_offer_order.price
-            )
+        pass
 
     def get_full_orderbook(self):
         return [(order.price, order.quantity) for order in self.buy_orders] + [(order.price, order.quantity) for order in self.sell_orders]
@@ -328,21 +341,23 @@ class OrderBook:
 
     def __repr__(self):
         new_line = "\n"
-        sell_order_list = [str((order.price, order.quantity, order.agent.name, order.id)) for order in self.sell_orders][-1::][:5]
+        sell_order_list = [str((order.price, abs(order.quantity), order.agent.name, order.id)) for order in self.sell_orders][:5]
         buy_order_list = [str((order.price, order.quantity, order.agent.name, order.id)) for order in self.buy_orders][:5]
         return \
 f"""===================================
 {self.product_name} Order Book
-Buy order = positive quantity
-Sell order = negative quantity
+Sell orders
 (price, quantity, name)
-{new_line.join(map(str, sell_order_list))}
+{new_line.join(map(str, sell_order_list[::-1]))}
+Buy orders
+(price, quantity, name)
 {new_line.join(map(str, buy_order_list))}
 ==================================="""
 
 
 class Marketplace(Artifact, ABC):
     def __init__(self, product_names = None, infer_goods_from_agents:  bool = True):
+        """The marketplace facilitates transactions between agents in the simulation."""
         super(Marketplace, self).__init__("Marketplace")
         self.infer_goods_from_agents = infer_goods_from_agents
         self.markets: Dict[str, OrderBook] = {}
@@ -352,28 +367,33 @@ class Marketplace(Artifact, ABC):
         else:
             self.market_names = []
 
-        self.action_space.append(Order)
-        self.query_space.append(MarketPlaceQuery)
+        self.action_space.append(BuyOrder)
+        self.action_space.append(SellOrder)
+        self.action_space.append(MarketPlaceQuery)
 
-    def process_action(self, agent, action: Union[list, Order]):
-        if isinstance(action, tuple):
-            market = action[0]
-            self.markets[market].add(InternalOrder(market, action[1], action[2], agent))
-        elif isinstance(action, Order):
-
-            market = action.good
-            self.markets[market].add(InternalOrder(good=action.good, price=action.price, quantity=action.quantity, agent=agent))
-        elif isinstance(action, list):
-            raise TypeError("action should be a tuple, not a list.")
+    def process_action(self, agent, action: Union[list, BuyOrder, SellOrder]):
+        if isinstance(action, MarketPlaceQuery):
+            if action.good not in self.markets.keys():
+                return f"The good: {action.good}, does not exist in the marketplace"
+            else:
+                m = self.markets[action.good]
+                return m.__repr__()
         else:
-            raise TypeError("action should either be a ")
-
-    def process_query(self, agent, query):
-        if query.good not in self.markets.keys():
-            return f"The good: {query.good}, does not exist in the marketplace"
-        else:
-            m = self.markets[query.good]
-            return m.__repr__()
+            if isinstance(action, tuple):
+                market = action[0]
+                self.markets[market].add(InternalOrder(market, action[1], action[2], agent))
+            elif isinstance(action, BuyOrder):
+                market = action.good
+                self.markets[market].add(InternalOrder(good=action.good, price=action.price, quantity=action.quantity, agent=agent))
+                return "Your Buy Order is in marketplace"
+            elif isinstance(action, SellOrder):
+                market = action.good
+                self.markets[market].add(InternalOrder(good=action.good, price=action.price, quantity=-action.quantity, agent=agent))
+                return "Your Sell Order is in marketplace"
+            elif isinstance(action, list):
+                raise TypeError("action should be a tuple, not a list.")
+            else:
+                raise TypeError("action should either be a ")
 
     def step(self):
         for name, market in self.markets.items():

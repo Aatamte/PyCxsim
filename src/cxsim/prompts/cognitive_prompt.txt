@@ -4,7 +4,7 @@ Last Action: {action_history}
 
 RESULT OF ACTION: {action_result}
 
-Goal: {goal}
+Parameters: {params}
 
 This is the reflection step.
 Consider your goal and past actions, and update your future plan and memory.

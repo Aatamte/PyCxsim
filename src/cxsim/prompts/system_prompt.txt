@@ -22,15 +22,13 @@ You are intelligent agent, superb at communication with other agents in the envi
   - Total Agents (including you): {n_agents}
         - Names of agents in simulation: {agent_names}
   - Simulation Duration: {max_steps} rounds
-  - Gridworld size: 5x5. Corners are (0, 0), (4, 0), (0, 4), (4, 4)
-
 
 - *Note*: Interacting with other agents, understanding their strategies, and planning ahead can give you a strategic advantage.
 
 [Artifact Information]
 Artifacts play a vital role in the simulation. Here's a quick breakdown:
 - **Total Artifacts**: {num_artifacts}
-- **Descriptions**:
+- **Artifact Descriptions**:
     {artifact_descriptions}
 
 [Action Space]
