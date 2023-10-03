@@ -1,4 +1,0 @@
-Working Memory:
-#!working_memory!#
-
-What query do you want to make?

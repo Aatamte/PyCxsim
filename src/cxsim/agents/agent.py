@@ -10,7 +10,7 @@ from src.cxsim.agents.tools.tool import Tool
 from src.cxsim.agents.traits.memory.long_term_memory import LongTermMemory
 from src.cxsim.agents.traits.inventory import Inventory
 from src.cxsim.agents.traits.memory.working_memory import WorkingMemory
-
+from src.cxsim.prompts.prompt import PromptTemplate
 
 def before_turn(func):
     setattr(func, "_before_turn", True)
@@ -86,9 +86,9 @@ class Agent:
         self.query_space = {}
 
         # agent prompts
-        self.system_prompt = None
-        self.cognitive_prompt = None
-        self.decision_prompt = None
+        self.system_prompt: PromptTemplate = None
+        self.cognitive_prompt: PromptTemplate = None
+        self.decision_promptL: PromptTemplate = None
 
         # other
         self.goal = ""
@@ -176,6 +176,15 @@ class Agent:
         """
         raise NotImplementedError("This method should be implemented by subclasses")
 
+    def set_system_prompt(self, environment):
+        pass
+
+    def set_cognitive_prompt(self, environment, observation):
+        pass
+
+    def set_decision_prompt(self, environment):
+        pass
+
     def reset(self):
         self.inventory.reset()
 
@@ -197,7 +206,7 @@ class Agent:
     def update_inventory(self):
         self.inventory = {key: len(value) for key, value in self.inventory.items()}
 
-    def set_up(self):
+    def prepare(self):
         pass
 
     def __isub__(self, other):

@@ -8,6 +8,8 @@ from src.cxsim.gui.logs_popup_window import LogsWindow
 from src.cxsim.utilities.background_jobs.job_manager import JobManager
 from src.cxsim.gui.assets.path_definition import ASSET_PATH
 
+import time
+
 dpg.create_context()
 
 artifact_tabs = {
@@ -30,9 +32,10 @@ color_dict = {
 }
 
 
-class Visualizer:
-    def __init__(self, environment):
-        self.environment = environment
+class GUI:
+    def __init__(self, close_on_finish: bool = False):
+        self.environment = None
+        self.close_on_finish = close_on_finish
         self.WIDTH = 1400
         self.HEIGHT = 1000
 
@@ -74,12 +77,12 @@ class Visualizer:
 
         self.agent_inventory = None
 
-        self.agent_overview = AgentOverview(environment)
-        self.world = World(environment, self.WIDTH, self.HEIGHT)
-        self.top_panel = TopPanel(self, environment, self.HEIGHT, self.WIDTH)
-        self.log_window = LogsWindow(environment)
-
         self.last_key_input = None
+
+        self.agent_overview = None
+        self.world = None
+        self.top_panel = None
+        self.log_window = None
 
         self.job_manager = JobManager()
         self.background_tasks_exist = False
@@ -211,6 +214,14 @@ class Visualizer:
                 if artifact_name in artifact_tabs.keys():
                     artifact_tabs[artifact_name].draw()
 
+    def prepare(self, environment):
+        self.environment = environment
+        self.agent_overview = AgentOverview(environment)
+        self.world = World(environment, self.WIDTH, self.HEIGHT)
+        self.world.blocks = environment.starting_block_size
+        self.top_panel = TopPanel(self, environment, self.HEIGHT, self.WIDTH)
+        self.log_window = LogsWindow(environment)
+
     def reset(self, environment):
         self.environment = environment
         if "Gridworld" in self.environment.artifact_lookup.keys():
@@ -226,6 +237,22 @@ class Visualizer:
         self.world.update()
         self.top_panel.update()
         #self.agent_overview.update()
+
+    def run_event_loop(self, current_time):
+        if self.skip_steps > 0:
+            self.top_panel.environment_status = "Skipping Step"
+            self.skip_steps -= 1
+            self.step(True)
+        else:
+            self.top_panel.environment_status = "Paused"
+            while (time.perf_counter() - current_time <= self.environment.step_delay) or self.is_paused:
+                self.step(False)
+                if self.skip_steps != 0:
+                    self.skip_steps -= 1
+                    break
+            else:
+                self.top_panel.environment_status = "Running"
+                self.step(True)
 
     def resize(self):
         self.WIDTH = dpg.get_viewport_width()

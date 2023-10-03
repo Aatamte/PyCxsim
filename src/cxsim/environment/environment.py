@@ -10,11 +10,12 @@ from src.cxsim.agents.population import Population
 from src.cxsim.artifacts.artifact import Artifact
 from src.cxsim.actions.action_handler import ActionHandler
 from src.cxsim.queries.query_handler import QueryHandler
-from src.cxsim.gui.visualizer import Visualizer
+from src.cxsim.gui.visualizer import GUI
 from src.cxsim.utilities.background_jobs.background_task import BackgroundTask
 from src.cxsim.environment.calander import Calender
 from src.cxsim.agents.item import ItemHandler
 from src.cxsim.environment.event import Event, EventHandler
+from src.cxsim.actions.standard import STANDARD_ACTIONS
 
 
 class UnsupportedItemType(Exception):
@@ -34,17 +35,20 @@ class Environment:
         ... [other attributes]
     """
     def __init__(
-        self,
-        name: str = "default environment",
-        gui: bool = False,
-        verbose: int = 0,
-        seed: int = None,
+            self,
+            name: str = "default environment",
+            max_steps: int = 10,
+            max_episodes: int = 10,
+            step_delay: int = 2,
+            gui: GUI = None,
+            verbose: int = 0,
+            seed: int = None,
     ):
         """
         Initialize the environment.
 
         :param name: Name of the environment.
-        :param visualization: Whether to visualize the environment.
+        :param gui: Whether to visualize the environment.
         :param verbose: Verbosity level.
         :param seed: Seed for random number generation.
         ... [other parameters]
@@ -55,18 +59,21 @@ class Environment:
         self.gui = gui
         self.start_time = None
 
+        # gridworld
+        self.starting_block_size = 15
+
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
         self.should_stop_simulation = False
         self.is_first_step = True
-        self.step_delay = 1
+        self.step_delay = step_delay
 
         self.current_step = 0
-        self.max_steps = 100
+        self.max_steps = max_steps
 
         self.current_episode = 0
-        self.max_episodes = 1
+        self.max_episodes = max_episodes
 
         # agent attributes
         self.agents = []
@@ -76,10 +83,10 @@ class Environment:
         self.agent_name_lookup = {}
         self.agent_id_lookup = {}
 
-        self.max_queries = 1
+        # actions
         self.max_actions = 1
         self.action_space = {}
-        self.query_space = {}
+        self.standard_actions = STANDARD_ACTIONS
 
         # artifacts
         self.n_artifacts = 0
@@ -88,14 +95,15 @@ class Environment:
 
         # handlers
         self.action_handler = ActionHandler(self)
-        self.query_handler = QueryHandler(self)
         self.event_handler = EventHandler(self)
 
         self.calender = Calender()
         self.item_handler = ItemHandler(self)
 
+        self.gui = gui
+
         if self.gui:
-            self.visualizer = Visualizer(self)
+            self.gui.prepare(self)
 
         self._current_time = time.perf_counter()
         self._past_time = time.perf_counter()
@@ -124,12 +132,8 @@ class Environment:
         :param artifact: An Artifact object
         """
         self.action_handler.add_artifact(artifact)
-        self.query_handler.add_artifact(artifact)
         self.artifacts.append(artifact)
         self.artifact_lookup[artifact.name] = artifact
-
-        if artifact.name == "Gridworld":
-            self.visualizer.world.blocks = artifact.x_size
 
     def add_event(self, event: Event):
         self.event_handler.add_event(event)
@@ -145,7 +149,7 @@ class Environment:
         elif isinstance(item, Agent):
             self.add_agent(item)
         elif isinstance(item, Population):
-            for it in item.generate_agents():
+            for it in item:
                 self.add_agent(it)
         elif isinstance(item, Event):
             self.add_event(item)
@@ -168,41 +172,6 @@ class Environment:
 
             assert artifact.process_action.__code__ != Artifact.process_action.__code__, "process_action method must be implemented by subclass"
 
-            #assert artifact.process_query.__code__ != Artifact.process_query.__code__, "process_query method must be implemented by subclass"
-
-    def _construct_system_prompt(self, agent: Agent):
-
-
-        # Setting variables for the agent's prompt sections
-        agent.system_prompt.set_variable("name", agent.name, "Agent information")
-
-        # Inventory
-        agent.system_prompt.set_variable("inventory", str(agent.inventory.starting_inventory), "Agent information")
-
-        # Action Restrictions
-        formatted_action_restrictions = agent.system_prompt.sections["Action Restrictions"].format_list(
-            agent.action_restrictions)
-        agent.system_prompt.set_variable("action_restrictions", formatted_action_restrictions, "Action Restrictions")
-
-        # Environment Information
-        agent.system_prompt.set_variable("n_agents", str(len(self.agents)), "Environment information")
-        agent.system_prompt.set_variable("max_steps", str(self.max_steps), "Environment information")
-        agent.system_prompt.set_variable("agent_names", str(self.agent_names), "Environment information")
-
-        # Artifacts
-        num_artifacts = len(self.action_handler.artifacts)
-        agent.system_prompt.set_variable("num_artifacts", str(num_artifacts), "Artifact information")
-        agent.system_prompt.set_artifact_descriptions(self.artifacts)
-
-        # Assuming global actions are a list
-        formatted_global_actions = agent.system_prompt.format_list(["""act(action="Skip", parameters=["None"])"""])
-        agent.system_prompt.set_variable("global_actions", formatted_global_actions, "Action space")
-
-        agent.system_prompt.set_variable("current_position", str((agent.x_pos, agent.y_pos)))
-
-
-        agent.set_up()
-
     def prepare(self):
         self.start_time = time.perf_counter()
         # assert that all agents have necessary functionality
@@ -217,14 +186,12 @@ class Environment:
 
             self.action_space[artifact.name] = artifact.get_action_space()
 
-            self.query_space[artifact.name] = artifact.get_query_space()
-
             artifact.agents = self.agent_id_lookup
 
             for agent in self.agents:
                 agent.action_space = self.action_space.copy()
-                agent.query_space = self.query_space.copy()
-                self._construct_system_prompt(agent)
+                agent.set_system_prompt(self)
+                agent.prepare()
 
         self.n_artifacts = len(self.action_handler.artifacts)
         # give agents the system prompt
@@ -249,7 +216,7 @@ class Environment:
         self.action_handler.reset(self)
 
         if self.gui:
-            self.visualizer.reset(self)
+            self.gui.reset(self)
 
         return 0
 
@@ -263,25 +230,31 @@ class Environment:
 
         self.calender.step()
 
+    def process_action(self, agent, action, n_actions):
+        action_names = {(item.__name__.lower()): item.__name__ for value in agent.action_space.values() for item in value}
+
+        observation = None
+
+        if action["action"].lower() in action_names:
+            action["action"] = action_names[action["action"].lower()]
+            observation = self.action_handler.process_action(agent, action)
+            n_actions += 1
+
+        return observation, n_actions
+
     def process_turn(self, agent: Agent):
+        # Before turn methods
         for func in agent.before_turn_methods:
             func()
 
-        n_queries = 0
         n_actions = 0
         observation = None
-        while n_actions < agent.max_actions and n_queries < agent.max_queries:
-            agent.decision_prompt.set_variable("inventory", str(agent.display_inventory()), "decision prompt")
-            agent.decision_prompt.set_variable("inbox", str(agent.inbox), "decision prompt")
-            agent.decision_prompt.set_variable("current_step", self.current_step,  "decision prompt")
-            #agent.decision_prompt.set_variable("current_position", self.artifact_lookup["Marketplace"]["shirts"].__repr__(),  "decision prompt")
-            agent.decision_prompt.set_variable("max_steps", self.max_steps,  "decision prompt")
 
-            agent.inbox.clear()
+        # Main action loop
+        while n_actions < agent.max_actions:
+            agent.set_decision_prompt(self)
 
-            agent.add_message("user", agent.decision_prompt.get_prompt())
-
-            with BackgroundTask(agent.decide, self.visualizer, agent_name=agent.name):
+            with BackgroundTask(agent.decide, self.gui, agent_name=agent.name):
                 pass
 
             if len(agent.action_queue) == 0:
@@ -291,61 +264,26 @@ class Environment:
             action = agent.action_queue.pop(0)
             self.log(logging.INFO, str(agent) + " " + str(action))
 
-            action_names = {(item.__name__.lower()): item.__name__ for value in agent.action_space.values() for item in value}
+            observation, n_actions = self.process_action(agent, action, n_actions)
 
-            if action["action"].lower() in action_names:
-                action["action"] = action_names[action["action"].lower()]
-                observation = self.action_handler.process_action(agent, action)
-                n_actions += 1
-            else:
-                observation = self.query_handler.process_query(agent, action)
-                if observation is None:
-                    n_actions += 1
-                    observation = "No response from agent"
-                agent.add_message("function", observation, function_name="act")
-                n_queries += 1
+        # After action loop
+        agent.set_cognitive_prompt(self, observation)
 
-        # do cognitive step
-        if len(agent.action_history) >= 1:
-            action_history = agent.action_history[-1]
-        else:
-            action_history = agent.action_history
-        agent.cognitive_prompt.set_variable("goal", agent.goal, "cognitive prompt")
-        agent.cognitive_prompt.set_variable("action_history", str(action_history), "cognitive prompt")
-        agent.cognitive_prompt.set_variable("action_result", observation, "cognitive prompt")
-        if agent.params:
-            agent.cognitive_prompt.set_variable("params", agent.params, "cognitive prompt")
-        agent.add_message("user", agent.cognitive_prompt.get_prompt())
-
-        with BackgroundTask(agent.reflect, self.visualizer, agent_name=agent.name):
+        with BackgroundTask(agent.reflect, self.gui, agent_name=agent.name):
             pass
 
         agent.step()
 
+        # After turn methods
         for func in agent.after_turn_methods:
             func()
 
     def step(self) -> [np.ndarray, list, list]:
         if self.gui:
-            if self.visualizer.skip_steps > 0:
-                self.visualizer.top_panel.environment_status = "Skipping Step"
-                self.visualizer.skip_steps -= 1
-                self.visualizer.step(True)
-            else:
-                self.visualizer.top_panel.environment_status = "Paused"
-                while (time.perf_counter() - self._current_time <= self.step_delay) or self.visualizer.is_paused:
-                    self.visualizer.step(False)
-                    if self.visualizer.skip_steps != 0:
-                        self.visualizer.skip_steps -= 1
-                        break
-                else:
-                    self.visualizer.top_panel.environment_status = "Running"
-                    self.visualizer.step(True)
+            self.gui.run_event_loop(self._current_time)
 
         self._current_time = time.perf_counter()
 
-        # execute actions for each agent all actions are processed
-        num_tokens = []
         for agent in self.agents:
             self.process_turn(agent)
 
@@ -355,7 +293,9 @@ class Environment:
         should_continue = self.action_handler.should_continue()
 
         self.update_simulation_state()
-        return should_continue
+
+    def describe(self):
+        pass
 
     def action_logs(self):
         return self.action_handler.action_logs
@@ -363,7 +303,7 @@ class Environment:
     def is_running(self):
         if self.gui:
             if self.should_stop_simulation:
-                del self.visualizer
+                del self.gui
                 return False
             return dpg.is_dearpygui_running()
         else:

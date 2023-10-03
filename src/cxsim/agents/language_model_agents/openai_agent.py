@@ -19,14 +19,14 @@ def parse_value(val):
     return val
 
 
-class OAIAgent(LanguageModelAgent):
+class OpenAIAgent(LanguageModelAgent):
     def __init__(self, model_id: str = "gpt-3.5-turbo"):
-        super(OAIAgent, self).__init__()
+        super(OpenAIAgent, self).__init__()
         self.model_id = model_id
         self.language_model_logs = []
         self.temperature = 0.35
 
-        self.keep_last_n = 8
+        self.keep_last_n = 2
         self.current_message_length = 0
 
     def step(self):
@@ -49,35 +49,29 @@ class OAIAgent(LanguageModelAgent):
         elif len(self.messages) > self.keep_last_n + 1:
             self.messages = [self.messages[0]] + self.messages[-self.keep_last_n:]
 
+        self.inbox.clear()
+
+    def set_decision_prompt(self, environment):
+        self.decision_prompt.set_variable("inventory", str(self.display_inventory()), "decision prompt")
+        self.decision_prompt.set_variable("inbox", str(self.inbox), "decision prompt")
+        self.decision_prompt.set_variable("current_step", environment.current_step, "decision prompt")
+        self.decision_prompt.set_variable("max_steps", environment.max_steps, "decision prompt")
+        self.add_message("user", self.decision_prompt.get_prompt())
+
+    def set_cognitive_prompt(self, environment, observation):
+        # do cognitive step
+        if len(self.action_history) >= 1:
+            action_history = self.action_history[-1]
+        else:
+            action_history = self.action_history
+        self.cognitive_prompt.set_variable("goal", self.goal, "cognitive prompt")
+        self.cognitive_prompt.set_variable("action_history", str(action_history), "cognitive prompt")
+        self.cognitive_prompt.set_variable("action_result", observation, "cognitive prompt")
+        if self.params:
+            self.cognitive_prompt.set_variable("params", self.params, "cognitive prompt")
+        self.add_message("user", self.cognitive_prompt.get_prompt())
+
     def decide(self):
-        self.create_ChatCompletion()
-        return None
-
-    def reflect(self):
-        self.reflection_completion()
-        return None
-
-    def execute_query(self):
-        self.reflection_completion()
-        return None
-
-    def reflection_completion(self):
-        try:
-            response = openai.ChatCompletion.create(
-                model=self.model_id,
-                messages=self.messages,
-                #functions=self.functions,
-                temperature=self.temperature,
-                request_timeout=30
-            )
-        except openai.error.InvalidRequestError:
-            raise ValueError(self.name, self.messages)
-
-        self.language_model_logs.append(response)
-
-        self.add_message("assistant", response["choices"][0]["message"]["content"])
-
-    def create_ChatCompletion(self):
         try:
             response = openai.ChatCompletion.create(
                 model=self.model_id,
@@ -109,11 +103,57 @@ class OAIAgent(LanguageModelAgent):
 
         return None
 
-    def get_result(self):
-        pass
+    def reflect(self):
+        try:
+            response = openai.ChatCompletion.create(
+                model=self.model_id,
+                messages=self.messages,
+                # functions=self.functions,
+                temperature=self.temperature,
+                request_timeout=30
+            )
+        except openai.error.InvalidRequestError:
+            raise ValueError(self.name, self.messages)
 
-    def set_up(self):
+        self.language_model_logs.append(response)
 
+        self.add_message("assistant", response["choices"][0]["message"]["content"])
+        return None
+
+    def set_system_prompt(self, environment):
+        # Setting variables for the agent's prompt sections
+        self.system_prompt.set_variable("name", self.name, "Agent information")
+
+        # Inventory
+        self.system_prompt.set_variable("inventory", str(self.inventory.starting_inventory), "Agent information")
+        self.system_prompt.set_variable("goal", str(self.params["goal"]), "Agent information")
+
+        # Action Restrictions
+        formatted_action_restrictions = self.system_prompt.sections["Action Restrictions"].format_list(
+            self.action_restrictions)
+        self.system_prompt.set_variable("action_restrictions", formatted_action_restrictions, "Action Restrictions")
+
+        # Environment Information
+        self.system_prompt.set_variable("n_agents", str(len(environment.agents)), "Environment information")
+        self.system_prompt.set_variable("max_steps", str(environment.max_steps), "Environment information")
+        self.system_prompt.set_variable("agent_names", str(environment.agent_names), "Environment information")
+
+
+        # Artifacts
+        num_artifacts = len(environment.action_handler.artifacts)
+        self.system_prompt.set_variable("num_artifacts", str(num_artifacts), "Artifact information")
+        self.system_prompt.set_artifact_descriptions(environment.artifacts)
+
+        # Assuming global actions are a list
+        formatted_global_actions = self.system_prompt.format_list(["""act(action="Skip", parameters=["None"])"""])
+        self.system_prompt.set_variable("global_actions", formatted_global_actions, "Action space")
+
+        self.system_prompt.set_variable("current_position", str((self.x_pos, self.y_pos)))
+
+        self.system_prompt.remove_section("Action Restrictions")
+        self.system_prompt.remove_section("Action Space")
+
+    def prepare(self):
         action_names = ["Skip"]
         for key, action_list in self.action_space.items():
             for action in action_list:

@@ -31,16 +31,20 @@ class Population:
         self.agent_inventory = agent_inventory
         self.resample = resample if resample else {}
         self.pre_calculated_values = {}
-        for item, value in self.agent_inventory.items():
-            if item in self.resample and not self.resample[item]:
-                if hasattr(value, 'rvs'):  # Check if it has an 'rvs' method
-                    self.pre_calculated_values[item] = [value.rvs() for _ in range(self.number_of_agents)]
-        self.pre_calculated_params = {}
 
-        for item, value in self.agent_params.items():
-            if item in self.resample and not self.resample[item]:
-                if hasattr(value, 'rvs'):  # Check if it has an 'rvs' method
-                    self.pre_calculated_params[item] = [value.rvs() for _ in range(self.number_of_agents)]
+        if self.number_of_agents != 0:
+            for item, value in self.agent_inventory.items():
+                if item in self.resample and not self.resample[item]:
+                    if hasattr(value, 'rvs'):  # Check if it has an 'rvs' method
+                        self.pre_calculated_values[item] = [value.rvs() for _ in range(self.number_of_agents)]
+            self.pre_calculated_params = {}
+
+            for item, value in self.agent_params.items():
+                if item in self.resample and not self.resample[item]:
+                    if hasattr(value, 'rvs'):  # Check if it has an 'rvs' method
+                        self.pre_calculated_params[item] = [value.rvs() for _ in range(self.number_of_agents)]
+
+        self.population = self.generate_agents()
 
     def generate_inventory(self, agent):
         starting_inventory = {}
@@ -110,3 +114,62 @@ class Population:
             self.set_prompts(agent)
             population.append(agent)
         return population
+
+    def __getitem__(self, index):
+        return self.population[index]
+
+    def __setitem__(self, index, value):
+        self.population[index] = value
+
+    def __delitem__(self, index):
+        del self.population[index]
+
+    def __len__(self):
+        return len(self.population)
+
+    def __iter__(self):
+        return iter(self.population)
+
+    def append(self, item):
+        self.population.append(item)
+
+    def extend(self, items):
+        self.population.extend(items)
+
+    def insert(self, index, item):
+        self.population.insert(index, item)
+
+    def remove(self, item):
+        self.population.remove(item)
+
+    def pop(self, index=-1):
+        return self.population.pop(index)
+
+    def index(self, item, start=0, end=None):
+        return self.population.index(item, start, end if end is not None else len(self))
+
+    def count(self, item):
+        return self.population.count(item)
+
+    def sort(self, key=None, reverse=False):
+        self.population.sort(key=key, reverse=reverse)
+
+    def reverse(self):
+        self.population.reverse()
+
+    def clear(self):
+        self.population.clear()
+
+    def __add__(self, other):
+        new_agent_population = Population(self.agent, 0)
+        new_agent_population.extend(self.population)  # Extend with the current population
+
+        if isinstance(other, Population):
+            new_agent_population.extend(other.population)  # Extend with the other AgentPopulation
+        elif isinstance(other, list):
+            new_agent_population.extend(other)  # Extend with a list of agents
+        else:
+            raise TypeError(f"Unsupported type: {type(other)}")
+
+        return new_agent_population
+

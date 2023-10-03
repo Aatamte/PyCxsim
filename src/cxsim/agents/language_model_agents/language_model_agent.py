@@ -16,8 +16,6 @@ class LanguageModelAgent(Agent):
 
         self.messages = []
 
-        self.system_prompt = None
-
         self.n_unfollowed_actions: int = 0
 
         self.usage_statistics = {

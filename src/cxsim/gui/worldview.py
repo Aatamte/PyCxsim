@@ -69,7 +69,7 @@ def get_random_unused_color():
 
     # If all colors have been used, return None
     if not unused_colors:
-        return None
+        unused_colors = [color for color in colors.keys()]
 
     # Randomly choose an unused color
     chosen_color_name = random.choice(unused_colors)
@@ -235,8 +235,6 @@ class World:
             self.place_agents()
 
     def create(self):
-        if self.blocks is None:
-            self.blocks = 10
         self.agent_positions = np.zeros((self.blocks, self.blocks))
 
         self.tiles = [[dpg.generate_uuid() for _ in range(self.blocks)] for _ in range(self.blocks)]

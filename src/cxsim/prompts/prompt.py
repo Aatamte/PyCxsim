@@ -15,10 +15,6 @@ with importlib_resources.open_text('src.cxsim.prompts', 'system_prompt.txt') as 
 with importlib_resources.open_text('src.cxsim.prompts', 'cognitive_prompt.txt') as file:
     observation_prompt = file.read()
 
-with importlib_resources.open_text('src.cxsim.prompts', 'state_of_mind_prompt.txt') as file:
-    state_of_mind_prompt = file.read()
-
-
 @dataclass
 class Prompt:
     content: str
