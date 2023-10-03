@@ -88,7 +88,7 @@ class Agent:
         # agent prompts
         self.system_prompt: PromptTemplate = None
         self.cognitive_prompt: PromptTemplate = None
-        self.decision_promptL: PromptTemplate = None
+        self.decision_prompt: PromptTemplate = None
 
         # other
         self.goal = ""
