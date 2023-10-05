@@ -24,14 +24,14 @@ class OpenAIAgent(LanguageModelAgent):
         super(OpenAIAgent, self).__init__()
         self.model_id = model_id
         self.language_model_logs = []
-        self.temperature = 0.35
+        self.temperature = 0.55
 
         self.keep_last_n = 2
         self.current_message_length = 0
 
     def step(self):
         index_to_keep = None
-
+        #print(self.messages)
         # Iterate backward through the messages
         n_back = 0
         for i in range(len(self.messages) - 1, -1, -1):

@@ -209,7 +209,7 @@ class OrderBook:
         existing_buy_orders = [o for o in self.buy_orders if o.agent == order.agent]
         existing_sell_orders = [o for o in self.sell_orders if o.agent == order.agent]
         assert not (existing_buy_orders and existing_sell_orders), "Agent has orders on both sides of the market."
-        #self.should_remove_existing_order(order)
+        self.should_remove_existing_order(order)
 
         order_is_legitimate = self.is_order_legitimate(order, is_buy_order)
 
@@ -357,7 +357,7 @@ Buy orders
 
 class Marketplace(Artifact, ABC):
     def __init__(self, product_names = None, infer_goods_from_agents:  bool = True):
-        """The marketplace facilitates transactions between agents in the simulation."""
+        """The marketplace facilitates transactions between agents in the simulation. Prices are in $1 increments"""
         super(Marketplace, self).__init__("Marketplace")
         self.infer_goods_from_agents = infer_goods_from_agents
         self.markets: Dict[str, OrderBook] = {}

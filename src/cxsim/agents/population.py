@@ -1,3 +1,4 @@
+import random
 from typing import List, Dict, Union, Type
 from src.cxsim.prompts.prompt import PromptTemplate
 import copy
@@ -159,6 +160,9 @@ class Population:
 
     def clear(self):
         self.population.clear()
+
+    def shuffle(self):
+        random.shuffle(self.population)
 
     def __add__(self, other):
         new_agent_population = Population(self.agent, 0)

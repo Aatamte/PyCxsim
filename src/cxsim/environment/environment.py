@@ -268,6 +268,7 @@ class Environment:
 
         # After action loop
         agent.set_cognitive_prompt(self, observation)
+        time.sleep(0.1)
 
         with BackgroundTask(agent.reflect, self.gui, agent_name=agent.name):
             pass
