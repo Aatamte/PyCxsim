@@ -13,7 +13,13 @@ pip install git+https://github.com/Aatamte/PyCxsim.git
 
 ## Overview
 
-PyCxsim is a framework designed to simulate interactions between agents and artifacts within a defined environment. This document provides a high-level overview of the core components of the simulation.
+PyCxsim is a framework designed to simulate interactions between agents and artifacts within a defined environment.
+
+A high-level overview of the core components of the simulation:
+- Environment
+- Agents
+- Artifacts
+
 
 ## Components
 
@@ -27,7 +33,8 @@ The `Environment` represents the main context of the simulation where agents and
 - Facilitating interactions: It processes agent actions, queries, and ensures smooth interactions between agents and artifacts.
 
 **Core Methods**:
-- `process_turn(agent: Agent)`: Processes the actions and queries of a given agent during its turn.
+- `run()`: Starts the simulation
+- `process_turn(agent: Agent)`: Processes the actions of a given agent during its turn.
 
 
 ### 2. Artifact
@@ -37,11 +44,10 @@ The `Artifact` represents objects or entities within the simulation that agents 
 
 **Key Responsibilities**:
 - Maintaining state: Each artifact has its own state, which can change based on interactions or over time.
-- Providing interaction interfaces: Artifacts define the actions that can be performed on them and the queries that can retrieve information about them.
+- Providing interaction interfaces: Artifacts define the actions that can be performed on them.
 
 **Core Methods**:
 - `process_action(agent: Agent, action)`: Processes an action performed by an agent on the artifact.
-- `process_query(agent: Agent, query)`: Processes a query made by an agent about the artifact.
 - `step()`: Executes a step or update for the artifact, potentially changing its state or triggering events.
 
 ### 3. Agent
@@ -54,8 +60,7 @@ The `Agent` represents individual actors in the simulation. They can perform act
 - Interacting with the environment and artifacts: Agents can perform actions on artifacts, make queries, and process observations.
 
 **Core Methods**:
-- `execute_action()`: Determines and performs an action based on the agent's state, observations, and strategy.
-- `execute_query()`: Determines and makes a query based on the agent's state and observations.
+- `decide()`: Determines and performs an action based on the agent's state, observations, and strategy.
 
 # Quickstart
 

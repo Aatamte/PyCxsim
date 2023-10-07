@@ -158,9 +158,6 @@ class OpenAIAgent(LanguageModelAgent):
         for key, action_list in self.action_space.items():
             for action in action_list:
                 action_names.append(action.__name__)
-        for key, query_list in self.query_space.items():
-            for query in query_list:
-                action_names.append(query.__name__)
 
         self.functions.append(
             {

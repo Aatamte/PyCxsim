@@ -12,6 +12,7 @@ from src.cxsim.agents.traits.inventory import Inventory
 from src.cxsim.agents.traits.memory.working_memory import WorkingMemory
 from src.cxsim.prompts.prompt import PromptTemplate
 
+
 def before_turn(func):
     setattr(func, "_before_turn", True)
     return func
@@ -83,14 +84,8 @@ class Agent:
         # action restrictions
         self.action_restrictions = {}
 
-        # query restrictions
-        self.query_restrictions = {}
-
         # action space
         self.action_space = {}
-
-        # query space
-        self.query_space = {}
 
         # agent prompts
         self.system_prompt: PromptTemplate = None
@@ -197,9 +192,6 @@ class Agent:
 
     def get_action_space(self):
         return self.action_space
-
-    def get_query_space(self):
-        return self.query_space
 
     def capital(self):
         return self.inventory["capital"]

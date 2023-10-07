@@ -12,7 +12,7 @@ def main():
     openai.api_key = os.environ["openai_api_key"]
 
     env = Environment(
-        max_steps=10,
+        max_steps=30,
         max_episodes=1,
         step_delay=1,
         gui=GUI()
@@ -34,6 +34,8 @@ def main():
     )
 
     sd = SupplyDemand(supply=supply, demand=demand)
+
+    print(sd.find_equilibrium())
 
     sd.plot()
 
@@ -78,14 +80,15 @@ def main():
         env.add(buyer)
         env.add(seller)
 
-    market = Marketplace()
+    market = Marketplace(
+
+    )
     env.add(market)
 
     for episode in env.iter_episodes():
         env.reset()
 
         for step in env.iter_steps():
-            print(market["shirts"])
 
             for agent in env.iter_agent_turns():
                 env.process_turn(agent)
