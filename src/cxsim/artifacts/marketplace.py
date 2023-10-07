@@ -35,7 +35,8 @@ class SellOrder:
 @dataclass
 class MarketPlaceQuery:
     """
-    Retrieves the market information for a single good
+    Retrieves the market information for a single good.
+    good [str]: name of the good
     """
     good: str
 
@@ -341,8 +342,8 @@ class OrderBook:
 
     def __repr__(self):
         new_line = "\n"
-        sell_order_list = [str((order.price, abs(order.quantity), order.agent.name, order.id)) for order in self.sell_orders][:5]
-        buy_order_list = [str((order.price, order.quantity, order.agent.name, order.id)) for order in self.buy_orders][:5]
+        sell_order_list = [str((order.price, abs(order.quantity), order.agent.name)) for order in self.sell_orders][:5]
+        buy_order_list = [str((order.price, order.quantity, order.agent.name)) for order in self.buy_orders][:5]
         return \
 f"""===================================
 {self.product_name} Order Book
@@ -352,11 +353,19 @@ Sell orders
 Buy orders
 (price, quantity, name)
 {new_line.join(map(str, buy_order_list))}
-==================================="""
+===================================
+Last 5 transactions:
+{self.history.sort_values(by="transaction_id", ascending=False).head(5)}
+"""
 
 
 class Marketplace(Artifact, ABC):
-    def __init__(self, product_names = None, infer_goods_from_agents:  bool = True):
+    def __init__(
+            self,
+            allow_multiple_orders: bool = False,
+            product_names = None,
+            infer_goods_from_agents:  bool = True
+    ):
         """The marketplace facilitates transactions between agents in the simulation. Prices are in $1 increments"""
         super(Marketplace, self).__init__("Marketplace")
         self.infer_goods_from_agents = infer_goods_from_agents

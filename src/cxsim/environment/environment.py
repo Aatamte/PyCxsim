@@ -1,20 +1,25 @@
 import time
 import logging
-
 import numpy as np
 import names
 import dearpygui.dearpygui as dpg
+from collections import deque
+from functools import wraps
 
+# core
 from src.cxsim.agents.agent import Agent
 from src.cxsim.agents.population import Population
 from src.cxsim.artifacts.artifact import Artifact
 from src.cxsim.actions.action_handler import ActionHandler
-from src.cxsim.queries.query_handler import QueryHandler
 from src.cxsim.gui.visualizer import GUI
 from src.cxsim.utilities.background_jobs.background_task import BackgroundTask
+
+# misc
 from src.cxsim.environment.calander import Calender
 from src.cxsim.agents.item import ItemHandler
 from src.cxsim.environment.event import Event, EventHandler
+
+# actions
 from src.cxsim.actions.standard import STANDARD_ACTIONS
 
 
@@ -31,7 +36,7 @@ class Environment:
         verbose (int): Verbosity level.
         seed (int): Seed for random number generation.
         gui (bool): Whether to visualize the environment.
-        start_time (float): Start time of the simulation.
+        _start_time (float): Start time of the simulation.
         ... [other attributes]
     """
     def __init__(
@@ -42,6 +47,7 @@ class Environment:
             step_delay: int = 2,
             gui: GUI = None,
             verbose: int = 0,
+            reuse_names: bool = True,
             seed: int = None,
     ):
         """
@@ -57,16 +63,18 @@ class Environment:
         self.verbose = verbose
         self.seed = seed
         self.gui = gui
-        self.start_time = None
+        self._start_time = None
 
         # gridworld
         self.starting_block_size = 15
 
+        # logger
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
-        self.should_stop_simulation = False
-        self.is_first_step = True
+        self._should_stop_simulation = False
+        self._is_first_step = True
+        self._is_prepared = False
         self.step_delay = step_delay
 
         self.current_step = 0
@@ -96,6 +104,9 @@ class Environment:
         # handlers
         self.action_handler = ActionHandler(self)
         self.event_handler = EventHandler(self)
+
+        # agent queue
+        self.agent_queue = deque()
 
         self.calender = Calender()
         self.item_handler = ItemHandler(self)
@@ -167,13 +178,11 @@ class Environment:
     def validate_artifacts(self):
         for name, artifact in self.action_handler.artifacts.items():
             assert artifact.set_up.__code__ != Artifact.process_query.__code__, "process_query method must be implemented by subclass"
-
             assert artifact.reset.__code__ != Artifact.reset.__code__, "process_query method must be implemented by subclass"
-
             assert artifact.process_action.__code__ != Artifact.process_action.__code__, "process_action method must be implemented by subclass"
 
     def prepare(self):
-        self.start_time = time.perf_counter()
+        self._start_time = time.perf_counter()
         # assert that all agents have necessary functionality
         self.validate_agents()
 
@@ -191,12 +200,17 @@ class Environment:
             for agent in self.agents:
                 agent.action_space = self.action_space.copy()
                 agent.set_system_prompt(self)
+
+                if agent.background_wrap_reflect and self.gui:
+                    agent.reflect = wrap_with_background_task(agent.reflect, agent, self.gui)
+
+                if agent.background_wrap_decide and self.gui:
+                    agent.decide = wrap_with_background_task(agent.decide, agent, self.gui)
+
                 agent.prepare()
 
         self.n_artifacts = len(self.action_handler.artifacts)
-        # give agents the system prompt
-
-        self.reset()
+        self._is_prepared = True
 
     def reset(self) -> [np.ndarray, dict]:
         """
@@ -205,6 +219,10 @@ class Environment:
         if not self.agents:
             raise ValueError("agents must be passed through the <set_agents> function before  "
                              "the first episode is run")
+
+        if not self._is_prepared:
+            self.prepare()
+
         self.current_step = 0
         self.current_episode += 1
 
@@ -212,11 +230,16 @@ class Environment:
         for agent in self.agents:
             agent.reset()
 
+        # add agent to the agent queue
+        for agent in self.agents:
+            self.agent_queue.append(agent)
+
         # reset artifacts
         self.action_handler.reset(self)
 
         if self.gui:
             self.gui.reset(self)
+            self.gui.run_event_loop(self._current_time)
 
         return 0
 
@@ -226,7 +249,7 @@ class Environment:
             self.current_episode += 1
             self.current_step = 0
         if self.current_episode >= self.max_episodes:
-            self.should_stop_simulation = True
+            self._should_stop_simulation = True
 
         self.calender.step()
 
@@ -239,8 +262,20 @@ class Environment:
             action["action"] = action_names[action["action"].lower()]
             observation = self.action_handler.process_action(agent, action)
             n_actions += 1
+        elif action["action"].lower() ==  "skip":
+            observation = "Skipped turn"
+            n_actions += 1
 
         return observation, n_actions
+
+    def get_action_for_agent(self, agent):
+        agent.decide()
+        if len(agent.action_queue) == 0:
+            self.log(logging.WARNING, f"Agent {agent.name, agent.id} did not have an action in the action_queue")
+            agent.action_queue.append({"action": "Skip", "parameters": ["None"]})
+        action = agent.action_queue.pop(0)
+        self.log(logging.INFO, str(agent) + " " + str(action))
+        return action
 
     def process_turn(self, agent: Agent):
         # Before turn methods
@@ -254,15 +289,7 @@ class Environment:
         while n_actions < agent.max_actions:
             agent.set_decision_prompt(self)
 
-            with BackgroundTask(agent.decide, self.gui, agent_name=agent.name):
-                pass
-
-            if len(agent.action_queue) == 0:
-                self.log(logging.WARNING, f"Agent {agent.name, agent.id} did not have an action in the action_queue")
-                agent.action_queue.append({"action": "Skip", "parameters": ["None"]})
-
-            action = agent.action_queue.pop(0)
-            self.log(logging.INFO, str(agent) + " " + str(action))
+            action = self.get_action_for_agent(agent)
 
             observation, n_actions = self.process_action(agent, action, n_actions)
 
@@ -270,8 +297,7 @@ class Environment:
         agent.set_cognitive_prompt(self, observation)
         time.sleep(0.1)
 
-        with BackgroundTask(agent.reflect, self.gui, agent_name=agent.name):
-            pass
+        agent.reflect()
 
         agent.step()
 
@@ -285,8 +311,15 @@ class Environment:
 
         self._current_time = time.perf_counter()
 
+        if len(self.agent_queue) != 0:
+            for _ in range(len(self.agent_queue)):
+                agent = self.agent_queue.popleft()
+                self.process_turn(agent)
+
+        assert len(self.agent_queue) == 0, "Unexpected behavior: Agent queue should be empty"
+
         for agent in self.agents:
-            self.process_turn(agent)
+            self.agent_queue.append(agent)
 
         self.action_handler.step()
 
@@ -303,7 +336,7 @@ class Environment:
 
     def is_running(self):
         if self.gui:
-            if self.should_stop_simulation:
+            if self._should_stop_simulation:
                 del self.gui
                 return False
             return dpg.is_dearpygui_running()
@@ -315,6 +348,10 @@ class Environment:
 
     def iter_episodes(self):
         return range(0, self.max_episodes)
+
+    def iter_agent_turns(self):
+        while len(self.agent_queue) > 0:
+            yield self.agent_queue.popleft()
 
     def list_artifacts(self):
         return self.action_handler.artifacts
@@ -328,6 +365,10 @@ class Environment:
 
     def load(self, filepath):
         pass
+
+    @property
+    def agent_queue_length(self):
+        return len(self.agent_queue)
 
     def log(self, level, msg, *args, **kwargs):
         """
@@ -352,3 +393,11 @@ Step: {self.current_step} / {self.max_steps}
                         Agents
 {newline.join([f"{idx}. "+ str(agent.name) for idx, agent in enumerate(self.agents)])}
 """
+
+
+def wrap_with_background_task(original_func, agent, gui):
+    @wraps(original_func)
+    def wrapper(*args, **kwargs):
+        with BackgroundTask(original_func, gui, agent_name=agent.name):
+            pass
+    return wrapper

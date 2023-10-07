@@ -43,7 +43,12 @@ class Agent:
         long_term_memory (LongTermMemory): Long-term memory storage of the agent.
         tools (dict): Tools or utilities available to the agent.
     """
-    def __init__(self, name: str = "default"):
+    def __init__(
+            self,
+            name: str = "default",
+            background_wrap_decide: bool = True,
+            background_wrap_reflect: bool = True
+    ):
         """
         Initialize an agent with a given name and default attributes.
 
@@ -57,7 +62,9 @@ class Agent:
         self.role = None
 
         self.max_actions = 1
-        self.max_queries = 3
+
+        self.background_wrap_reflect = background_wrap_reflect
+        self.background_wrap_decide = background_wrap_decide
 
         self.action_queue = []
 

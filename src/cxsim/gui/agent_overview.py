@@ -1,5 +1,5 @@
 import dearpygui.dearpygui as dpg
-
+import textwrap
 
 color_dict = {
     'red': (255, 0, 0),
@@ -163,6 +163,15 @@ class InventoryVisualization:
             dpg.hide_item(self.window)
 
 
+def format_dict(d, wrap=500):
+    formatted_str = "{\n"
+    for key, value in d.items():
+        wrapped_value = textwrap.fill(str(value), wrap)
+        formatted_str += f"      {key}: {wrapped_value}\n"
+    formatted_str += "}"
+    return formatted_str
+
+
 class ParameterVisualization:
     def __init__(self):
         self.show = False
@@ -173,7 +182,7 @@ class ParameterVisualization:
 
     def update(self, agent):
         self.agent = agent
-        dpg.set_value(self.param_text, self.agent.params)
+        dpg.set_value(self.param_text, format_dict(self.agent.params))
 
     def draw(self):
         with dpg.child_window(label="inventory", border=False, show=self.show) as self.window:
@@ -228,24 +237,26 @@ class MessageBox:
         self.existing_messages = []
 
         for idx, message in enumerate(self.agent.messages):
+            prefix = ""
             if message["role"] == "user":
-                message["content"] = "User: " + message["content"]
+                prefix = "User: "
                 indent = 0
                 color = color_dict["green"]
             elif message["role"] == "system":
                 indent = 0
-                message["content"] = "System: " + message["content"]
+                prefix = "System: "
                 color = color_dict["red"]
             else:
                 indent = 0
                 if message["content"]:
-                    message["content"] = self.agent.name + ": " + message["content"]
+                    prefix = self.agent.name + ": "
                 else:
-                    message["content"] = self.agent.name + "made function call " + message["function_call"]["arguments"]
+                    message["content"] = message["function_call"]["arguments"]
+                    prefix = self.agent.name + " took action: \n"
                 color = color_dict["orange"]
 
             new_message = dpg.add_text(
-                message["content"],
+                prefix + message["content"],
                 indent=indent,
                 parent=self.window,
                 wrap=self.wrap_size,

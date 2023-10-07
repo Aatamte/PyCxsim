@@ -1,11 +1,8 @@
-import random
+from src.cxsim import Environment, Population, GUI, PromptTemplate
+from src.cxsim.artifacts import Marketplace, Dialogue, Gridworld, Artifact
+from src.cxsim.agents import OpenAIAgent
 
-from src.cxsim import Environment
-from src.cxsim.artifacts.marketplace import Marketplace
-from src.cxsim.agents import Population, OpenAIAgent
-from src.cxsim.prompts.prompt import PromptTemplate
-from src.cxsim.econ.curves import Demand, Supply, SupplyDemand
-from src.cxsim.gui.visualizer import GUI
+from src.cxsim.econ import Demand, Supply, SupplyDemand
 
 import os
 import openai
@@ -23,21 +20,22 @@ def main():
 
     total_agents = 15
 
-    supply = Supply(total_agents)
-    demand = Demand(total_agents)
-
-    # Define Supply and Demand Functions
-    demand.set_function(lambda x: (1 * x) + 140)
-    supply.set_function(lambda x: 155 - (1 * x))
-
-    sd = SupplyDemand(
-        supply=supply,
-        demand=demand
+    # Create Supply and Demand instances with explicit prices and quantities
+    supply = Supply(
+        prices=lambda x: 50 + x,
+        quantities=lambda x: x,
+        max_quantity=total_agents + 1
     )
 
-    sd.plot()
+    demand = Demand(
+        prices=lambda x: 65 - x,
+        quantities=lambda x: x,
+        max_quantity=total_agents + 1
+    )
 
-    print(sd.find_equilibrium())
+    sd = SupplyDemand(supply=supply, demand=demand)
+
+    sd.plot()
 
     buyer_pop = Population(
         agent=OpenAIAgent,
@@ -46,8 +44,14 @@ def main():
         cognitive_prompt=PromptTemplate("src/cxsim/prompts/cognitive_prompt.txt"),
         decision_prompt=PromptTemplate("src/cxsim/prompts/decision_prompt.txt"),
         prompt_arguments={"role": "buyer"},
-        agent_params={"goal": "buy shirts in the marketplace for a price lower than the expected value, you profit the difference. ", "shirts Expected Value": demand.values},
-        agent_inventory={"capital": 1000, "shirts": 0}
+        agent_params={
+            "goal": "buy shirts in the marketplace for a price lower than the expected value, you profit the difference.",
+            "shirts Expected Value": demand.prices
+        },
+        agent_inventory={
+            "capital": 1255,
+            "shirts": 0
+        }
     )
 
     seller_pop = Population(
@@ -57,8 +61,14 @@ def main():
         cognitive_prompt=PromptTemplate("src/cxsim/prompts/cognitive_prompt.txt"),
         decision_prompt=PromptTemplate("src/cxsim/prompts/decision_prompt.txt"),
         prompt_arguments={"role": "seller"},
-        agent_params={"goal": "sell shirts in the marketplace for a price higher than the expected value, you profit the difference", "shirts Expected Value": supply.values},
-        agent_inventory={"capital": 1000, "shirts":  [2] * total_agents}
+        agent_params={
+            "goal": "sell shirts in the marketplace for a price higher than the expected value, you profit the difference",
+            "shirts Expected Value": supply.prices
+        },
+        agent_inventory={
+            "capital": 1255,
+            "shirts":  [2] * total_agents
+        }
     )
 
     buyer_pop.shuffle()
@@ -68,14 +78,18 @@ def main():
         env.add(buyer)
         env.add(seller)
 
-    env.add(Marketplace())
-
-    # prepare the environment to be run
-    env.prepare()
+    market = Marketplace()
+    env.add(market)
 
     for episode in env.iter_episodes():
+        env.reset()
+
         for step in env.iter_steps():
-            print(step)
+            print(market["shirts"])
+
+            for agent in env.iter_agent_turns():
+                env.process_turn(agent)
+
             env.step()
 
 
