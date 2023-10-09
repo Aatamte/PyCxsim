@@ -393,11 +393,11 @@ class Marketplace(Artifact, ABC):
                 self.markets[market].add(InternalOrder(market, action[1], action[2], agent))
             elif isinstance(action, BuyOrder):
                 market = action.good
-                self.markets[market].add(InternalOrder(good=action.good, price=action.price, quantity=action.quantity, agent=agent))
+                self.markets[market].add(InternalOrder(good=action.good, price=action.price, quantity=1, agent=agent))
                 return "Your Buy Order is in marketplace"
             elif isinstance(action, SellOrder):
                 market = action.good
-                self.markets[market].add(InternalOrder(good=action.good, price=action.price, quantity=-action.quantity, agent=agent))
+                self.markets[market].add(InternalOrder(good=action.good, price=action.price, quantity=-1, agent=agent))
                 return "Your Sell Order is in marketplace"
             elif isinstance(action, list):
                 raise TypeError("action should be a tuple, not a list.")
@@ -419,10 +419,6 @@ class Marketplace(Artifact, ABC):
 
         for market_name in self.market_names:
             self.markets[market_name] = OrderBook(market_name, environment)
-
-        self.system_prompt = Prompt(
-            f"""This is a marketplace where agents can buy and sell goods. Current markets include: {[market for market in self.markets]}. To place a buy order, use a positive quantity in your order(int). To place a sell order, use a negative quantity in your order(-int)."""
-        )
 
     def reset(self, environment):
         for market in self.markets.values():

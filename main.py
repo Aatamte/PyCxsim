@@ -64,12 +64,12 @@ def main():
         decision_prompt=PromptTemplate("src/cxsim/prompts/decision_prompt.txt"),
         prompt_arguments={"role": "seller"},
         agent_params={
-            "goal": "sell shirts in the marketplace for a price higher than the expected value, you profit the difference",
+            "goal": "sell shirts in the marketplace for a price higher than the expected value, you profit the difference. You may only sell one at a time",
             "shirts Expected Value": supply.prices
         },
         agent_inventory={
             "capital": 1255,
-            "shirts":  [2] * total_agents
+            "shirts":  [10] * total_agents
         }
     )
 
