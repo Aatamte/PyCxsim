@@ -1,8 +1,18 @@
 [decision prompt]
-CURRENT STEP: {current_step}
-MAX STEPS: {max_steps}
+CURRENT STEP: {current_step} of {max_steps}
+
 INVENTORY:
 {inventory}
+
+Last Action: {history}
+
+RESULT OF ACTION: {observation}
+
+Marketplace: {marketplace}
+
+Parameters: {params}
+
+Goal: {goal}
 
 Think step by step to decide which action best furthers your goal.
 What action do you take?

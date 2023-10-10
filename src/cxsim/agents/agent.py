@@ -62,6 +62,8 @@ class Agent:
         self.color: tuple = (0, 0, 0)
         self.role = None
 
+        self.enable_reflect = True
+
         self.max_actions = 1
 
         self.background_wrap_reflect = background_wrap_reflect
@@ -157,6 +159,7 @@ class Agent:
             self.tools[tool.name] = tool
 
     def add_message(self, role: str, content: str, function_name: str = None):
+        """Add a message to the agents messaging dictionary"""
         if function_name:
             self.messages.append({"role": role, "name": function_name, "content": content})
         else:

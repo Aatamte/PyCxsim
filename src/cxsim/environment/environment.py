@@ -216,6 +216,7 @@ class Environment:
         """
         Resets the environment
         """
+
         if not self.agents:
             raise ValueError("agents must be passed through the <set_agents> function before  "
                              "the first episode is run")
@@ -286,18 +287,22 @@ class Environment:
         observation = None
 
         # Main action loop
-        while n_actions < agent.max_actions:
-            agent.set_decision_prompt(self)
+        #while n_actions < agent.max_actions:
+        agent.set_decision_prompt(self)
 
-            action = self.get_action_for_agent(agent)
+        action = self.get_action_for_agent(agent)
 
-            observation, n_actions = self.process_action(agent, action, n_actions)
+        observation, n_actions = self.process_action(agent, action, n_actions)
 
         # After action loop
-        agent.set_cognitive_prompt(self, observation)
-        time.sleep(0.1)
 
-        agent.reflect()
+        if agent.enable_reflect:
+            agent.set_cognitive_prompt(self, observation)
+            time.sleep(0.1)
+
+            agent.reflect()
+        else:
+            agent.observations.append(observation)
 
         agent.step()
 

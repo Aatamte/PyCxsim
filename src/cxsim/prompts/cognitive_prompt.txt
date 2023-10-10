@@ -2,7 +2,7 @@
 
 Last Action: {action_history}
 
-RESULT OF ACTION: {action_result}
+RESULT OF ACTION: {observation}
 
 Parameters: {params}
 

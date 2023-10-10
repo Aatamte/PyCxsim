@@ -6,7 +6,7 @@ Welcome to the "Getting Started" guide for PyCxsim!
 
 The beginner guide covers:
     * Agent basics
-        * Overview of the important methods in the agent class (.execute_query() and execute_action())
+        * Overview of the important methods in the agent class
         * traits basics
         * tool basics
         * overview of how the agent is "prompted"

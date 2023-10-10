@@ -15,9 +15,8 @@ PyCxsim Documentation
    overview
    getting_started
    user_guide
+   examples
    api_reference
-   contribute
-   changelog
 
 Overview
 ========
@@ -37,21 +36,7 @@ Detailed guides and tutorials on how to use the various features and functionali
 API Reference
 =============
 
-Detailed documentation of the PyCxsim modules:
-
-* `cxsim`
-* `cxsim.actions`
-* `cxsim.agents`
-  * `cxsim.agents.language_model_agents`
-* `cxsim.artifacts`
-* `cxsim.background_jobs`
-* `cxsim.environment`
-* `cxsim.prompts`
-* `cxsim.queries`
-* `cxsim.templates`
-* `cxsim.utilities`
-* `cxsim.visualization`
-  * `cxsim.visualization.tabs`
+Detailed documentation of the PyCxsim modules can be found here.
 
 Contribute
 ==========

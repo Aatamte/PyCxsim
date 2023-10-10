@@ -51,10 +51,10 @@ Agent.act(action, parameters)
 
 Agent <- results of action
 
-Agent.reflects()
-
 # End of turn
 ---
 
 [Final Message]
 Remember, every time you call the `act` function, you'll have the opportunity to update and refine your strategy. Understand your environment, plan your moves, and best of luck!
+
+Do not use the SKIP action

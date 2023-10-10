@@ -360,13 +360,15 @@ Last 5 transactions:
 
 
 class Marketplace(Artifact, ABC):
+    """
+    The marketplace facilitates transactions between agents in the simulation. Prices are in $1 increments
+    """
     def __init__(
             self,
             allow_multiple_orders: bool = False,
             product_names = None,
             infer_goods_from_agents:  bool = True
     ):
-        """The marketplace facilitates transactions between agents in the simulation. Prices are in $1 increments"""
         super(Marketplace, self).__init__("Marketplace")
         self.infer_goods_from_agents = infer_goods_from_agents
         self.markets: Dict[str, OrderBook] = {}
@@ -393,11 +395,11 @@ class Marketplace(Artifact, ABC):
                 self.markets[market].add(InternalOrder(market, action[1], action[2], agent))
             elif isinstance(action, BuyOrder):
                 market = action.good
-                self.markets[market].add(InternalOrder(good=action.good, price=action.price, quantity=1, agent=agent))
+                self.markets[market].add(InternalOrder(good=action.good, price=action.price, quantity=action.quantity, agent=agent))
                 return "Your Buy Order is in marketplace"
             elif isinstance(action, SellOrder):
                 market = action.good
-                self.markets[market].add(InternalOrder(good=action.good, price=action.price, quantity=-1, agent=agent))
+                self.markets[market].add(InternalOrder(good=action.good, price=action.price, quantity=-action.quantity, agent=agent))
                 return "Your Sell Order is in marketplace"
             elif isinstance(action, list):
                 raise TypeError("action should be a tuple, not a list.")

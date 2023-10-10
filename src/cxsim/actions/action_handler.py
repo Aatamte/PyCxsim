@@ -32,26 +32,32 @@ class ActionHandler:
     @staticmethod
     def is_restricted_action(agent, action):
         if type(action) not in agent.action_restrictions:
-            return False
+            return False, None
         else:
             for restriction in agent.action_restrictions[type(action)]:
                 try:
                     restriction(agent, action)
-                except AssertionError:
-                    return True
-        return False
+                except AssertionError as e:
+                    return True, e
+        return False, None
 
     def process_action(self, agent, action):
         action_log = [self.environment.current_step, None, None]
 
-        if action["action"] == "skip":
+        if action["action"] == "Skip":
             action = None
 
         elif action["action"] in self.action_lookup.keys():
             action = self.action_lookup[action["action"]](*action["parameters"])
             action.agent = agent
 
-        if action and not self.is_restricted_action(agent, action):
+        is_restricted, msg = self.is_restricted_action(agent, action)
+
+        if is_restricted:
+            agent.action_history.append((self.environment.current_step, action_log[1], action_log[2]))
+            self.action_logs.append((agent.name, *action_log))
+            return msg
+        elif action:
             if isinstance(action, tuple):
                 artifact_name, action_details = action
                 if artifact_name not in self.artifacts.keys():
@@ -67,10 +73,10 @@ class ActionHandler:
             else:
                 raise Warning("An agents action must be either a tuple or an action class")
 
-        agent.action_history.append((self.environment.current_step, action_log[1], action_log[2]))
-        self.action_logs.append((agent.name, *action_log))
+            agent.action_history.append((self.environment.current_step, action_log[1], action_log[2]))
+            self.action_logs.append((agent.name, *action_log))
 
-        return result
+            return result
 
     def process_query(self, agent, query):
         artifact = self.map_query_to_artifact[type(query)]

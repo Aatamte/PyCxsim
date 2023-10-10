@@ -7,6 +7,17 @@ import json
 import asyncio
 import re
 
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_random_exponential,
+)  # for exponential backoff
+
+
+@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
+def completion_with_backoff(**kwargs):
+    return openai.ChatCompletion.create(**kwargs)
+
 
 def parse_value(val):
     if not isinstance(val, str):  # Ensure val is a string
@@ -20,7 +31,7 @@ def parse_value(val):
 
 
 class OpenAIAgent(LanguageModelAgent):
-    def __init__(self, model_id: str = "gpt-3.5-turbo"):
+    def __init__(self, model_id: str = "gpt-4"):
         super(OpenAIAgent, self).__init__()
         self.model_id = model_id
         self.language_model_logs = []
@@ -28,6 +39,7 @@ class OpenAIAgent(LanguageModelAgent):
 
         self.keep_last_n = 2
         self.current_message_length = 0
+        self.enable_reflect = False
 
     def step(self):
         index_to_keep = None
@@ -52,10 +64,29 @@ class OpenAIAgent(LanguageModelAgent):
         self.inbox.clear()
 
     def set_decision_prompt(self, environment):
+        if len(self.observations) != 0:
+            observation = self.observations.pop(0)
+        else:
+            observation = "N/A"
+
+        if len(self.action_history) >= 1:
+            action_history = self.action_history[-1]
+        elif len(self.action_history) == 0:
+            action_history = "N/A"
+        else:
+            action_history = self.action_history
+
         self.decision_prompt.set_variable("inventory", str(self.display_inventory()), "decision prompt")
         self.decision_prompt.set_variable("inbox", str(self.inbox), "decision prompt")
         self.decision_prompt.set_variable("current_step", environment.current_step, "decision prompt")
+        self.decision_prompt.set_variable("goal", self.goal, "decision prompt")
         self.decision_prompt.set_variable("max_steps", environment.max_steps, "decision prompt")
+        self.decision_prompt.set_variable("observation", observation, "decision prompt")
+        self.decision_prompt.set_variable("history", str(action_history), "decision prompt")
+
+        if self.params:
+            self.decision_prompt.set_variable("params", self.params, "decision prompt")
+
         self.add_message("user", self.decision_prompt.get_prompt())
 
     def set_cognitive_prompt(self, environment, observation):
@@ -73,7 +104,7 @@ class OpenAIAgent(LanguageModelAgent):
 
     def decide(self):
         try:
-            response = openai.ChatCompletion.create(
+            response = completion_with_backoff(
                 model=self.model_id,
                 messages=self.messages,
                 functions=self.functions,
@@ -105,7 +136,7 @@ class OpenAIAgent(LanguageModelAgent):
 
     def reflect(self):
         try:
-            response = openai.ChatCompletion.create(
+            response = completion_with_backoff(
                 model=self.model_id,
                 messages=self.messages,
                 # functions=self.functions,

@@ -22,3 +22,4 @@ keyring~=23.13.1
 pkginfo~=1.9.6
 future~=0.18.3
 docutils~=0.18.1
+tenacity~=8.0.1

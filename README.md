@@ -10,35 +10,32 @@ As the PyCxsim package is currently in development and not yet available on PyPI
 ```bash
 pip install git+https://github.com/Aatamte/PyCxsim.git
 ```
+
+See the [Documentation](https://Aatamte.github.io/PyCxsim/).
+
 ## Note
 
-PyCxsim is still under active development.
+PyCxsim is still under active development. 
 
 ## Overview
 
-PyCxsim is a framework designed to simulate interactions between agents and artifacts within a defined environment.
-
-A high-level overview of the core components of the simulation:
-- Environment
-- Agents
-- Artifacts
-
+PyCxsim is a framework designed to simulate interactions between _agents_ and _artifacts_ within a defined environment. The terminology is inspired by the framework for Complex Adaptive Systems (CAS) and Reinforcement Learning (RL).
 
 ## Components
 
-### 1. Environment
+### 1. Agent
 
 **Definition**: 
-The `Environment` represents the main context of the simulation where agents and artifacts interact. It manages the state of the simulation and facilitates interactions between agents and artifacts.
+The `Agent` represents individual actors in the simulation. They perform
 
 **Key Responsibilities**:
-- Managing agents and artifacts: The environment keeps track of all agents and artifacts within the simulation.
-- Facilitating interactions: It processes agent actions, queries, and ensures smooth interactions between agents and artifacts.
+- Maintaining state and capabilities: Agents have their own state, inventory, and set of capabilities that determine their actions and interactions.
+- Interacting with the environment and artifacts: Agents can perform actions on artifacts, make queries, and process observations.
 
 **Core Methods**:
-- `run()`: Starts the simulation
-- `process_turn(agent: Agent)`: Processes the actions of a given agent during its turn.
-
+- `decide() -> action`: 
+- `reflect()`:
+- `reset()`:
 
 ### 2. Artifact
 
@@ -52,18 +49,20 @@ The `Artifact` represents objects or entities within the simulation that agents 
 **Core Methods**:
 - `process_action(agent: Agent, action)`: Processes an action performed by an agent on the artifact.
 - `step()`: Executes a step or update for the artifact, potentially changing its state or triggering events.
+- `reset()`:
 
-### 3. Agent
+### 3. Environment
 
 **Definition**: 
-The `Agent` represents individual actors in the simulation. They can perform actions, make queries, and interact with artifacts and the environment based on their state and capabilities.
+The `Environment` represents the main context of the simulation where agents and artifacts interact. It manages the state of the simulation and facilitates interactions between agents and artifacts.
 
 **Key Responsibilities**:
-- Maintaining state and capabilities: Agents have their own state, inventory, and set of capabilities that determine their actions and interactions.
-- Interacting with the environment and artifacts: Agents can perform actions on artifacts, make queries, and process observations.
+- Managing agents and artifacts: The environment keeps track of all agents and artifacts within the simulation.
+- Facilitating interactions: It processes agent actions, queries, and ensures smooth interactions between agents and artifacts.
 
 **Core Methods**:
-- `decide()`: Determines and performs an action based on the agent's state, observations, and strategy.
+- `process_turn(agent: Agent)`: Processes the actions of a given agent during its turn.
+
 
 # Quickstart
 
