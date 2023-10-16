@@ -46,9 +46,7 @@ class Agent:
     """
     def __init__(
             self,
-            name: str = "default",
-            background_wrap_decide: bool = True,
-            background_wrap_reflect: bool = True
+            name: str = "default"
     ):
         """
         Initialize an agent with a given name and default attributes.
@@ -61,13 +59,6 @@ class Agent:
         self.y_pos = None
         self.color: tuple = (0, 0, 0)
         self.role = None
-
-        self.enable_reflect = True
-
-        self.max_actions = 1
-
-        self.background_wrap_reflect = background_wrap_reflect
-        self.background_wrap_decide = background_wrap_decide
 
         self.action_queue = []
 
@@ -89,10 +80,9 @@ class Agent:
         # action space
         self.action_space = {}
 
-        # agent prompts
-        self.system_prompt: PromptTemplate = None
-        self.cognitive_prompt: PromptTemplate = None
-        self.decision_prompt: PromptTemplate = None
+        # connection
+        self.connection = None
+        self.environment = None
 
         # other
         self.goal = ""
@@ -166,32 +156,12 @@ class Agent:
             self.messages.append({"role": role, "content": content})
 
     @abstractmethod
-    def decide(self):
-        """
-        Execute an action by the agent.
-        This method should be implemented by subclasses.
-        """
+    def step(self):
         raise NotImplementedError("This method should be implemented by subclasses")
 
     @abstractmethod
-    def reflect(self):
-        """
-        Execute an action by the agent.
-        This method should be implemented by subclasses.
-        """
-        raise NotImplementedError("This method should be implemented by subclasses")
-
-    def set_system_prompt(self, environment):
-        pass
-
-    def set_cognitive_prompt(self, environment, observation):
-        pass
-
-    def set_decision_prompt(self, environment):
-        pass
-
     def reset(self):
-        self.inventory.reset()
+        raise NotImplementedError("This method should be implemented by subclasses")
 
     def get_action_space(self):
         return self.action_space
@@ -202,13 +172,10 @@ class Agent:
     def display_inventory(self):
         return str({key: value for key, value in self.inventory.items()})
 
-    def step(self):
-        pass
-
     def update_inventory(self):
         self.inventory = {key: len(value) for key, value in self.inventory.items()}
 
-    def prepare(self):
+    def compile(self):
         pass
 
     def __isub__(self, other):

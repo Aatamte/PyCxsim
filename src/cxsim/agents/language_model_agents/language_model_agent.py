@@ -1,5 +1,5 @@
 from src.cxsim.agents.agent import Agent
-from queue import Queue
+from src.cxsim.agents.connnections.language_model_connection import LanguageModelAPIConnection
 
 # NOTES
 #
@@ -11,6 +11,7 @@ from queue import Queue
 class LanguageModelAgent(Agent):
     def __init__(self, local: bool = False, temperature: float = 1.0):
         super(LanguageModelAgent, self).__init__()
+        self.connection = LanguageModelAPIConnection()
         self.local: bool = local
         self.temperature: float = temperature
 
@@ -24,20 +25,19 @@ class LanguageModelAgent(Agent):
             "total_tokens": 0
         }
 
-    def execute_api_call(self, api_callable):
-        pass
-
     def set_up(self):
         pass
 
-    def retry_select_action(self):
-        self.n_unfollowed_actions += 1
+    def send(self, *args, **kwargs):
+        return self.connection.send(*args, **kwargs)
 
-    def execute_query(self):
-        pass
+    def get(self, *args, **kwargs):
+        return self.connection.send(*args, **kwargs)
 
-    def execute_action(self):
-        pass
+    def add_message(self, role: str, content: str, function_name: str = None):
+        """Add a message to the agents messaging dictionary"""
+        self.connection.add_message(role=role, content=content, function_name=function_name)
+
 
 
 

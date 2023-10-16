@@ -5,6 +5,8 @@ import names
 import dearpygui.dearpygui as dpg
 from collections import deque
 from functools import wraps
+from dataclasses import is_dataclass, asdict
+from typing import Union, Any
 
 # core
 from src.cxsim.agents.agent import Agent
@@ -13,6 +15,7 @@ from src.cxsim.artifacts.artifact import Artifact
 from src.cxsim.actions.action_handler import ActionHandler
 from src.cxsim.gui.visualizer import GUI
 from src.cxsim.utilities.background_jobs.background_task import BackgroundTask
+from src.cxsim.environment.utilities import EnvironmentUtilities
 
 # misc
 from src.cxsim.environment.calander import Calender
@@ -45,7 +48,7 @@ class Environment:
             max_steps: int = 10,
             max_episodes: int = 10,
             step_delay: int = 2,
-            gui: GUI = None,
+            gui: GUI = GUI(),
             verbose: int = 0,
             reuse_names: bool = True,
             seed: int = None,
@@ -104,6 +107,9 @@ class Environment:
         # handlers
         self.action_handler = ActionHandler(self)
         self.event_handler = EventHandler(self)
+
+        # utilities
+        self.utils: EnvironmentUtilities = EnvironmentUtilities()
 
         # agent queue
         self.agent_queue = deque()
@@ -177,11 +183,10 @@ class Environment:
 
     def validate_artifacts(self):
         for name, artifact in self.action_handler.artifacts.items():
-            assert artifact.set_up.__code__ != Artifact.process_query.__code__, "process_query method must be implemented by subclass"
             assert artifact.reset.__code__ != Artifact.reset.__code__, "process_query method must be implemented by subclass"
             assert artifact.process_action.__code__ != Artifact.process_action.__code__, "process_action method must be implemented by subclass"
 
-    def prepare(self):
+    def compile(self):
         self._start_time = time.perf_counter()
         # assert that all agents have necessary functionality
         self.validate_agents()
@@ -199,15 +204,9 @@ class Environment:
 
             for agent in self.agents:
                 agent.action_space = self.action_space.copy()
-                agent.set_system_prompt(self)
-
-                if agent.background_wrap_reflect and self.gui:
-                    agent.reflect = wrap_with_background_task(agent.reflect, agent, self.gui)
-
-                if agent.background_wrap_decide and self.gui:
-                    agent.decide = wrap_with_background_task(agent.decide, agent, self.gui)
-
-                agent.prepare()
+                agent.step = wrap_with_background_task(agent.step, agent, self.gui)
+                agent.environment = self
+                agent.compile()
 
         self.n_artifacts = len(self.action_handler.artifacts)
         self._is_prepared = True
@@ -222,7 +221,7 @@ class Environment:
                              "the first episode is run")
 
         if not self._is_prepared:
-            self.prepare()
+            self.compile()
 
         self.current_step = 0
         self.current_episode += 1
@@ -254,57 +253,40 @@ class Environment:
 
         self.calender.step()
 
-    def process_action(self, agent, action, n_actions):
-        action_names = {(item.__name__.lower()): item.__name__ for value in agent.action_space.values() for item in value}
+    def process_action(self, agent, action: Union[dict, Any]) -> Any:
+        # Generate a mapping of action names from the agent's action space
+        action_names = {(item.__name__.lower()): item for value in agent.action_space.values() for item in value}
 
+        # Initialize the observation to None
         observation = None
 
-        if action["action"].lower() in action_names:
-            action["action"] = action_names[action["action"].lower()]
-            observation = self.action_handler.process_action(agent, action)
-            n_actions += 1
-        elif action["action"].lower() ==  "skip":
-            observation = "Skipped turn"
-            n_actions += 1
+        # If action is a dataclass, convert it to dictionary
+        if is_dataclass(action):
+            action = asdict(action)
 
-        return observation, n_actions
+        # Extract the action name and parameters
+        action_name, action_params = list(action.items())[0]
+        action_name = action_name.lower()
+        print(action_name, action_names)
 
-    def get_action_for_agent(self, agent):
-        agent.decide()
-        if len(agent.action_queue) == 0:
-            self.log(logging.WARNING, f"Agent {agent.name, agent.id} did not have an action in the action_queue")
-            agent.action_queue.append({"action": "Skip", "parameters": ["None"]})
-        action = agent.action_queue.pop(0)
-        self.log(logging.INFO, str(agent) + " " + str(action))
-        return action
+        # Check if the action exists in the action space
+        if action_name in action_names:
+            ActionClass = action_names[action_name]  # Get the corresponding class
+            # Convert the action_params dict to a dataclass instance if it isn't already
+            if not is_dataclass(action_params):
+                action_params = ActionClass(**action_params)
+            # Process the action and get an observation
+            observation = self.action_handler.process_action(agent, action_params)
+
+        return observation
 
     def process_turn(self, agent: Agent):
         # Before turn methods
         for func in agent.before_turn_methods:
             func()
 
-        n_actions = 0
-        observation = None
-
-        # Main action loop
-        #while n_actions < agent.max_actions:
-        agent.set_decision_prompt(self)
-
-        action = self.get_action_for_agent(agent)
-
-        observation, n_actions = self.process_action(agent, action, n_actions)
-
-        # After action loop
-
-        if agent.enable_reflect:
-            agent.set_cognitive_prompt(self, observation)
-            time.sleep(0.1)
-
-            agent.reflect()
-        else:
-            agent.observations.append(observation)
-
         agent.step()
+
 
         # After turn methods
         for func in agent.after_turn_methods:
@@ -364,6 +346,12 @@ class Environment:
     def run(self, close_on_end: bool = True):
         for step in self.iter_steps():
             self.step()
+
+    def __getitem__(self, item):
+        if item in self.artifact_lookup.keys():
+            return self.artifact_lookup[item]
+        else:
+            raise KeyError("Artifact not in environment")
 
     def save(self):
         print("saving")

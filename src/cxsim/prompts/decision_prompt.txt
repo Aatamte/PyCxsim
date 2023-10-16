@@ -1,5 +1,5 @@
 [decision prompt]
-CURRENT STEP: {current_step} of {max_steps}
+CURRENT STEP: {current_step}
 
 INVENTORY:
 {inventory}

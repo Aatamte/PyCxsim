@@ -1,14 +1,11 @@
 from abc import ABC
 from typing import Dict
-from dataclasses import dataclass
 import pandas as pd
 from typing import Union
-from pydantic import BaseModel
-
+from dataclasses import dataclass, field, fields
 
 from src.cxsim.agents.agent import Agent
 from src.cxsim.artifacts.artifact import Artifact
-from src.cxsim.prompts.prompt import Prompt
 from src.cxsim.environment.event import Event
 
 
@@ -27,9 +24,9 @@ class SellOrder:
     """
     Represents a single sell order in the order book
     """
-    good: str
-    price: int
-    quantity: int
+    good: str = field(metadata={"description": "The name of the good being sold"})
+    price: int = field(metadata={"description": "The selling price of the good"})
+    quantity: int = field(metadata={"description": "The quantity of the good being sold"})
 
 
 @dataclass

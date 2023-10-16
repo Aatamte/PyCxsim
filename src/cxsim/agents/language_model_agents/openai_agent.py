@@ -41,86 +41,19 @@ class OpenAIAgent(LanguageModelAgent):
         self.current_message_length = 0
         self.enable_reflect = False
 
-    def step(self):
-        index_to_keep = None
-        #print(self.messages)
-        # Iterate backward through the messages
-        n_back = 0
-        for i in range(len(self.messages) - 1, -1, -1):
-            if self.messages[i]["content"] is not None:
-                if self.messages[i]["content"].startswith("CURRENT STEP"):
-                    index_to_keep = i
-                    n_back += 1
-                    if n_back >= 3:
-                        break
-
-        # If the message is found, keep only the messages from that point onward
-        if index_to_keep is not None:
-            self.messages = [self.messages[0]] + self.messages[index_to_keep:]
-        # Else, if the message is not found, you can keep the logic you already have
-        elif len(self.messages) > self.keep_last_n + 1:
-            self.messages = [self.messages[0]] + self.messages[-self.keep_last_n:]
-
-        self.inbox.clear()
-
-    def set_decision_prompt(self, environment):
-        if len(self.observations) != 0:
-            observation = self.observations.pop(0)
-        else:
-            observation = "N/A"
-
-        if len(self.action_history) >= 1:
-            action_history = self.action_history[-1]
-        elif len(self.action_history) == 0:
-            action_history = "N/A"
-        else:
-            action_history = self.action_history
-
-        self.decision_prompt.set_variable("inventory", str(self.display_inventory()), "decision prompt")
-        self.decision_prompt.set_variable("inbox", str(self.inbox), "decision prompt")
-        self.decision_prompt.set_variable("current_step", environment.current_step, "decision prompt")
-        self.decision_prompt.set_variable("goal", self.goal, "decision prompt")
-        self.decision_prompt.set_variable("max_steps", environment.max_steps, "decision prompt")
-        self.decision_prompt.set_variable("observation", observation, "decision prompt")
-        self.decision_prompt.set_variable("history", str(action_history), "decision prompt")
-
-        if self.params:
-            self.decision_prompt.set_variable("params", self.params, "decision prompt")
-
-        self.add_message("user", self.decision_prompt.get_prompt())
-
-    def set_cognitive_prompt(self, environment, observation):
-        # do cognitive step
-        if len(self.action_history) >= 1:
-            action_history = self.action_history[-1]
-        else:
-            action_history = self.action_history
-        self.cognitive_prompt.set_variable("goal", self.goal, "cognitive prompt")
-        self.cognitive_prompt.set_variable("action_history", str(action_history), "cognitive prompt")
-        self.cognitive_prompt.set_variable("action_result", observation, "cognitive prompt")
-        if self.params:
-            self.cognitive_prompt.set_variable("params", self.params, "cognitive prompt")
-        self.add_message("user", self.cognitive_prompt.get_prompt())
-
     def decide(self):
         try:
-            response = completion_with_backoff(
+            response = self.connection.send(
                 model=self.model_id,
                 messages=self.messages,
                 functions=self.functions,
                 temperature=self.temperature,
-                function_call={"name": "act"},
-                request_timeout=30
+                function_call={"name": "act"}
             )
 
         except openai.error.InvalidRequestError as e:
             print(e)
             raise ValueError(self.name, self.messages)
-
-        self.language_model_logs.append(response)
-
-        usage = response["usage"]
-        self.usage_statistics["total_tokens"] = usage["total_tokens"]
 
         if "function_call" in response.choices[0].message:
             name = response.choices[0].message["function_call"]["name"]
@@ -150,72 +83,3 @@ class OpenAIAgent(LanguageModelAgent):
 
         self.add_message("assistant", response["choices"][0]["message"]["content"])
         return None
-
-    def set_system_prompt(self, environment):
-        # Setting variables for the agent's prompt sections
-        self.system_prompt.set_variable("name", self.name, "Agent information")
-
-        # Inventory
-        self.system_prompt.set_variable("inventory", str(self.inventory.starting_inventory), "Agent information")
-        self.system_prompt.set_variable("goal", str(self.params["goal"]), "Agent information")
-
-        # Action Restrictions
-        formatted_action_restrictions = self.system_prompt.sections["Action Restrictions"].format_list(
-            self.action_restrictions)
-        self.system_prompt.set_variable("action_restrictions", formatted_action_restrictions, "Action Restrictions")
-
-        # Environment Information
-        self.system_prompt.set_variable("n_agents", str(len(environment.agents)), "Environment information")
-        self.system_prompt.set_variable("max_steps", str(environment.max_steps), "Environment information")
-        self.system_prompt.set_variable("agent_names", str(environment.agent_names), "Environment information")
-
-
-        # Artifacts
-        num_artifacts = len(environment.action_handler.artifacts)
-        self.system_prompt.set_variable("num_artifacts", str(num_artifacts), "Artifact information")
-        self.system_prompt.set_artifact_descriptions(environment.artifacts)
-
-        # Assuming global actions are a list
-        formatted_global_actions = self.system_prompt.format_list(["""act(action="Skip", parameters=["None"])"""])
-        self.system_prompt.set_variable("global_actions", formatted_global_actions, "Action space")
-
-        self.system_prompt.set_variable("current_position", str((self.x_pos, self.y_pos)))
-
-        self.system_prompt.remove_section("Action Restrictions")
-        self.system_prompt.remove_section("Action Space")
-
-    def prepare(self):
-        action_names = ["Skip"]
-        for key, action_list in self.action_space.items():
-            for action in action_list:
-                action_names.append(action.__name__)
-
-        self.functions.append(
-            {
-                "name": "act",
-                "description": "Make an action in the simulation",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "action": {
-                            "type": "string",
-                            "description": "The name of the action that you want to take.",
-                            "enum":  action_names
-                        },
-                        "parameters": {
-                            "type": "array",
-                            "description": "The arguments for the action you want to take",
-                            "items":
-                                {
-                                    "type": "string"
-                                }
-                        }
-                    },
-                    "required": ["action", "parameters"]
-                }
-
-            }
-        )
-
-        self.add_message("system", self.system_prompt.get_prompt())
-

@@ -90,11 +90,11 @@ class Population:
 
     def set_prompts(self, agent):
         if self.system_prompt:
-            agent.system_prompt = self._prepare_prompt(self.system_prompt)
+            agent.connection.system_prompt = self._prepare_prompt(self.system_prompt)
         if self.cognitive_prompt:
-            agent.cognitive_prompt = self._prepare_prompt(self.cognitive_prompt)
+            agent.connection.cognitive_prompt = self._prepare_prompt(self.cognitive_prompt)
         if self.decision_prompt:
-            agent.decision_prompt = self._prepare_prompt(self.decision_prompt)
+            agent.connection.decision_prompt = self._prepare_prompt(self.decision_prompt)
 
     def _prepare_prompt(self, prompt):
         if isinstance(prompt, PromptTemplate):

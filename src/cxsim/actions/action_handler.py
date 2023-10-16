@@ -1,4 +1,6 @@
 from src.cxsim.artifacts.artifact import Artifact
+from typing import Union, Tuple, Any, Type, List
+from dataclasses import is_dataclass, asdict
 
 
 class ActionHandler:
@@ -22,7 +24,6 @@ class ActionHandler:
         # add actions to map_action_to_artifact
         for action in artifact.get_action_space():
             self.map_action_to_artifact[action] = artifact.name
-
             self.action_lookup[action.__name__] = action
 
     def set_up(self):
@@ -30,58 +31,44 @@ class ActionHandler:
             artifact.set_up()
 
     @staticmethod
-    def is_restricted_action(agent, action):
-        if type(action) not in agent.action_restrictions:
+    def is_restricted_action(agent, action: Any) -> Tuple[bool, Any]:
+        action_type = type(action) if not is_dataclass(action) else action
+        if action_type not in agent.action_restrictions:
             return False, None
-        else:
-            for restriction in agent.action_restrictions[type(action)]:
-                try:
-                    restriction(agent, action)
-                except AssertionError as e:
-                    return True, e
+
+        for restriction in agent.action_restrictions[action_type]:
+            try:
+                restriction(agent, action)
+            except AssertionError as e:
+                return True, e
         return False, None
 
-    def process_action(self, agent, action):
-        action_log = [self.environment.current_step, None, None]
+    def process_action(self, agent, action: Any) -> str:
+        if not is_dataclass(action):
+            return "Invalid input: Action must be a dataclass."
 
-        if action["action"] == "Skip":
-            action = None
+        action_type = type(action)
+        action_log = [self.environment.current_step, None, asdict(action)]
 
-        elif action["action"] in self.action_lookup.keys():
-            action = self.action_lookup[action["action"]](*action["parameters"])
-            action.agent = agent
+        if action_type not in self.map_action_to_artifact:
+            return f"Invalid action: {action_type.__name__} is not in the list of available actions."
 
-        is_restricted, msg = self.is_restricted_action(agent, action)
+        artifact_name = self.map_action_to_artifact[action_type]
+        artifact = self.artifacts.get(artifact_name, None)
 
-        if is_restricted:
-            agent.action_history.append((self.environment.current_step, action_log[1], action_log[2]))
-            self.action_logs.append((agent.name, *action_log))
-            return msg
-        elif action:
-            if isinstance(action, tuple):
-                artifact_name, action_details = action
-                if artifact_name not in self.artifacts.keys():
-                    raise KeyError(f"The artifact name that you supplied in the agents actions ({artifact_name}) does not exist in: {list(self.artifacts.keys())}")
-                artifact = self.artifacts[artifact_name]
-                action_log[1] = artifact_name
-                action_log[2] = action_details
-                artifact.execute_action(agent, action_details)
-            elif type(action) in self.map_action_to_artifact.keys():
-                action_log[1] = self.map_action_to_artifact[type(action)]
-                action_log[2] = action
-                result = self.artifacts[self.map_action_to_artifact[type(action)]].process_action(agent, action)
-            else:
-                raise Warning("An agents action must be either a tuple or an action class")
+        if artifact is None:
+            return f"Invalid artifact: No artifact associated with action {action_type.__name__}."
 
-            agent.action_history.append((self.environment.current_step, action_log[1], action_log[2]))
-            self.action_logs.append((agent.name, *action_log))
+        try:
+            result = artifact.process_action(agent, action)
+        except Exception as e:
+            return f"Action processing failed: {e}"
 
-            return result
+        action_log[1] = artifact_name
+        agent.action_history.append((self.environment.current_step, artifact_name, asdict(action)))
+        self.action_logs.append((agent.name, *action_log))
 
-    def process_query(self, agent, query):
-        artifact = self.map_query_to_artifact[type(query)]
-        observation = self.artifacts[artifact].process_query(agent, query)
-        return observation
+        return f"Action processed successfully: {result}" if result else "Action processed successfully."
 
     def step(self):
         for name, artifact in self.artifacts.items():

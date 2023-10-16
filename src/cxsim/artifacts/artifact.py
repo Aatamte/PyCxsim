@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from dataclasses import is_dataclass
 from typing import Union
 import dataclasses
+from dataclasses import fields
 
 
 def generate_prompt(cls: Union[BaseModel, object]):
@@ -27,13 +28,10 @@ class Artifact:
 
     Attributes:
         name (str): Name of the artifact.
-        system_prompt (str): System prompt or message related to the artifact.
-        action_space_prompt (str): Prompt for available actions on the artifact.
         event_history (list): Record of past events or interactions with the artifact.
         environment: Reference to the environment in which the artifact exists.
         agents: Reference to agents that can interact with the artifact.
         action_space (list): List of available actions that can be performed on the artifact.
-        query_space (list): List of available queries related to the artifact.
     """
     def __init__(self, name):
         """
@@ -42,16 +40,12 @@ class Artifact:
         :param name: Name of the artifact.
         """
         self.name = name
-        self.system_prompt = ""
-
-        self.action_space_prompt = ""
         self.event_history = []
 
         self.environment = None
         self.agents = None
 
         self.action_space = []
-        self.query_space = []
 
     @abstractmethod
     def set_up(self, environment):
@@ -71,17 +65,6 @@ class Artifact:
 
         :param agent: Agent performing the action.
         :param action: Action to be processed.
-        """
-        pass
-
-    @abstractmethod
-    def process_query(self, agent, query):
-        """
-        Process a query made by an agent related to the artifact.
-        This method should be implemented by subclasses.
-
-        :param agent: Agent making the query.
-        :param query: Query to be processed.
         """
         pass
 
@@ -114,17 +97,15 @@ class Artifact:
         return [generate_prompt(action) for action in self.action_space]
 
     @abstractmethod
-    def get_query_space(self):
-        """
-        Retrieve the available queries related to the artifact.
-
-        :return: List of available queries.
-        """
-        return self.query_space
-
-    def get_query_space_prompt(self):
-        return [generate_prompt(query) for query in self.query_space]
-
-    @abstractmethod
     def reset(self, environment):
         pass
+
+    def get_description(self):
+        description = f"{self.name}\ndescription: {self.__doc__}\n"
+        description += "ACTIONS:\n"
+        for action in self.get_action_space():
+            action_name = str(action.__name__)
+            action_parameters = [f"{field.name} {field.type}" for field in fields(action)]
+            description += f" -function {action_name}(" + ", ".join(action_parameters) + ")\n"
+            description += f"\tDescription: {action.__doc__}\n"
+        return description

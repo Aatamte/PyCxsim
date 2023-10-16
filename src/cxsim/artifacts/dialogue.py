@@ -2,7 +2,6 @@ import dataclasses
 from collections import deque
 
 from src.cxsim.artifacts.artifact import Artifact
-from src.cxsim.prompts.prompt import Prompt
 
 
 @dataclasses.dataclass
@@ -25,7 +24,6 @@ class Dialogue(Artifact):
         super().__init__("Dialogue")
         self.messages = {}
         self.action_space = [Message]
-        #self.query_space = [DialogueQuery]
 
     def reset(self, environment):
         self.environment = environment
@@ -45,8 +43,3 @@ class Dialogue(Artifact):
             self.environment.agent_name_lookup[recipient].inbox.append("From: " + agent.name + f"\nTo: {action.recipients}\nContent: " + action.content)
 
         return "Successful"
-
-
-class Inbox:
-    def __init__(self):
-        pass
