@@ -4,8 +4,6 @@ from setuptools import setup, find_packages
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
-print(requirements)
-
 setup(
     name='pycxsim',
     version="0.1.2",
@@ -15,7 +13,7 @@ setup(
     packages=find_packages(where='src'),
     install_requires=requirements,  # List of dependencies
     url="https://github.com/Aatamte/PyCxsim",
-    download_url="https://github.com/Aatamte/PyCxsim/archive/refs/tags/v0.1.tar.gz",
+    download_url="https://github.com/Aatamte/PyCxsim/archive/refs/tags/v0.1.2.tar.gz",
     keywords=["Artificial Intelligence"],
     package_dir={'': 'src'},
     # other parameters...

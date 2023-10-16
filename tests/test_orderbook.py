@@ -1,7 +1,7 @@
 import unittest
 from src.cxsim import Environment
 from src.cxsim.agents import Agent
-from src.cxsim.artifacts.marketplace import Marketplace, Order
+from src.cxsim.artifacts.marketplace import Marketplace, BuyOrder, SellOrder
 import random
 
 
@@ -14,7 +14,7 @@ class DummyAgent(Agent):
 
     def execute_action(self):
         # Sample order for demonstration. Adjust parameters as needed.
-        sample_order = Order(good="socks", price=10, quantity=5)
+        sample_order = BuyOrder(good="socks", price=10, quantity=5)
         self.action_queue.append(sample_order)
 
     def execute_query(self):
@@ -40,14 +40,14 @@ class TestOrderBookIntegration(unittest.TestCase):
         self.marketplace.create_market("socks")
         self.environment.add(self.marketplace)
 
-        self.environment.prepare()
+        self.environment.compile()
 
     def test_buy_order_exceeds_capital(self):
         agent = self.agents[0]
         agent.execute_action()  # Agent creates a buy order for 10 socks at $5 each ($50 total)
 
         # Now, we manually create a buy order which would exceed the agent's capital when combined with the existing order
-        expensive_order = Order(good="socks", price=1000, quantity=5)
+        expensive_order = BuyOrder(good="socks", price=1000, quantity=5)
         self.marketplace.process_action(agent, expensive_order)
 
         # Only the initial buy order should exist, the expensive order should be ignored
@@ -56,8 +56,8 @@ class TestOrderBookIntegration(unittest.TestCase):
     def test_sell_order_exceeds_goods(self):
         agent = self.agents[0]
         # The agent will try to sell more socks than they have
-        sell_order_1 = Order(good="socks", price=10, quantity=-110)
-        sell_order_2 = Order(good="socks", price=10, quantity=-10)
+        sell_order_1 = SellOrder(good="socks", price=10, quantity=110)
+        sell_order_2 = SellOrder(good="socks", price=10, quantity=10)
         self.marketplace.process_action(agent, sell_order_1)
         self.marketplace.process_action(agent, sell_order_2)
 
@@ -69,7 +69,7 @@ class TestOrderBookIntegration(unittest.TestCase):
         agent.execute_action()  # Agent creates a buy order
 
         # Now, the agent will try to place a sell order
-        sell_order = Order(good="socks", price=10, quantity=-5)
+        sell_order = SellOrder(good="socks", price=10, quantity=5)
         self.marketplace.process_action(agent, sell_order)
 
         # After placing the sell order, the buy order should be removed, and only the sell order should exist
@@ -94,15 +94,15 @@ class TestAgentInteractions(unittest.TestCase):
         self.marketplace.create_market("socks")
         self.environment.add(self.marketplace)
 
-        self.environment.prepare()
+        self.environment.compile()
 
     def test_trade_execution(self):
         # Initial order: buyer wants 5 socks for $10 each
-        buy_order = Order(good="socks", price=10, quantity=5)
+        buy_order = BuyOrder(good="socks", price=10, quantity=5)
         self.marketplace.process_action(self.buyer, buy_order)
 
         # Seller sells 5 socks for $10 each
-        sell_order = Order(good="socks", price=10, quantity=-5)
+        sell_order = SellOrder(good="socks", price=10, quantity=5)
         self.marketplace.process_action(self.seller, sell_order)
 
         # Check that trade happened correctly
@@ -118,11 +118,11 @@ class TestAgentInteractions(unittest.TestCase):
 
     def test_mismatched_quantities(self):
         # Buyer wants to buy 10 socks for $10 each
-        buy_order = Order(good="socks", price=10, quantity=10)
+        buy_order = BuyOrder(good="socks", price=10, quantity=10)
         self.marketplace.process_action(self.buyer, buy_order)
 
         # Seller only sells 5 socks for $10 each
-        sell_order = Order(good="socks", price=10, quantity=-5)
+        sell_order = SellOrder(good="socks", price=10, quantity=5)
         self.marketplace.process_action(self.seller, sell_order)
 
         # Check that only 5 socks were traded
@@ -150,7 +150,7 @@ class TestRandomizedMarketplaceTransactions(unittest.TestCase):
         marketplace = Marketplace()
         marketplace.create_market("socks")
         environment.add(marketplace)
-        environment.prepare()
+        environment.compile()
 
         total_initial_capital = sum(agent.get_inventory("capital") for agent in agents)
         total_initial_socks = sum(agent.get_inventory("socks") for agent in agents)
@@ -166,11 +166,11 @@ class TestRandomizedMarketplaceTransactions(unittest.TestCase):
             quantity = random.randint(1, 10)
 
             # Create and process buy order
-            buy_order = Order(good="socks", price=price, quantity=quantity)
+            buy_order = BuyOrder(good="socks", price=price, quantity=quantity)
             marketplace.process_action(buyer, buy_order)
 
             # Create and process sell order
-            sell_order = Order(good="socks", price=price, quantity=-quantity)
+            sell_order = SellOrder(good="socks", price=price, quantity=quantity)
             marketplace.process_action(seller, sell_order)
 
         # Assertions
@@ -196,7 +196,7 @@ class TestMarketplaceStressTest(unittest.TestCase):
         self.marketplace = Marketplace()
         self.marketplace.create_market("socks")
         self.environment.add(self.marketplace)
-        self.environment.prepare()
+        self.environment.compile()
 
         self.total_initial_capital = sum(agent.get_inventory("capital") for agent in self.agents)
         self.total_initial_socks = sum(agent.get_inventory("socks") for agent in self.agents)
@@ -208,21 +208,24 @@ class TestMarketplaceStressTest(unittest.TestCase):
             agent = random.choice(self.agents)
             price = random.randint(5, 15)
             quantity = random.choice([random.randint(1, 10), -random.randint(1, 10)])
+            if quantity <= 0:
+                order = SellOrder(good="socks", price=price, quantity=quantity)
+            else:
+                order = BuyOrder(good="socks", price=price, quantity=quantity)
 
-            order = Order(good="socks", price=price, quantity=quantity)
             self.marketplace.process_action(agent, order)
 
         # Edge Cases
         # 1. Zero quantity orders
-        zero_order = Order(good="socks", price=10, quantity=0)
+        zero_order = BuyOrder(good="socks", price=10, quantity=0)
         self.marketplace.process_action(random.choice(self.agents), zero_order)
 
         # 2. Orders that exceed an agent's inventory/capital
         agent = random.choice(self.agents)
-        high_price_order = Order(good="socks", price=agent.get_inventory("capital") + 1, quantity=1)
+        high_price_order = BuyOrder(good="socks", price=agent.get_inventory("capital") + 1, quantity=1)
         self.marketplace.process_action(agent, high_price_order)
 
-        high_quantity_order = Order(good="socks", price=10, quantity=agent.get_inventory("socks") + 1)
+        high_quantity_order = BuyOrder(good="socks", price=10, quantity=agent.get_inventory("socks") + 1)
         self.marketplace.process_action(agent, high_quantity_order)
 
         # 3. Simultaneous orders from multiple agents
