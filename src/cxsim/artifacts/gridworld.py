@@ -1,6 +1,5 @@
-from src.cxsim.artifacts.artifact import Artifact
+from cxsim.artifacts.artifact import Artifact
 from dataclasses import dataclass
-from src.cxsim.agents.agent import Agent
 
 
 @dataclass

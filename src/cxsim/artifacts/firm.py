@@ -1,5 +1,4 @@
-from src.cxsim import Artifact
-
+from cxsim.artifacts import Artifact
 
 class Firm(Artifact):
     def __init__(self, wage_rate, production_function, goods_price):

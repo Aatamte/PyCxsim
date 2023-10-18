@@ -1,4 +1,4 @@
-from src.cxsim import Artifact
+from cxsim.artifacts import Artifact
 
 
 class Government(Artifact):

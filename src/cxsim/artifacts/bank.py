@@ -1,5 +1,4 @@
-from src.cxsim import Artifact
-
+from cxsim.artifacts import Artifact
 
 class Bank(Artifact):
     def __init__(self, interest_rate: float = 2.0):
