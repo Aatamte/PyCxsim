@@ -16,5 +16,8 @@ setup(
     download_url="https://github.com/Aatamte/PyCxsim/archive/refs/tags/v0.1.2.tar.gz",
     keywords=["Artificial Intelligence"],
     package_dir={'': 'src'},
+    package_data={
+        'cxsim': ['prompts/*.txt'],
+    },
     # other parameters...
 )
