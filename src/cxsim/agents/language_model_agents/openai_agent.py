@@ -1,10 +1,6 @@
 import openai
-
-from src.cxsim.agents.language_model_agents.language_model_agent import LanguageModelAgent
-from cxsim.utilities.background_jobs.decorators import background_task
-from src.cxsim.utilities.convert_string_to_json import string_to_dict
+from cxsim.agents.language_model_agents.language_model_agent import LanguageModelAgent
 import json
-import asyncio
 import re
 
 from tenacity import (
@@ -31,7 +27,7 @@ def parse_value(val):
 
 
 class OpenAIAgent(LanguageModelAgent):
-    def __init__(self, model_id: str = "gpt-4"):
+    def __init__(self, model_id: str = "gpt-3.5-turbo"):
         super(OpenAIAgent, self).__init__()
         self.model_id = model_id
         self.language_model_logs = []

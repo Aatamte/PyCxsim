@@ -1,5 +1,5 @@
-from src.cxsim.agents.agent import Agent
-from src.cxsim.agents.connnections.language_model_connection import LanguageModelAPIConnection
+from cxsim.agents.agent import Agent
+from cxsim.agents.connnections.language_model_connection import LanguageModelAPIConnection
 
 # NOTES
 #

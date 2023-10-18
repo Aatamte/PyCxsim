@@ -161,11 +161,11 @@ The information window contains five tabs:
 Simulating a marketplace:
 
 ```Python
-from src.cxsim import Environment, Population, GUI, PromptTemplate
-from src.cxsim.artifacts import Marketplace, Dialogue, Gridworld, Artifact
-from src.cxsim.agents import OpenAIAgent
+from cxsim import Environment, Population, GUI, PromptTemplate
+from cxsim.artifacts import Marketplace, Dialogue, Gridworld, Artifact
+from cxsim.agents import OpenAIAgent
 
-from src.cxsim.econ import Demand, Supply, SupplyDemand
+from cxsim.econ import Demand, Supply, SupplyDemand
 
 import os
 import openai

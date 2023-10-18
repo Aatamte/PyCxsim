@@ -246,7 +246,7 @@ class MessageBox:
                 indent = 0
                 prefix = "System: "
                 color = color_dict["red"]
-            else:
+            elif message["role"] == "assistant":
                 indent = 0
                 if message["content"]:
                     prefix = self.agent.name + ": "
@@ -261,7 +261,6 @@ class MessageBox:
                 parent=self.window,
                 wrap=self.wrap_size,
                 color=color
-                #pos=(10 + indent, idx * 25)
             )
             self.existing_messages.append(new_message)
 

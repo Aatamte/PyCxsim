@@ -3,7 +3,7 @@ import plotly.graph_objs as go
 from scipy.optimize import fsolve
 from collections.abc import Callable
 
-from src.cxsim.econ.econ_utils import EquilibriumFinder
+from cxsim.econ.econ_utils import EquilibriumFinder
 
 
 class EconomicCurve:

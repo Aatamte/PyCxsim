@@ -1,4 +1,4 @@
-from src.cxsim.artifacts.artifact import Artifact
+from cxsim.artifacts.artifact import Artifact
 from typing import Union, Tuple, Any, Type, List
 from dataclasses import is_dataclass, asdict
 
@@ -22,7 +22,7 @@ class ActionHandler:
         self.artifacts[artifact.name] = artifact
 
         # add actions to map_action_to_artifact
-        for action in artifact.get_action_space():
+        for action in artifact.action_space:
             self.map_action_to_artifact[action] = artifact.name
             self.action_lookup[action.__name__] = action
 

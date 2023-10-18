@@ -1,4 +1,4 @@
-from src.cxsim import Artifact
+from cxsim import Artifact
 
 
 class CentralBank(Artifact):

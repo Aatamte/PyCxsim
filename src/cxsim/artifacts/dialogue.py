@@ -1,7 +1,7 @@
 import dataclasses
 from collections import deque
 
-from src.cxsim.artifacts.artifact import Artifact
+from cxsim.artifacts.artifact import Artifact
 
 
 @dataclasses.dataclass
@@ -13,30 +13,27 @@ class Message:
     content: str
 
 
-@dataclasses.dataclass
-class DialogueQuery:
-    verbose: int
-
-
 class Dialogue(Artifact):
     """Use this artifact to communicate with other agents in the environment"""
     def __init__(self):
         super().__init__("Dialogue")
         self.messages = {}
-        self.action_space = [Message]
+        self.action_space.append(Message)
 
     def reset(self, environment):
         self.environment = environment
         for agent in self.environment.agents:
             self.messages[agent.name] = []
 
-    def set_up(self, environment):
+    def step(self):
+        pass
+
+    def compile(self, environment):
         self.environment = environment
         for agent in self.environment.agents:
             self.messages[agent.name] = deque()
 
     def process_action(self, agent, action: Message):
-        print(agent, action)
         for recipient in action.recipients.split(","):
             recipient = recipient.strip()
             self.messages[recipient].append(action.content)

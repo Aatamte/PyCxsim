@@ -1,8 +1,7 @@
 import random
 from typing import List, Dict, Union, Type
-from src.cxsim.prompts.prompt import PromptTemplate
+from cxsim.prompts.prompt import PromptTemplate
 import copy
-import scipy
 
 
 class Population:

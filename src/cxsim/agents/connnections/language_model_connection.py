@@ -1,9 +1,5 @@
-from src.cxsim.agents.connnections.connection import Connection
-
-from src.cxsim.prompts.prompt import PromptTemplate
+from cxsim.prompts.prompt import PromptTemplate
 import json
-import asyncio
-import re
 
 import openai
 from tenacity import (
@@ -54,7 +50,7 @@ class LanguageModelAPIConnection:
     def turn(self):
         pass
 
-    def complete(self, action_needed: bool, *args, **kwargs):
+    def complete(self, action_needed: bool, append_response: bool = True, *args, **kwargs):
         response = completion_with_backoff(
             model=self.model_id,
             messages=self.messages,
@@ -62,10 +58,15 @@ class LanguageModelAPIConnection:
         )
         self.full_logs.append(response)
         self.total_tokens += response["usage"]["total_tokens"]
+
         if response.choices[0].message.get("function_call"):
             function_name = response.choices[0].message["function_call"]["name"]
             function_parameters = json.loads(response.choices[0].message["function_call"]["arguments"])
             self.function_calls.append({function_name: function_parameters})
+
+            if append_response:
+                self.add_message("assistant", f"{function_name}({function_parameters})")
+
         return response
 
     def compress_messages(self, n_steps: int = None, n_messages: int = None, keep_system: bool = True):

@@ -4,9 +4,9 @@ import pandas as pd
 from typing import Union
 from dataclasses import dataclass, field, fields
 
-from src.cxsim.agents.agent import Agent
-from src.cxsim.artifacts.artifact import Artifact
-from src.cxsim.environment.event import Event
+from cxsim.agents.agent import Agent
+from cxsim.artifacts.artifact import Artifact
+from cxsim.environment.event import Event
 
 
 @dataclass
@@ -356,7 +356,7 @@ Last 5 transactions:
 """
 
 
-class Marketplace(Artifact, ABC):
+class Marketplace(Artifact):
     """
     The marketplace facilitates transactions between agents in the simulation. Prices are in $1 increments
     """

@@ -7,7 +7,7 @@ The environment is the foundation of any simulation in PyCxsim. This guide will 
 
   .. code-block:: python
 
-     from src.cxsim import Environment
+     from cxsim import Environment
      env = Environment()
 
 - **Configuration**: Dive into the various settings and parameters available for customization.

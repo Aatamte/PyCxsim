@@ -1,6 +1,5 @@
 from typing import Optional, List
-from src.cxsim.agents.agent import Agent
-from src.cxsim.prompts.prompt import PromptTemplate
+from cxsim.agents.agent import Agent
 
 
 class TimeStepTrigger:

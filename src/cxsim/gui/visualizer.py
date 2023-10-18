@@ -1,12 +1,12 @@
 import dearpygui.dearpygui as dpg
 
-from src.cxsim.gui.tabs.market_tab import MarketplaceTab
-from src.cxsim.gui.agent_overview import AgentOverview
-from src.cxsim.gui.worldview import World
-from src.cxsim.gui.top_panel import TopPanel
-from src.cxsim.gui.logs_popup_window import LogsWindow
-from src.cxsim.utilities.background_jobs.job_manager import JobManager
-from src.cxsim.gui.assets.path_definition import ASSET_PATH
+from cxsim.gui.tabs.market_tab import MarketplaceTab
+from cxsim.gui.agent_overview import AgentOverview
+from cxsim.gui.worldview import World
+from cxsim.gui.top_panel import TopPanel
+from cxsim.gui.logs_popup_window import LogsWindow
+from cxsim.utilities.background_jobs.job_manager import JobManager
+from cxsim.gui.assets.path_definition import ASSET_PATH
 
 import time
 

@@ -1,5 +1,5 @@
 from collections import deque
-from src.cxsim.agents.item import Item
+from cxsim.agents.item import Item
 
 
 class Inventory:

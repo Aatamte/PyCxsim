@@ -10,7 +10,7 @@ PyCxsim allows for detailed agent customization. Let's create a custom agent:
 
 .. code-block:: python
 
-   from src.cxsim.agents import OAIAgent
+   from cxsim.agents import OAIAgent
    class MyAgent(OAIAgent):
        ...
 

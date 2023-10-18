@@ -1,16 +1,12 @@
+from cxsim.actions.action_restrictions import ActionRestriction
+from cxsim.agents.item import Item
+from cxsim.agents.tools.tool import Tool
+from cxsim.agents.traits.memory.long_term_memory import LongTermMemory
+from cxsim.agents.traits.inventory import Inventory
+from cxsim.agents.traits.memory.working_memory import WorkingMemory
+
 from copy import deepcopy
 from abc import abstractmethod
-from typing import List
-
-from src.cxsim.actions.action_restrictions import ActionRestriction
-from src.cxsim.agents.item import Item
-from src.cxsim.utilities.background_jobs.decorators import background_task
-
-from src.cxsim.agents.tools.tool import Tool
-from src.cxsim.agents.traits.memory.long_term_memory import LongTermMemory
-from src.cxsim.agents.traits.inventory import Inventory
-from src.cxsim.agents.traits.memory.working_memory import WorkingMemory
-from src.cxsim.prompts.prompt import PromptTemplate
 
 
 def before_turn(func):

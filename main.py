@@ -1,10 +1,10 @@
-from src.cxsim import Environment, Population, PromptTemplate
-from src.cxsim.artifacts import Marketplace
-from src.cxsim.agents import OpenAIAgent
-from src.cxsim.actions.action_restrictions import ActionRestriction
-from src.cxsim.artifacts.marketplace import BuyOrder, SellOrder, MarketPlaceQuery
+from cxsim import Environment, Population, PromptTemplate
+from cxsim.artifacts import Marketplace
+from cxsim.agents import OpenAIAgent
+from cxsim.actions.action_restrictions import ActionRestriction
+from cxsim.artifacts.marketplace import BuyOrder, SellOrder, MarketPlaceQuery
 
-from src.cxsim.econ import Demand, Supply, SupplyDemand
+from cxsim.econ import Demand, Supply, SupplyDemand
 
 import os
 import openai
@@ -77,7 +77,6 @@ class MyAgent(OpenAIAgent):
         action = self.connection.function_calls.pop(0)
 
         observation = self.environment.process_action(self, action)
-        print(observation)
 
         return None
 
@@ -166,7 +165,7 @@ def test(total_agents, supply: Supply, demand: Demand):
 
 if __name__ == '__main__':
 
-    total_agents = 2
+    total_agents = 15
 
     # Create Supply and Demand instances with explicit prices and quantities
     supply = Supply(

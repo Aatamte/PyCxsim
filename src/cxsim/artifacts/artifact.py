@@ -48,7 +48,7 @@ class Artifact:
         self.action_space = []
 
     @abstractmethod
-    def set_up(self, environment):
+    def compile(self, environment):
         """
         Set up the artifact within a given environment.
         This method should be implemented by subclasses.
@@ -84,7 +84,7 @@ class Artifact:
         """
         return True
 
-    @abstractmethod
+    @property
     def get_action_space(self):
         """
         Retrieve the available actions for the artifact.
@@ -103,7 +103,7 @@ class Artifact:
     def get_description(self):
         description = f"{self.name}\ndescription: {self.__doc__}\n"
         description += "ACTIONS:\n"
-        for action in self.get_action_space():
+        for action in self.action_space:
             action_name = str(action.__name__)
             action_parameters = [f"{field.name} {field.type}" for field in fields(action)]
             description += f" -function {action_name}(" + ", ".join(action_parameters) + ")\n"

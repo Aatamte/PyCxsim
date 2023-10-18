@@ -19,7 +19,7 @@ With PyCxsim installed, let's create a basic simulation using the `Environment` 
 
 .. code-block:: python
 
-   from src.cxsim import Environment
+   from cxsim import Environment
    env = Environment(gui=True)
    env.set_up()
    for step in env.iter_steps():

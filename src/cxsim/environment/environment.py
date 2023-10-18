@@ -7,23 +7,24 @@ from collections import deque
 from functools import wraps
 from dataclasses import is_dataclass, asdict
 from typing import Union, Any
+import inspect
 
 # core
-from src.cxsim.agents.agent import Agent
-from src.cxsim.agents.population import Population
-from src.cxsim.artifacts.artifact import Artifact
-from src.cxsim.actions.action_handler import ActionHandler
-from src.cxsim.gui.visualizer import GUI
-from src.cxsim.utilities.background_jobs.background_task import BackgroundTask
-from src.cxsim.environment.utilities import EnvironmentUtilities
+from cxsim.agents.agent import Agent
+from cxsim.agents.population import Population
+from cxsim.artifacts.artifact import Artifact
+from cxsim.actions.action_handler import ActionHandler
+from cxsim.gui.visualizer import GUI
+from cxsim.utilities.background_jobs.background_task import BackgroundTask
+from cxsim.environment.utilities import EnvironmentUtilities
 
 # misc
-from src.cxsim.environment.calander import Calender
-from src.cxsim.agents.item import ItemHandler
-from src.cxsim.environment.event import Event, EventHandler
+from cxsim.environment.calander import Calender
+from cxsim.agents.item import ItemHandler
+from cxsim.environment.event import Event, EventHandler
 
 # actions
-from src.cxsim.actions.standard import STANDARD_ACTIONS
+from cxsim.actions.standard import STANDARD_ACTIONS
 
 
 class UnsupportedItemType(Exception):
@@ -155,27 +156,41 @@ class Environment:
     def add_event(self, event: Event):
         self.event_handler.add_event(event)
 
+    @staticmethod
+    def get_item_class(item):
+        return inspect.getmro(type(item))
+
     def add(self, item):
         """
         Add a new item (agent, artifact, population, event, or a list of valid items) to the environment.
 
         :param item: Item to be added
         """
-        if isinstance(item, Artifact):
-            self.add_artifact(item)
-        elif isinstance(item, Agent):
-            self.add_agent(item)
-        elif isinstance(item, Population):
-            for it in item:
-                self.add_agent(it)
-        elif isinstance(item, Event):
-            self.add_event(item)
+        item_class = self.get_item_class(item)
 
-        elif isinstance(item, list):
-            for it in item:
-                self.add(it)
+        class_method_mapping = {
+            Artifact: self.add_artifact,
+            Agent: self.add_agent,
+            Population: self.add_population,
+            Event: self.add_event,
+            list: self.add_list,
+        }
+
+        for item_type, method in class_method_mapping.items():
+            if item_type in item_class:
+                method(item)
+                break
         else:
+            print(type(item))
             raise UnsupportedItemType()
+
+    def add_population(self, item):
+        for it in item:
+            self.add_agent(it)
+
+    def add_list(self, item):
+        for it in item:
+            self.add(it)
 
     def validate_agents(self):
         for agent in self.agents:
@@ -198,7 +213,7 @@ class Environment:
         for name, artifact in self.action_handler.artifacts.items():
             artifact.set_up(self)
 
-            self.action_space[artifact.name] = artifact.get_action_space()
+            self.action_space[artifact.name] = artifact.action_space
 
             artifact.agents = self.agent_id_lookup
 
@@ -267,7 +282,6 @@ class Environment:
         # Extract the action name and parameters
         action_name, action_params = list(action.items())[0]
         action_name = action_name.lower()
-        print(action_name, action_names)
 
         # Check if the action exists in the action space
         if action_name in action_names:
@@ -286,7 +300,6 @@ class Environment:
             func()
 
         agent.step()
-
 
         # After turn methods
         for func in agent.after_turn_methods:

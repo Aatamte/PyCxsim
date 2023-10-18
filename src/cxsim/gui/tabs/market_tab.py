@@ -1,4 +1,4 @@
-from src.cxsim.gui.tabs.tab import Tab
+from cxsim.gui.tabs.tab import Tab
 import dearpygui.dearpygui as dpg
 
 
