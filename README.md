@@ -21,49 +21,6 @@ PyCxsim is still under active development.
 
 PyCxsim is a framework designed to simulate interactions between _agents_ and _artifacts_ within a defined environment. The terminology is inspired by the framework for Complex Adaptive Systems (CAS) and Reinforcement Learning (RL).
 
-## Components
-
-### 1. Agent
-
-**Definition**: 
-The `Agent` represents individual actors in the simulation. They perform
-
-**Key Responsibilities**:
-- Maintaining state and capabilities: Agents have their own state, inventory, and set of capabilities that determine their actions and interactions.
-- Interacting with the environment and artifacts: Agents can perform actions on artifacts, make queries, and process observations.
-
-**Core Methods**:
-- `decide() -> action`: 
-- `reflect()`:
-- `reset()`:
-
-### 2. Artifact
-
-**Definition**: 
-The `Artifact` represents objects or entities within the simulation that agents can interact with. It provides interfaces for actions and queries and maintains its own state.
-
-**Key Responsibilities**:
-- Maintaining state: Each artifact has its own state, which can change based on interactions or over time.
-- Providing interaction interfaces: Artifacts define the actions that can be performed on them.
-
-**Core Methods**:
-- `process_action(agent: Agent, action)`: Processes an action performed by an agent on the artifact.
-- `step()`: Executes a step or update for the artifact, potentially changing its state or triggering events.
-- `reset()`:
-
-### 3. Environment
-
-**Definition**: 
-The `Environment` represents the main context of the simulation where agents and artifacts interact. It manages the state of the simulation and facilitates interactions between agents and artifacts.
-
-**Key Responsibilities**:
-- Managing agents and artifacts: The environment keeps track of all agents and artifacts within the simulation.
-- Facilitating interactions: It processes agent actions, queries, and ensures smooth interactions between agents and artifacts.
-
-**Core Methods**:
-- `process_turn(agent: Agent)`: Processes the actions of a given agent during its turn.
-
-
 # Quickstart
 
 ```Python
