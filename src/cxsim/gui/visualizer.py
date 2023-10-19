@@ -154,7 +154,7 @@ class GUI:
         elif sender == "agent_overview":
             self.switch_tab(self.current_tab, self.agent_overview)
         elif sender == "show_log_popup":
-            self.switch_tab(self.current_tab, self.log_window)
+            self.switch_tab(None, self.log_window)
         elif sender in artifact_tabs.keys():
             self.switch_tab(self.current_tab, artifact_tabs[sender].get_window())
 
@@ -164,7 +164,8 @@ class GUI:
             self.agent_overview.set_show(False)
         elif previous_tab == self.log_window:
             self.log_window.set_show(False)
-
+        elif previous_tab == self.log_window:
+            self.log_window.set_show(True)
         elif previous_tab:
             dpg.hide_item(previous_tab)
 
@@ -290,6 +291,10 @@ class GUI:
         )
         dpg.setup_dearpygui()
         dpg.show_viewport()
+
+    @staticmethod
+    def close(self):
+        dpg.destroy_context()
 
     def __del__(self):
         dpg.destroy_context()

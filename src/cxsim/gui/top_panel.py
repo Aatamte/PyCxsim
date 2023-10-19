@@ -1,3 +1,5 @@
+import random
+
 import dearpygui.dearpygui as dpg
 
 
@@ -35,6 +37,9 @@ class TopPanel:
         self.current_status_dpg_uuid = dpg.generate_uuid()
         self.current_task_dpg_uuid = dpg.generate_uuid()
 
+        self.progress_bar_uuid = dpg.generate_uuid()
+
+
     def pause_simulation_callback(self, sender):
         self.visualizer.is_paused = True
         self.environment_status = "Paused"
@@ -52,7 +57,7 @@ class TopPanel:
         dpg.set_value(self.current_step_uuid, f"Current step: {self.environment.current_step} / {self.environment.max_steps}")
         dpg.set_value(self.n_agents_text_uuid, f"Number of Agents: {self.environment.n_agents}")
         dpg.set_value(self.n_artifacts_text_uuid, f"Number of Artifacts: {self.environment.n_artifacts}")
-
+        dpg.set_value(self.progress_bar_uuid, (self.environment.n_agents - len(self.environment.agent_queue)) / self.environment.n_agents)
         # control group
 
         # status group
@@ -112,3 +117,4 @@ class TopPanel:
                 with dpg.group() as self.current_state_group:
                     self.current_status_dpg_uuid = dpg.add_text(f"Status: {self.environment_status}")
                     self.current_task_dpg_uuid = dpg.add_text(f"Task: {self.current_task}")
+                    self.progress_bar_uuid = dpg.add_progress_bar(label="Progress bar", default_value=0.2)

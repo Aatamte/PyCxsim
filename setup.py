@@ -18,7 +18,6 @@ setup(
     package_dir={'': 'src'},
     package_data={
         'cxsim': ['prompts/*.txt', 'gui/assets/*.ico'],
-
     },
     # other parameters...
 )

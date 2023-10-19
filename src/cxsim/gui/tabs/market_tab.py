@@ -32,7 +32,7 @@ class MarketplaceTab(Tab):
         dpg.set_value(self.best_bid, [x_coords_bid, self.best_bid_plot])
         dpg.set_value(self.best_ask, [x_coords_ask, self.best_ask_plot])
         dpg.set_value(self.text, self.marketplace[self.current_market])
-        dpg.set_value(self.market_history, self.marketplace[self.current_market].history)
+        #dpg.set_value(self.market_history, self.marketplace[self.current_market].history)
 
     def get_window(self):
         return self.window

@@ -78,7 +78,7 @@ class AgentOverview:
                     dpg.add_menu_item(label="inventory", tag="inventory", callback=self.show_tab)
                     dpg.add_menu_item(label="messages", tag="messages", callback=self.show_tab)
                     dpg.add_menu_item(label="actions", tag="actions", callback=self.show_tab)
-                    dpg.add_menu_item(label="events", tag="events", callback=self.show_tab)
+                    #dpg.add_menu_item(label="events", tag="events", callback=self.show_tab)
                     dpg.add_menu_item(label="params", tag="params", callback=self.show_tab)
 
                 for name, tab in self.tab_options.items():
