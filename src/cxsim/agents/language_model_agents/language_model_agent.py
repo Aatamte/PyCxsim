@@ -11,7 +11,8 @@ from cxsim.agents.connnections.language_model_connection import LanguageModelAPI
 class LanguageModelAgent(Agent):
     def __init__(self, local: bool = False, temperature: float = 1.0):
         super(LanguageModelAgent, self).__init__()
-        self.connection = LanguageModelAPIConnection()
+        self.model_id = "gpt-3.5-turbo"
+        self.connection = LanguageModelAPIConnection(model_id = self.model_id)
         self.local: bool = local
         self.temperature: float = temperature
 

@@ -6,7 +6,7 @@ import os
 if __name__ == '__main__':
     openai.api_key = os.environ["openai_api_key"]
 
-    env = Smith1962Environment(n_agents=5)
+    env = Smith1962Environment(n_agents=25)
 
     env.test_one()
 

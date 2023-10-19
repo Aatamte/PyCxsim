@@ -10,7 +10,7 @@ RESULT OF ACTION: {observation}
 
 Marketplace: {marketplace}
 
-Parameters: {params}
+Parameters: {parameters}
 
 Goal: {goal}
 

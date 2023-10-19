@@ -68,7 +68,7 @@ class SmithAgent(OpenAIAgent):
                 "observation": observation,
                 "history": str(action_history),
                 "marketplace": shirts_orderbook,
-                "parameters": self.params
+                "parameters": str(self.params)
             }
         )
         self.add_message("user", self.decision_prompt.get_prompt())
@@ -89,7 +89,8 @@ def calculate_alpha(equilibrium, price_history):
 
 
 class Smith1962Environment:
-    def __init__(self, n_agents: int, equilibrium_price: int = 50):
+    def __init__(self, n_agents: int, model: str = "gpt-3.5-turbo", equilibrium_price: int = 50):
+        self.model = model
         self.n_agents = n_agents
         self.equilibrium_price = equilibrium_price
 
@@ -101,7 +102,6 @@ class Smith1962Environment:
         # Calculate a and c based on the number of agents
         self.a = (self.n_agents / 2) + (self.equilibrium_price - self.shift_value)
         self.c = (self.n_agents / 2) + (self.equilibrium_price + self.shift_value)
-        print(self.a)
 
     def supply_function(self, x: float) -> float:
         """Supply function S(x) = a + bx"""
@@ -115,13 +115,6 @@ class Smith1962Environment:
         pass
 
     def test_one(self):
-        print("Supply function at price 50:", self.supply_function(50))
-        print("Demand function at price 50:", self.demand_function(50))
-
-        for x in range(self.n_agents + 1):
-            print(self.supply_function(x))
-            print(self.demand_function(x))
-
         supply = Supply(
             prices=self.supply_function,
             quantities=lambda x: x,
@@ -159,7 +152,7 @@ class Smith1962Environment:
         def sell_limit(agent, action):
             assert agent.params[
                        "shirts expected value"] < action.price, f"You placed a sell order with a price lower than your expected value"
-
+        SmithAgent.model_id = self.model
         buyer_pop = Population(
             agent=SmithAgent,
             number_of_agents=self.n_agents,
@@ -201,11 +194,11 @@ class Smith1962Environment:
                     env.process_turn(agent)
 
                 price_history = market["shirts"].history["price"].values
-                print(price_history)
-                print(alpha_history)
 
                 if len(price_history) != 0:
                     alpha = calculate_alpha(equilibrium_price, price_history)
                     alpha_history.append(alpha)
+
+                print(f"""STEP {env.current_step}\nprevious transactions: {price_history}\nalpha values: {alpha_history}""")
 
                 env.step()
