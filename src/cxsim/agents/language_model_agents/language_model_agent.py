@@ -1,5 +1,5 @@
 from cxsim.agents.agent import Agent
-from cxsim.agents.connnections.language_model_connection import LanguageModelAPIConnection
+from cxsim.agents.backends.language_backend import LanguageBackend
 
 # NOTES
 #
@@ -11,8 +11,7 @@ from cxsim.agents.connnections.language_model_connection import LanguageModelAPI
 class LanguageModelAgent(Agent):
     def __init__(self, local: bool = False, temperature: float = 1.0):
         super(LanguageModelAgent, self).__init__()
-        self.model_id = "gpt-3.5-turbo"
-        self.connection = LanguageModelAPIConnection(model_id = self.model_id)
+        self.connection = LanguageBackend()
         self.local: bool = local
         self.temperature: float = temperature
 
@@ -28,12 +27,6 @@ class LanguageModelAgent(Agent):
 
     def set_up(self):
         pass
-
-    def send(self, *args, **kwargs):
-        return self.connection.send(*args, **kwargs)
-
-    def get(self, *args, **kwargs):
-        return self.connection.send(*args, **kwargs)
 
     def add_message(self, role: str, content: str, function_name: str = None):
         """Add a message to the agents messaging dictionary"""

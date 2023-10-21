@@ -1,46 +1,44 @@
 from cxsim import Environment, Population, PromptTemplate
 from cxsim.artifacts import Marketplace
-from cxsim.agents import OpenAIAgent
+from cxsim.agents import Agent
 from cxsim.actions.action_restrictions import ActionRestriction
 from cxsim.artifacts.marketplace import BuyOrder, SellOrder, MarketPlaceQuery
 from cxsim.prompts.default_prompts import DEFAULT_DECISION_PROMPT, DEFAULT_SYSTEM_PROMPT
 from cxsim.econ import Demand, Supply, SupplyDemand
+from cxsim.agents.backends.language_backend import LanguageBackend
 
-import os
-import openai
 import numpy as np
-from typing import Union, List
 
-class SmithAgent(OpenAIAgent):
+
+class SmithAgent(Agent):
     def __init__(self):
         super().__init__()
-        self.connection.system_prompt = DEFAULT_SYSTEM_PROMPT
+        self.backend = LanguageBackend()
+        self.system_prompt = DEFAULT_SYSTEM_PROMPT
         self.decision_prompt = DEFAULT_DECISION_PROMPT
+        self.functions = None
 
     def reset(self):
-        self.connection.system_prompt.set_variables(
+        artifact_descriptions = self.environment.utils.get_artifact_descriptions(self.environment.artifacts)
+        self.system_prompt.set_variables(
             {
                 "name": self.name,
                 "inventory": str(self.inventory.starting_inventory),
                 "goal": str(self.params["goal"]),
-                "action_restrictions": self.connection.system_prompt.sections["Action Restrictions"].format_list(
-                    self.action_restrictions),
+                "action_restrictions": self.system_prompt.sections["Action Restrictions"].format_list(self.action_restrictions),
                 "n_agents": str(len(self.environment.agents)),
                 "max_steps": str(self.environment.max_steps),
                 "agent_names": str(self.environment.agent_names),
-                "num_artifacts": str(len(self.environment.action_handler.artifacts))
+                "num_artifacts": str(len(self.environment.action_handler.artifacts)),
+                "artifact_descriptions": artifact_descriptions
             }
         )
-        self.connection.system_prompt.set_artifact_descriptions(self.environment.artifacts)
 
-        self.connection.system_prompt.remove_section("Action Restrictions")
-        self.add_message("system", self.connection.system_prompt.get_prompt())
+        self.system_prompt.remove_section("Action Restrictions")
 
-        for artifact, action_list in self.action_space.items():
-            for action in action_list:
-                self.connection.function_definitions.append(
-                    self.environment.utils.format_openai_function_call(action)
-                )
+        self.backend.add_message("system", self.system_prompt)
+
+        self.functions = self.environment.utils.format_openai_function_calls(self.action_space_list)
 
     def step(self):
         if len(self.observations) != 0:
@@ -71,13 +69,26 @@ class SmithAgent(OpenAIAgent):
                 "parameters": str(self.params)
             }
         )
-        self.add_message("user", self.decision_prompt.get_prompt())
 
-        response = self.connection.complete(action_needed=True)
+        self.backend.add_message("user", self.decision_prompt)
+        func_name = "buyorder" if self.params["role"] == "buyer" else "sellorder"
 
-        action = self.connection.function_calls.pop(0)
+        response = self.backend.complete(
+            functions=self.functions,
+            function_call={"name": func_name}
+        )
 
-        observation = self.environment.process_action(self, action)
+        content, func_call = self.backend.openai.parse_function_call(response)
+
+        pretty_func_call = self.backend.openai.format_function_call(func_call)
+
+        self.backend.add_message("assistant", pretty_func_call)
+
+        observation = self.environment.process_action(self, func_call)
+
+        self.observations.append(observation)
+
+        self.backend.compress_messages(n_steps_back=2)
 
         return None
 
@@ -137,7 +148,7 @@ class Smith1962Environment:
 
         equilibrium_quantity, equilibrium_price = sd.find_equilibrium()
 
-        sd.plot()
+        print(equilibrium_price)
 
         market = Marketplace()
 
@@ -152,13 +163,14 @@ class Smith1962Environment:
         def sell_limit(agent, action):
             assert agent.params[
                        "shirts expected value"] < action.price, f"You placed a sell order with a price lower than your expected value"
+
         SmithAgent.model_id = self.model
         buyer_pop = Population(
             agent=SmithAgent,
             number_of_agents=self.n_agents,
             action_restrictions=[ActionRestriction(action=BuyOrder, func=buy_limit)],
-            prompt_arguments={"role": "buyer"},
             agent_params={
+                "role": "buyer",
                 "goal": "buy shirts in the marketplace for a price lower than your expected value, you profit the difference. Only buy one shirt at a time",
                 "shirts expected value": demand.prices
             },
@@ -169,8 +181,8 @@ class Smith1962Environment:
             agent=SmithAgent,
             number_of_agents=self.n_agents,
             action_restrictions=[ActionRestriction(action=SellOrder, func=sell_limit)],
-            prompt_arguments={"role": "seller"},
             agent_params={
+                "role": "seller",
                 "goal": "maximize your capital by selling shirts in the marketplace for a price higher than the expected value. You profit the difference. Only sell one shirt at a time ",
                 "shirts expected value": supply.prices
             },

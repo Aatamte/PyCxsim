@@ -15,15 +15,25 @@ class BackgroundTask:
         self.func(*self.args, **self.kwargs)
 
     def __enter__(self):
+
+        #self.visualizer.environment.log.debug("Entering BackgroundTask context manager.")
+
         if self.agent_name:
             self.visualizer.top_panel.current_task = f"Background Task for {self.agent_name}"
         else:
             self.visualizer.top_panel.current_task = "Background Task"
         self.future = _executor.submit(self.run)
 
-        # Continuously call visualizer.step(False) while the background task is running
-        while not self.future.done():
-            self.visualizer.step(False)
+        try:
+            while not self.future.done():
+                self.visualizer.step(False)
+            self.future.result()  # Retrieve the result to re-raise any exceptions that occurred.
+        except Exception as e:
+            raise Exception(e)
+            # Handle exception
+            self.visualizer.top_panel.current_task = "Error occurred"
+            print(f"An error occurred for {self.agent_name}: {e}")
+
         self.visualizer.top_panel.current_task = "None"
         return self
 

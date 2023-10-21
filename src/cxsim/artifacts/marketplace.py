@@ -14,9 +14,9 @@ class BuyOrder:
     """
     Represents a single buy order in the order book
     """
-    good: str
-    price: int
-    quantity: int
+    good: str = field(metadata={"description": "The name of the good being bought"})
+    price: int = field(metadata={"description": "The buying price of the good"})
+    quantity: int = field(metadata={"description": "The quantity of the good being bought"})
 
 
 @dataclass
@@ -339,8 +339,8 @@ class OrderBook:
 
     def __repr__(self):
         new_line = "\n"
-        sell_order_list = [str((order.price, abs(order.quantity), order.agent.name)) for order in self.sell_orders][:5]
-        buy_order_list = [str((order.price, order.quantity, order.agent.name)) for order in self.buy_orders][:5]
+        sell_order_list = [str((order.price, abs(order.quantity), order.agent.name)) for order in self.sell_orders][:1]
+        buy_order_list = [str((order.price, order.quantity, order.agent.name)) for order in self.buy_orders][:1]
         return \
 f"""===================================
 {self.product_name} Order Book

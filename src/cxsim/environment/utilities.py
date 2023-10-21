@@ -19,6 +19,16 @@ class EnvironmentUtilities:
     def __init__(self):
         pass
 
+
+
+
+    def get_artifact_descriptions(self, artifacts):
+        formatted_descriptions = "\n".join([f"{idx}: {artifact.get_description()}"for idx, artifact in enumerate(artifacts)])
+        return formatted_descriptions
+
+    def format_openai_function_calls(self, functions: list) -> List[dict]:
+        return [self.format_openai_function_call(func) for func in functions]
+
     def format_openai_function_call(self, dataclass_type: Any) -> dict:
         schema = {
             "name": dataclass_type.__name__.lower(),

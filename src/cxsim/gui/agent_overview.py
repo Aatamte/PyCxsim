@@ -236,32 +236,32 @@ class MessageBox:
             dpg.delete_item(message)
         self.existing_messages = []
 
-        for idx, message in enumerate(self.agent.connection.messages):
+        for idx, message in enumerate(self.agent.backend.full_messages):
             prefix = ""
             if message["role"] == "user":
-                prefix = "User: "
+                prefix = "user: "
                 indent = 0
                 color = color_dict["green"]
             elif message["role"] == "system":
                 indent = 0
-                prefix = "System: "
+                prefix = "system: "
                 color = color_dict["red"]
             elif message["role"] == "assistant":
                 indent = 0
-                if message["content"]:
-                    prefix = self.agent.name + ": "
-                else:
-                    message["content"] = message["function_call"]["arguments"]
-                    prefix = self.agent.name + " took action: \n"
+                prefix = self.agent.name + ": "
                 color = color_dict["orange"]
+            else:
+                indent = 0
+                color = color_dict["yellow"]
 
             new_message = dpg.add_text(
-                prefix + message["content"],
+                prefix + str(message["content"]),
                 indent=indent,
                 parent=self.window,
                 wrap=self.wrap_size,
                 color=color
             )
+
             self.existing_messages.append(new_message)
 
         if include_input_text:

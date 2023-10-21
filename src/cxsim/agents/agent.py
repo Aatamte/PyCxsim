@@ -76,8 +76,7 @@ class Agent:
         # action space
         self.action_space = {}
 
-        # connection
-        self.connection = None
+        self.backend = None
         self.environment = None
 
         # other
@@ -94,9 +93,6 @@ class Agent:
         # agent tools
         self.tools = {}
 
-        # agent functions
-        self.functions = []
-
         self.before_turn_methods = [
             getattr(self, method_name) for method_name in dir(self)
             if callable(getattr(self, method_name))
@@ -108,29 +104,6 @@ class Agent:
             if callable(getattr(self, method_name))
             and getattr(getattr(self, method_name), "_after_turn", False)
         ]
-
-    def add_function(self, func):
-        """
-
-        Args:
-            func:
-            func_type:
-
-        Returns: None
-
-        """
-        name = func.__name__
-
-        description = func
-
-        func_dict = {
-            "name": name,
-            "description": description,
-            "parameters": {
-                "type": "object"
-            }
-        }
-        self.functions.append(func_dict)
 
     def add_tool(self, tool: Tool):
         """
@@ -144,12 +117,12 @@ class Agent:
         else:
             self.tools[tool.name] = tool
 
-    def add_message(self, role: str, content: str, function_name: str = None):
-        """Add a message to the agents messaging dictionary"""
-        if function_name:
-            self.messages.append({"role": role, "name": function_name, "content": content})
-        else:
-            self.messages.append({"role": role, "content": content})
+#    def add_message(self, role: str, content: str, function_name: str = None):
+#        """Add a message to the agents messaging dictionary"""
+#        if function_name:
+#            self.messages.append({"role": role, "name": function_name, "content": content})
+#        else:
+#            self.messages.append({"role": role, "content": content})
 
     @abstractmethod
     def step(self):
@@ -189,6 +162,15 @@ class Agent:
                 self.action_restrictions[item.action].append(item.restriction_function)
             else:
                 self.action_restrictions[item.action] = [item.restriction_function]
+
+    @property
+    def action_space_list(self) -> list:
+        action_space = []
+        for artifact, action_list in self.action_space.items():
+            for action in action_list:
+                action_space.append(action)
+
+        return action_space
 
     def __iadd__(self, other: Item):
         if not isinstance(other, Item):

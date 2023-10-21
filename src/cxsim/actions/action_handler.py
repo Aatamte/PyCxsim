@@ -77,10 +77,6 @@ class ActionHandler:
     def should_continue(self):
         return all(artifact.should_continue() for artifact in self.artifacts.values())
 
-    def reset(self, environment):
-        for name, artifact in self.artifacts.items():
-            artifact.reset(environment)
-
     def __repr__(self):
         return str(self.artifacts)
 

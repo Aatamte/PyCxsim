@@ -226,7 +226,7 @@ class Environment:
         self.n_artifacts = len(self.action_handler.artifacts)
         self._is_prepared = True
 
-    def reset(self) -> [np.ndarray, dict]:
+    def reset(self, reset_agents: bool = True, reset_artifacts: bool = True, create_new_agent_queue: bool = True) -> None:
         """
         Resets the environment
         """
@@ -241,22 +241,25 @@ class Environment:
         self.current_step = 0
         self.current_episode += 1
 
-        # reset each agent
-        for agent in self.agents:
-            agent.reset()
+        if reset_agents:
+            # reset each agent
+            for agent in self.agents:
+                agent.reset()
 
-        # add agent to the agent queue
-        for agent in self.agents:
-            self.agent_queue.append(agent)
+        if create_new_agent_queue:
+            # add agent to the agent queue
+            for agent in self.agents:
+                self.agent_queue.append(agent)
 
-        # reset artifacts
-        self.action_handler.reset(self)
+        if reset_artifacts:
+            for artifact in self.artifacts:
+                artifact.reset(self)
 
         if self.gui:
             self.gui.reset(self)
             self.gui.run_event_loop(self._current_time)
 
-        return 0
+        return None
 
     def update_simulation_state(self):
         self.current_step += 1
@@ -287,10 +290,13 @@ class Environment:
         if action_name in action_names:
             ActionClass = action_names[action_name]  # Get the corresponding class
             # Convert the action_params dict to a dataclass instance if it isn't already
-            if not is_dataclass(action_params):
-                action_params = ActionClass(**action_params)
-            # Process the action and get an observation
-            observation = self.action_handler.process_action(agent, action_params)
+            try:
+                if not is_dataclass(action_params):
+                    action_params = ActionClass(**action_params)
+                # Process the action and get an observation
+                observation = self.action_handler.process_action(agent, action_params)
+            except TypeError:
+                observation = "Action failed because the arguments were not correct"
 
         return observation
 
@@ -311,10 +317,9 @@ class Environment:
 
         self._current_time = time.perf_counter()
 
-        if len(self.agent_queue) != 0:
-            for _ in range(len(self.agent_queue)):
-                agent = self.agent_queue.popleft()
-                self.process_turn(agent)
+        for _ in range(len(self.agent_queue)):
+            agent = self.agent_queue.popleft()
+            self.process_turn(agent)
 
         assert len(self.agent_queue) == 0, "Unexpected behavior: Agent queue should be empty"
 
@@ -322,9 +327,6 @@ class Environment:
             self.agent_queue.append(agent)
 
         self.action_handler.step()
-
-        # should simulation stop based on response from artifacts
-        should_continue = self.action_handler.should_continue()
 
         self.update_simulation_state()
 
