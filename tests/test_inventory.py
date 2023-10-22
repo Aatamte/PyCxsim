@@ -1,5 +1,5 @@
 import unittest
-from src.cxsim.agents.traits.inventory import Inventory
+from cxsim.agents.traits.inventory import Inventory
 
 
 class Item:

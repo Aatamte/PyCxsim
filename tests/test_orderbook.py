@@ -1,7 +1,7 @@
 import unittest
-from src.cxsim import Environment
-from src.cxsim.agents import Agent
-from src.cxsim.artifacts.marketplace import Marketplace, BuyOrder, SellOrder
+from cxsim import Environment
+from cxsim.agents import Agent
+from cxsim.artifacts.marketplace import Marketplace, BuyOrder, SellOrder
 import random
 
 

@@ -1,9 +1,9 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from src.cxsim import Environment, Agent
-from src.cxsim.agents import Population
-from src.cxsim.artifacts import Marketplace
-from src.cxsim.environment.environment import UnsupportedItemType, Artifact
+from cxsim import Environment, Agent
+from cxsim.agents import Population
+from cxsim.artifacts import Marketplace
+from cxsim.environment.environment import UnsupportedItemType, Artifact
 
 
 class TestEnvironment(unittest.TestCase):

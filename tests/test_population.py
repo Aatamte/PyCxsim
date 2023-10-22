@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 import unittest
 
-from src.cxsim.agents import Agent, Population
+from cxsim.agents import Agent, Population
 
 
 class TestPopulation(unittest.TestCase):
