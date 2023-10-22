@@ -211,6 +211,7 @@ class Smith1962Environment:
                     alpha = calculate_alpha(equilibrium_price, price_history)
                     alpha_history.append(alpha)
 
-                print(f"""STEP {env.current_step}\nprevious transactions: {price_history}\nalpha values: {alpha_history}""")
+                print(f"""STEP {env.current_step}\nEquilibrium Price: {equilibrium_price}\nprevious transactions: {price_history}\nalpha values: {alpha_history}""")
+
 
                 env.step()
