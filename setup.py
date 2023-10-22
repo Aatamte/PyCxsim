@@ -6,14 +6,15 @@ with open('requirements.txt') as f:
 
 setup(
     name='pycxsim',
-    version="0.1.2",
+    version="0.1.3",
     license="MIT",
     author="Aaron Tamte",
     author_email="aaron2804@gmail.com",
     packages=find_packages(where='src'),
+    python_requires='>=3.8',
     install_requires=requirements,  # List of dependencies
+    description="PyCxsim is a framework to simulate computational agents in a confined environment.",
     url="https://github.com/Aatamte/PyCxsim",
-    download_url="https://github.com/Aatamte/PyCxsim/archive/refs/tags/v0.1.2.tar.gz",
     keywords=["Artificial Intelligence"],
     package_dir={'': 'src'},
     package_data={

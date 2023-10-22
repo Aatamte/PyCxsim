@@ -102,40 +102,37 @@ def calculate_alpha(equilibrium, price_history):
 class Smith1962Environment:
     def __init__(self, n_agents: int, model: str = "gpt-3.5-turbo", equilibrium_price: int = 50):
         self.model = model
-        self.n_agents = n_agents
+        self._n_agents = n_agents
         self.equilibrium_price = equilibrium_price
 
-        self.b = 1  # Slope for supply curve
-        self.d = 1  # Slope for demand curve
+        self._b = 1  # Slope for supply curve
+        self._d = 1  # Slope for demand curve
 
-        self.shift_value = self.n_agents / 2
+        self.shift_value = self._n_agents / 2
 
         # Calculate a and c based on the number of agents
-        self.a = (self.n_agents / 2) + (self.equilibrium_price - self.shift_value)
-        self.c = (self.n_agents / 2) + (self.equilibrium_price + self.shift_value)
+        self._a = (self._n_agents / 2) + (self.equilibrium_price - self.shift_value)
+        self._c = (self._n_agents / 2) + (self.equilibrium_price + self.shift_value)
 
-    def supply_function(self, x: float) -> float:
+    def _supply_function(self, x: float) -> float:
         """Supply function S(x) = a + bx"""
-        return self.a + self.b * x
+        return self._a + self._b * x
 
-    def demand_function(self, x: float) -> float:
+    def _demand_function(self, x: float) -> float:
         """Demand function D(x) = c - dx"""
-        return self.c - self.d * x
-
-    def test(self, n: int):
-        pass
+        return self._c - self._d * x
 
     def test_one(self):
         supply = Supply(
-            prices=self.supply_function,
+            prices=self._supply_function,
             quantities=lambda x: x,
-            max_quantity=self.n_agents + 1
+            max_quantity=self._n_agents + 1
         )
 
         demand = Demand(
-            prices=self.demand_function,
+            prices=self._demand_function,
             quantities=lambda x: x,
-            max_quantity=self.n_agents + 1
+            max_quantity=self._n_agents + 1
         )
 
         env = Environment(
@@ -167,7 +164,7 @@ class Smith1962Environment:
         SmithAgent.model_id = self.model
         buyer_pop = Population(
             agent=SmithAgent,
-            number_of_agents=self.n_agents,
+            number_of_agents=self._n_agents,
             action_restrictions=[ActionRestriction(action=BuyOrder, func=buy_limit)],
             agent_params={
                 "role": "buyer",
@@ -179,14 +176,14 @@ class Smith1962Environment:
 
         seller_pop = Population(
             agent=SmithAgent,
-            number_of_agents=self.n_agents,
+            number_of_agents=self._n_agents,
             action_restrictions=[ActionRestriction(action=SellOrder, func=sell_limit)],
             agent_params={
                 "role": "seller",
                 "goal": "maximize your capital by selling shirts in the marketplace for a price higher than the expected value. You profit the difference. Only sell one shirt at a time ",
                 "shirts expected value": supply.prices
             },
-            agent_inventory={"capital": 1255, "shirts": [25] * self.n_agents}
+            agent_inventory={"capital": 1255, "shirts": [25] * self._n_agents}
         )
 
         buyer_pop.shuffle()

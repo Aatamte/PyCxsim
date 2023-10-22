@@ -3,19 +3,23 @@
 [![docs](https://github.com/Aatamte/PyCxsim/workflows/docs/badge.svg)](https://Aatamte.github.io/PyCxsim/)
 ![Tests](https://github.com/Aatamte/PyCxsim/actions/workflows/python-tests.yml/badge.svg)
 
-## Note
+Note: PyCxsim is still under active development.
 
-PyCxsim is still under active development. 
+[Documentation](https://Aatamte.github.io/PyCxsim/).
 
 ## Installation
 
-You can install PyCxsim directly from the GitHub repository (>=Python 3.8):
+You can install the latest PyCxsim directly from the GitHub repository (>=Python 3.8):
 
 ```bash
 python -m pip install git+https://github.com/Aatamte/PyCxsim.git
 ```
 
-See the [Documentation](https://Aatamte.github.io/PyCxsim/).
+or directly from pip:
+
+```bash
+pip install pycxsim
+```
 
 ## Overview
 
@@ -23,52 +27,49 @@ PyCxsim is a framework to simulate computational agents in a confined environmen
 
 ### Structure
 
-Defining an environment
 ```Python
 from cxsim import Environment
-
-cxenv = Environment()
-```
-Adding an Artifact to the environment
-```Python
 from cxsim.artifacts import Marketplace
-
-market = Marketplace()
-
-cxenv.add(market)
-```
-Adding an agent to the environment
-```Python
 from cxsim.agents import Agent
 
+# defining an environment
+cxenv = Environment()
+
+# adding an Artifact to the environment
+market = Marketplace()
+cxenv.add(market)
+
+#adding an agent to the environment
 agent = Agent()
 
 cxenv.add(agent)
-```
-The simulation loop is similar to openai's gym
-```Python
-for episode in env.iter_episodes():
-    env.reset()
-    for step in env.iter_steps():
-        env.step()
+
+#the simulation loop
+for episode in cxenv.iter_episodes():
+    # start the next episode
+    cxenv.reset()
+    
+    for step in cxenv.iter_steps():
+        # start the next step
+        cxenv.step()
+
 ```
 
-
-```Python
-for step in env.iter_steps():
-    for agent in env.iter_agent_turns():
-        env.process_turn(agent)
-    env.step()
-```
 
 ### GUI
 
 One of the unique (and cool!) features of Pycxsim is the embedded GUI.
-The GUI is composed of a Control Panel, World, and Information window
 
 ![Image Description](./docs/assets/GUI_example.JPG)
 
 ## Examples
+
+1. Simulate a marketplace made up of computational agents, based off experiments in the paper [“An Experimental Study of Competitive Market Behavior”](https://digitalcommons.chapman.edu/cgi/viewcontent.cgi?article=1027&context=economics_articles)  by Vernon Smith.
+```Python
+from cxsim.examples import Smith1962Environment
+
+Smith1962Environment(n_agents=5).test_one()
+```
 
 ## Standard Artifacts
 
