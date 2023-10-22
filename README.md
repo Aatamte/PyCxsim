@@ -23,10 +23,42 @@ PyCxsim is a framework to simulate computational agents in a confined environmen
 
 ### Structure
 
+Defining an environment
 ```Python
 from cxsim import Environment
 
 cxenv = Environment()
+```
+Adding an Artifact to the environment
+```Python
+from cxsim.artifacts import Marketplace
+
+market = Marketplace()
+
+cxenv.add(market)
+```
+Adding an agent to the environment
+```Python
+from cxsim.agents import Agent
+
+agent = Agent()
+
+cxenv.add(agent)
+```
+The simulation loop is similar to openai's gym
+```Python
+for episode in env.iter_episodes():
+    env.reset()
+    for step in env.iter_steps():
+        env.step()
+```
+
+
+```Python
+for step in env.iter_steps():
+    for agent in env.iter_agent_turns():
+        env.process_turn(agent)
+    env.step()
 ```
 
 ### GUI
