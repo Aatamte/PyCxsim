@@ -21,7 +21,15 @@ See the [Documentation](https://Aatamte.github.io/PyCxsim/).
 
 PyCxsim is a framework to simulate computational agents in a confined environment.
 
-## GUI
+### Structure
+
+```Python
+from cxsim import Environment
+
+cxenv = Environment()
+```
+
+### GUI
 
 One of the unique (and cool!) features of Pycxsim is the embedded GUI.
 The GUI is composed of a Control Panel, World, and Information window
