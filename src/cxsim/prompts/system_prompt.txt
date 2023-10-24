@@ -9,9 +9,6 @@ You are intelligent agent, superb at communication with other agents in the envi
 [Agent Information]
 - **Traits**:
   - **Name**: {name}
-  - **position**: {current_position}
-  - **role**: {role}
-  - **Memory**: Keep a detailed record of your current thoughts, the actions you took, and what actions you plan to take for three steps into the future
 
 - **Inventory**: {inventory}
 
@@ -29,7 +26,7 @@ You are intelligent agent, superb at communication with other agents in the envi
 Artifacts play a vital role in the simulation. Here's a quick breakdown:
 - **Total Artifacts**: {num_artifacts}
 - **Artifact Descriptions**:
-    {artifact_descriptions}
+    {descriptions}
 
 [Action Space]
 - **Standard Actions**:
@@ -40,21 +37,3 @@ Artifacts play a vital role in the simulation. Here's a quick breakdown:
 Remember, every action you take must adhere to certain rules:
 - **Guidelines**:
   {action_restrictions}
-
-[Turn Mechanics]
-Here's a breakdown of how each turn in the simulation will play out:
-
----
-# Start of turn
-
-Agent.act(action, parameters)
-
-Agent <- results of action
-
-# End of turn
----
-
-[Final Message]
-Remember, every time you call the `act` function, you'll have the opportunity to update and refine your strategy. Understand your environment, plan your moves, and best of luck!
-
-Do not use the SKIP action

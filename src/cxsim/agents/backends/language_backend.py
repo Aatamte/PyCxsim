@@ -10,7 +10,7 @@ from tenacity import (
 )  # for exponential backoff
 
 
-@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(3))
+@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(2))
 def completion_with_backoff(**kwargs):
     return openai.ChatCompletion.create(**kwargs)
 
@@ -53,7 +53,7 @@ class LanguageBackend:
             self,
             model_id: str = "gpt-3.5-turbo",
             service: str = "openai",
-            temperature: float = 0.55,
+            temperature: float = 0.3,
             track_tokens: bool = False,
             exponential_backoff: bool = True
     ):
@@ -85,7 +85,6 @@ class LanguageBackend:
         messages = kwargs.pop('messages', self.messages)
         model_id = kwargs.pop('model_id', self.model_id)
         function_call = kwargs.pop('function_call', "auto")
-
         response = completion_with_backoff(
             model=model_id,
             messages=messages,

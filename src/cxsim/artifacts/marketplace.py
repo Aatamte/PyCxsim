@@ -78,9 +78,10 @@ class OrderBook:
     num_transactions: Counts the total number of transactions.
     history: A DataFrame to store history of transactions.
     """
-    def __init__(self, product_name: str, environment):
+    def __init__(self, product_name: str, environment, market_depth: int = 2):
         self.product_name = product_name
         self.environment = environment
+        self.market_depth = market_depth
         # Initialize lists to hold buy and sell orders
         self.sell_orders = []
         self.buy_orders = []
@@ -339,8 +340,8 @@ class OrderBook:
 
     def __repr__(self):
         new_line = "\n"
-        sell_order_list = [str((order.price, abs(order.quantity), order.agent.name)) for order in self.sell_orders][:1]
-        buy_order_list = [str((order.price, order.quantity, order.agent.name)) for order in self.buy_orders][:1]
+        sell_order_list = [str((order.price, abs(order.quantity), order.agent.name)) for order in self.sell_orders][:self.market_depth]
+        buy_order_list = [str((order.price, order.quantity, order.agent.name)) for order in self.buy_orders][:self.market_depth]
         return \
 f"""===================================
 {self.product_name} Order Book
@@ -358,17 +359,19 @@ Last 5 transactions:
 
 class Marketplace(Artifact):
     """
-    The marketplace facilitates transactions between agents in the simulation. Prices are in $1 increments
+    The marketplace facilitates transactions between agents in the simulation.
     """
     def __init__(
             self,
             allow_multiple_orders: bool = False,
             product_names = None,
-            infer_goods_from_agents:  bool = True
+            infer_goods_from_agents:  bool = True,
+            market_depth: int = 5
     ):
         super(Marketplace, self).__init__("Marketplace")
         self.infer_goods_from_agents = infer_goods_from_agents
         self.markets: Dict[str, OrderBook] = {}
+        self.market_depth = market_depth
 
         if product_names:
             self.market_names = product_names
@@ -417,7 +420,7 @@ class Marketplace(Artifact):
                         self.market_names.append(good)
 
         for market_name in self.market_names:
-            self.markets[market_name] = OrderBook(market_name, environment)
+            self.markets[market_name] = OrderBook(market_name, environment, self.market_depth)
 
     def reset(self, environment):
         for market in self.markets.values():

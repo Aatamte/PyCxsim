@@ -9,6 +9,7 @@ class Population:
             self,
             agent: Type,
             number_of_agents: int,
+            agent_kargs: dict,
             system_prompt: Union[PromptTemplate, str] = None,
             cognitive_prompt: Union[PromptTemplate, str] = None,
             decision_prompt: Union[PromptTemplate, str] = None,
@@ -21,6 +22,7 @@ class Population:
     ):
         self.number_of_agents = number_of_agents
         self.agent = agent
+        self.agent_kargs = agent_kargs
         self.agent_params = agent_params
         self.action_restrictions = action_restrictions
         self.query_restrictions = query_restrictions
@@ -107,7 +109,7 @@ class Population:
     def generate_agents(self):
         population = []
         for _ in range(self.number_of_agents):
-            agent = self.agent().copy()
+            agent = self.agent(**self.agent_kargs).copy()
             self.generate_inventory(agent)
             self.apply_restrictions(agent)
             self.generate_params(agent)

@@ -41,7 +41,6 @@ cxenv.add(market)
 
 #adding an agent to the environment
 agent = Agent()
-
 cxenv.add(agent)
 
 #the simulation loop
@@ -67,8 +66,13 @@ One of the unique (and cool!) features of Pycxsim is the embedded GUI.
 1. Simulate a marketplace made up of computational agents, based off experiments in the paper [“An Experimental Study of Competitive Market Behavior”](https://digitalcommons.chapman.edu/cgi/viewcontent.cgi?article=1027&context=economics_articles)  by Vernon Smith.
 ```Python
 from cxsim.examples import Smith1962Environment
+import openai
+import os
 
-Smith1962Environment(n_agents=5).test_one()
+openai.api_key = os.environ["openai_api_key"]
+
+cxenv = Smith1962Environment(n_agents=10, model_id="gpt-4")
+cxenv.test_one(market_depth=10)
 ```
 
 ## Standard Artifacts

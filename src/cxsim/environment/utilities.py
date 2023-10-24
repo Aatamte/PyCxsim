@@ -1,6 +1,6 @@
 from dataclasses import fields
 from typing import List, Any
-
+import inspect
 
 def map_python_type_to_json(type_str: str) -> str:
     mapping = {
@@ -19,12 +19,18 @@ class EnvironmentUtilities:
     def __init__(self):
         pass
 
-
-
-
-    def get_artifact_descriptions(self, artifacts):
+    def format_artifact_descriptions(self, artifacts):
         formatted_descriptions = "\n".join([f"{idx}: {artifact.get_description()}"for idx, artifact in enumerate(artifacts)])
         return formatted_descriptions
+
+    def format_action_restrictions(self, action_restrictions):
+        formatted_restrictions = ""
+        for action, restrictions in action_restrictions.items():
+            formatted_restrictions += action.__name__ + "\n"
+            for idx, r in enumerate(restrictions):
+                formatted_restrictions += f"{idx}. {inspect.getsource(r).strip()}"
+
+        return formatted_restrictions
 
     def format_openai_function_calls(self, functions: list) -> List[dict]:
         return [self.format_openai_function_call(func) for func in functions]

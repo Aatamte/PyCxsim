@@ -8,11 +8,11 @@ Last Action: {history}
 
 RESULT OF ACTION: {observation}
 
-Marketplace: {marketplace}
-
-Parameters: {parameters}
-
 Goal: {goal}
 
-Think step by step to decide which action best furthers your goal.
+Expected price: {price}
+
+Marketplace: {marketplace}
+
+Take a moment and think about which action gets you closer to your goal
 What action do you take?
