@@ -148,12 +148,16 @@ class Smith1962Environment:
         )
 
         env = Environment(
+            name="Smith 1962",
             max_steps=30,
             max_episodes=1,
             step_delay=1
         )
 
         sd = SupplyDemand(supply=supply, demand=demand)
+
+        if plot_supply_demand:
+            sd.plot()
 
         equilibrium_quantity, equilibrium_price = sd.find_equilibrium()
 

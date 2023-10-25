@@ -1,5 +1,4 @@
 from cxsim.prompts.prompt import PromptTemplate
-
 from typing import Union
 import json
 import openai
