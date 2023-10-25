@@ -9,10 +9,10 @@ Note: PyCxsim is still under active development.
 
 ## Installation
 
-You can install the latest PyCxsim directly from the GitHub repository (>=Python 3.8):
+You can install the latest version of PyCxsim directly from the GitHub repository (>=Python 3.8):
 
 ```bash
-python -m pip install git+https://github.com/Aatamte/PyCxsim.git
+pip install git+https://github.com/Aatamte/PyCxsim.git
 ```
 
 or directly from pip:
