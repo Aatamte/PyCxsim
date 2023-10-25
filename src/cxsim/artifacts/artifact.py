@@ -1,22 +1,17 @@
 from abc import ABC, abstractmethod
-from pydantic import BaseModel
 from dataclasses import is_dataclass
 from typing import Union
 import dataclasses
 from dataclasses import fields
 
 
-def generate_prompt(cls: Union[BaseModel, object]):
-    if issubclass(cls, BaseModel):
-        fields = cls.model_fields
-        field_strs = ", ".join([f'"{field_name}": {field.annotation}' for field_name, field in fields.items()])
-        method_str = f'{{"action": "{cls.__name__}", "action_parameters": {{{field_strs}}}}}'
-    elif is_dataclass(cls):
+def generate_prompt(cls: Union[object]):
+    if is_dataclass(cls):
         cls_fields = dataclasses.fields(cls)
         field_strs = ", ".join([f'"{field.name}": {field.type.__name__}' for field in cls_fields])
         method_str = f'{{"action": "{cls.__name__}", "action_parameters": {{{field_strs}}}}}'
     else:
-        raise ValueError("Unsupported class type. Expected a Pydantic BaseModel or a dataclass.")
+        raise ValueError("Unsupported class type. Expected a dataclass.")
 
     return method_str
 
