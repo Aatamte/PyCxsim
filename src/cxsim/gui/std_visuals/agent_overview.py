@@ -1,19 +1,7 @@
+from cxsim.gui.assets.utils import COLORS
+
 import dearpygui.dearpygui as dpg
 import textwrap
-
-color_dict = {
-    'red': (255, 0, 0),
-    'green': (0, 255, 0),
-    'blue': (0, 0, 255),
-    'yellow': (255, 255, 0),
-    'orange': (255, 165, 0),
-    'purple': (128, 0, 128),
-    'pink': (255, 192, 203),
-    'brown': (165, 42, 42),
-    'gray': (128, 128, 128),
-    'black': (0, 0, 0),
-    'white': (255, 255, 255),
-}
 
 
 class AgentOverview:
@@ -49,9 +37,9 @@ class AgentOverview:
         self.agent_name = new_agent_name
         self.agent = self.environment.agent_name_lookup[new_agent_name]
 
-        self.update()
+        self.render()
 
-    def update(self):
+    def render(self):
         if self.agent:
             for name, tab in self.tab_options.items():
                 tab.update(self.agent)
@@ -59,19 +47,19 @@ class AgentOverview:
     def set_show(self, value: bool):
         self.show = value
         if value:
-            dpg.show_item(self.agent_overview_window)
+            dpg.show_item(self.window)
         else:
-            dpg.hide_item(self.agent_overview_window)
+            dpg.hide_item(self.window)
 
     def show_tab(self, sender, data):
-
         if self.current_tab:
             self.tab_options[self.current_tab].set_show(False)
         self.tab_options[sender].set_show(True)
         self.current_tab = sender
 
     def draw(self):
-        with dpg.child_window(label="Agent Overview", show=self.show, border=False) as self.agent_overview_window:
+        print("drawed")
+        with dpg.child_window(label="Agent Overview", show=self.show, border=False) as self.window:
             dpg.add_combo(label="Agent", items=[agent.name for agent in self.environment.agents], callback=self.change_agent)
             with dpg.child_window(label="Agent information", menubar=True):
                 with dpg.menu_bar(label="agent menu bar"):
@@ -241,18 +229,18 @@ class MessageBox:
             if message["role"] == "user":
                 prefix = "user: "
                 indent = 0
-                color = color_dict["green"]
+                color = COLORS["green"]
             elif message["role"] == "system":
                 indent = 0
                 prefix = "system: "
-                color = color_dict["red"]
+                color = COLORS["red"]
             elif message["role"] == "assistant":
                 indent = 0
                 prefix = self.agent.name + ": "
-                color = color_dict["orange"]
+                color = COLORS["orange"]
             else:
                 indent = 0
-                color = color_dict["yellow"]
+                color = COLORS["yellow"]
 
             new_message = dpg.add_text(
                 prefix + str(message["content"]),

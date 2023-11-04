@@ -4,11 +4,12 @@ import dearpygui.dearpygui as dpg
 
 
 class TopPanel:
-    def __init__(self, visualizer, environment, HEIGHT, WIDTH):
+    def __init__(self, visualizer, environment, dimension_config):
         self.visualizer = visualizer
         self.environment = environment
-        self.HEIGHT = int(HEIGHT * 0.1)
-        self.WIDTH = int(3 * WIDTH / 5)
+        self.dimension_config = dimension_config
+        self.HEIGHT = dimension_config.top_panel_height
+        self.WIDTH = dimension_config.top_panel_width
         self.pos_y = 0
         self.panel = None
 
@@ -52,7 +53,7 @@ class TopPanel:
         self.visualizer.skip_steps = 1
         self.environment_status = f"Running step {self.environment.current_step} (Skipping)"
 
-    def update(self):
+    def render(self):
         # env group
         dpg.set_value(self.current_step_uuid, f"Current step: {self.environment.current_step} / {self.environment.max_steps}")
         dpg.set_value(self.n_agents_text_uuid, f"Number of Agents: {self.environment.n_agents}")
@@ -65,14 +66,12 @@ class TopPanel:
         dpg.set_value(self.current_task_dpg_uuid, f"Task: {self.current_task}")
 
     def resize(self):
-        self.HEIGHT = int(dpg.get_viewport_height() * 0.1)
-        self.WIDTH = int(3 * dpg.get_viewport_width() / 5)
-        self.env_group_width = int(self.WIDTH * 0.3)
-        self.control_group_width = int(self.WIDTH * 0.3)
-        self.current_state_group_width = int(self.WIDTH * 0.3)
+        self.env_group_width = int(self.dimension_config.top_panel_width * 0.3)
+        self.control_group_width = int(self.dimension_config.top_panel_width * 0.3)
+        self.current_state_group_width = int(self.dimension_config.top_panel_width * 0.3)
 
-        dpg.set_item_height(self.panel, self.HEIGHT)    # doesnt seem to work the correct way
-        dpg.set_item_width(self.panel, self.WIDTH)
+        dpg.set_item_height(self.panel, self.dimension_config.top_panel_height)
+        dpg.set_item_width(self.panel, self.dimension_config.top_panel_width)
 
         dpg.set_item_width(self.env_group, self.env_group_width)
         dpg.set_item_width(self.control_group, self.control_group_width)

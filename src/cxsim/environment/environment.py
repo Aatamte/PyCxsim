@@ -14,7 +14,7 @@ from cxsim.agents.agent import Agent
 from cxsim.agents.population import Population
 from cxsim.artifacts.artifact import Artifact
 from cxsim.actions.action_handler import ActionHandler
-from cxsim.gui.visualizer import GUI
+from cxsim.gui.GUI import GUI
 from cxsim.utilities.background_jobs.background_task import BackgroundTask
 from cxsim.environment.utilities import EnvironmentUtilities
 
@@ -121,7 +121,7 @@ class Environment:
         self.gui = gui
 
         if self.gui:
-            self.gui.prepare(self)
+            self.gui.compile(self)
 
         self._current_time = time.perf_counter()
         self._past_time = time.perf_counter()
@@ -336,15 +336,6 @@ class Environment:
     def action_logs(self):
         return self.action_handler.action_logs
 
-    def is_running(self):
-        if self.gui:
-            if self._should_stop_simulation:
-                del self.gui
-                return False
-            return dpg.is_dearpygui_running()
-        else:
-            return True
-
     def iter_steps(self):
         return range(0, self.max_steps)
 
@@ -367,9 +358,6 @@ class Environment:
             return self.artifact_lookup[item]
         else:
             raise KeyError("Artifact not in environment")
-
-    def save(self):
-        print("saving")
 
     def load(self, filepath):
         pass

@@ -105,7 +105,7 @@ def calculate_alpha(equilibrium, price_history):
 class Smith1962Environment:
     def __init__(self, n_agents: int, model_id: str = "gpt-3.5-turbo", equilibrium_price: int = 50):
         self.model_id = model_id
-        self._n_agents = n_agents
+        self._n_agents = int(n_agents // 2)
         self.equilibrium_price = equilibrium_price
 
         self._b = 1  # Slope for supply curve

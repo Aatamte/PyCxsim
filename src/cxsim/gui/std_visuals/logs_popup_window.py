@@ -59,6 +59,7 @@ class LogsWindow(logging.Handler):
             self.display_early_logs()
 
     def set_show(self, value: bool):
+        print(value)
         self.show = value
         if value:
             dpg.show_item(self.window)

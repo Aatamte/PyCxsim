@@ -1,13 +1,11 @@
-from cxsim.gui.tabs.tab import Tab
+from cxsim.gui.tab import Tab
 import dearpygui.dearpygui as dpg
 
 
 class MarketplaceTab(Tab):
-    def __init__(self):
-        super(MarketplaceTab, self).__init__("Marketplace", "market_tab")
-        self.environment = None
-        self.marketplace = None
-
+    def __init__(self, environment, artifact):
+        super(MarketplaceTab, self).__init__("Marketplace", "market_tab", environment, artifact)
+        self.marketplace = self.artifact
         self.current_market = None
         self.window = None
 

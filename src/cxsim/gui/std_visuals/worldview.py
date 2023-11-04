@@ -1,90 +1,36 @@
+from cxsim.gui.assets.utils import COLORS
+
 import dearpygui.dearpygui as dpg
-import math
 import numpy as np
 import random
 
-# Dictionary of 50 different colors and their RGBA values
-colors = {
-    'red': (255, 0, 0),
-    'green': (0, 255, 0),
-    'blue': (0, 0, 255),
-    'yellow': (255, 255, 0),
-    'orange': (255, 165, 0),
-    'purple': (128, 0, 128),
-    'pink': (255, 105, 180),
-    'brown': (139, 69, 19),
-    'gray': (128, 128, 128),
-    'lime': (0, 255, 0),
-    'violet': (238, 130, 238),
-    'indigo': (75, 0, 130),
-    'cyan': (0, 255, 255),
-    'magenta': (255, 0, 255),
-    'beige': (245, 245, 220),
-    'gold': (255, 215, 0),
-    'teal': (0, 128, 128),
-    'coral': (255, 127, 80),
-    'aqua': (0, 255, 255),
-    'navy': (0, 0, 128),
-    'silver': (192, 192, 192),
-    'olive': (128, 128, 0),
-    'maroon': (128, 0, 0),
-    'turquoise': (64, 224, 208),
-    'khaki': (240, 230, 140),
-    'lavender': (230, 230, 250),
-    'plum': (221, 160, 221),
-    'tan': (210, 180, 140),
-    'azure': (240, 255, 255),
-    'mint': (189, 252, 201),
-    'chocolate': (210, 105, 30),
-    'ivory': (255, 255, 240),
-    'sandy': (210, 180, 140),
-    'wheat': (245, 222, 179),
-    'bisque': (255, 228, 196),
-    'goldenrod': (218, 165, 32),
-    'firebrick': (178, 34, 34),
-    'salmon': (250, 128, 114),
-    'darkgreen': (0, 100, 0),
-    'skyblue': (135, 206, 235),
-    'darkorchid': (153, 50, 204),
-    'darkslategray': (47, 79, 79),
-    'mediumvioletred': (199, 21, 133),
-    'mediumturquoise': (72, 209, 204),
-    'mediumspringgreen': (0, 250, 154),
-    'mediumslateblue': (123, 104, 238),
-    'mediumseagreen': (60, 179, 113),
-    'mediumblue': (0, 0, 205),
-    'mediumaquamarine': (102, 205, 170),
-    'darkviolet': (148, 0, 211),
-}
-# Ensure that we have exactly 50 colors
-assert len(colors) == 50
-
-# List to keep track of used colors
-used_colors = []
+# List to keep track of used COLORS
+used_COLORS = []
 
 
 def get_random_unused_color():
-    # Get all unused colors
-    unused_colors = [color for color in colors.keys() if color not in used_colors]
+    # Get all unused COLORS
+    unused_COLORS = [color for color in COLORS.keys() if color not in used_COLORS]
 
-    # If all colors have been used, return None
-    if not unused_colors:
-        unused_colors = [color for color in colors.keys()]
+    # If all COLORS have been used, return None
+    if not unused_COLORS:
+        unused_COLORS = [color for color in COLORS.keys()]
 
     # Randomly choose an unused color
-    chosen_color_name = random.choice(unused_colors)
-    chosen_color_value = colors[chosen_color_name]
+    chosen_color_name = random.choice(unused_COLORS)
+    chosen_color_value = COLORS[chosen_color_name]
 
     # Mark the color as used
-    used_colors.append(chosen_color_name)
+    used_COLORS.append(chosen_color_name)
 
     return chosen_color_name, chosen_color_value
 
 
-class World:
-    def __init__(self, environment, starting_WIDTH, starting_HEIGHT):
-        self.HEIGHT = int(starting_HEIGHT * 0.95)
-        self.WIDTH = int(3 * starting_WIDTH / 5)
+class MainView:
+    def __init__(self, environment, dimension_config):
+        self.dimension_config = dimension_config
+        self.HEIGHT = dimension_config.main_view_height
+        self.WIDTH = dimension_config.main_view_width
         self.world = None
         self.grid = None
         self.environment = environment
@@ -122,7 +68,7 @@ class World:
 
         return tuple(chosen_position)
 
-    def update(self):
+    def render(self):
         for idx, agent in enumerate(self.environment.agents):
             x = agent.x_pos
             y = agent.y_pos
@@ -149,13 +95,12 @@ class World:
                 parent=self.grid
             )
 
-
     def reset(self, n_blocks: int = None):
         pass
 
     def resize(self):
-        self.HEIGHT = int(dpg.get_viewport_height() * 0.95)
-        self.WIDTH = int(3 * dpg.get_viewport_width() / 5)
+        self.HEIGHT = self.dimension_config.main_view_height
+        self.WIDTH = self.dimension_config.main_view_width
         dpg.set_item_width(self.world, self.WIDTH)
         dpg.set_item_height(self.world, self.HEIGHT)
         dpg.delete_item(self.grid)
