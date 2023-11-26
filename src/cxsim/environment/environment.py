@@ -126,6 +126,9 @@ class Environment:
         self._current_time = time.perf_counter()
         self._past_time = time.perf_counter()
 
+        # mode
+        self.strict = False
+
     def add_agent(self, agent: Agent):
         """
         Add a new agent to the environment.
@@ -231,7 +234,7 @@ class Environment:
         Resets the environment
         """
 
-        if not self.agents:
+        if not self.agents or len(self.agents) == 0:
             raise ValueError("agents must be passed through the <set_agents> function before  "
                              "the first episode is run")
 
@@ -272,6 +275,7 @@ class Environment:
         self.calender.step()
 
     def process_action(self, agent, action: Union[dict, Any]) -> Any:
+
         # Generate a mapping of action names from the agent's action space
         action_names = {(item.__name__.lower()): item for value in agent.action_space.values() for item in value}
 
@@ -280,23 +284,26 @@ class Environment:
 
         # If action is a dataclass, convert it to dictionary
         if is_dataclass(action):
-            action = asdict(action)
-
-        # Extract the action name and parameters
-        action_name, action_params = list(action.items())[0]
-        action_name = action_name.lower()
+            action_name = action.__class__.__name__.lower()
+            action_params = asdict(action)
+        elif isinstance(action, dict):
+            # Extract the action name and parameters
+            action_name, action_params = list(action.items())[0]
+            action_name = action_name.lower()
+        else:
+            raise TypeError("action must be either a dataclass or a dictionary")
 
         # Check if the action exists in the action space
         if action_name in action_names:
-            ActionClass = action_names[action_name]  # Get the corresponding class
+            _action = action_names[action_name](**action_params)
+
             # Convert the action_params dict to a dataclass instance if it isn't already
             try:
-                if not is_dataclass(action_params):
-                    action_params = ActionClass(**action_params)
-                # Process the action and get an observation
-                observation = self.action_handler.process_action(agent, action_params)
+                observation = self.action_handler.process_action(agent, _action)
             except TypeError:
                 observation = "Action failed because the arguments were not correct"
+        elif self.strict:
+            raise ValueError("")
 
         return observation
 
@@ -311,7 +318,7 @@ class Environment:
         for func in agent.after_turn_methods:
             func()
 
-    def step(self) -> [np.ndarray, list, list]:
+    def step(self):
         if self.gui:
             self.gui.run_event_loop(self._current_time)
 

@@ -14,6 +14,41 @@ def completion_with_backoff(**kwargs):
     return openai.ChatCompletion.create(**kwargs)
 
 
+class Local:
+    def __init__(self):
+        self.action_space = None
+
+    @staticmethod
+    def text_to_dict(text: str, delimiter: str, strict: bool = True):
+        # Split the text by the delimiter
+        parts = text.split(delimiter)
+
+        # Ensure that there are at least two parts: an action and one parameter
+        if strict and len(parts) < 2:
+            raise ValueError("Text must contain an action and at least one parameter.")
+
+        # The first part is the action
+        action = parts[0].strip()
+
+        # The remaining parts are parameters
+        params = {}
+        for part in parts[1:]:
+            # Split each parameter into key and value
+            if '=' in part:
+                key, value = part.split('=', 1)
+                params[key.strip()] = value.strip()
+            elif strict:
+                raise ValueError("All parameters must have a key and value.")
+            else:
+                params[part.strip()] = None
+
+        return {"action": action, "params": params}
+
+# Example usage:
+result = Local.text_to_dict("run action param1=value1 param2=value2", " ", False)
+print(result)
+
+
 class OpenAI:
     def parse_function_call(self, response):
         func_call = None
@@ -50,6 +85,7 @@ class OpenAI:
 class LanguageBackend:
     def __init__(
             self,
+
             model_id: str = "gpt-3.5-turbo",
             service: str = "openai",
             temperature: float = 0.3,
@@ -74,8 +110,10 @@ class LanguageBackend:
 
         if self.service == "openai":
             pass
+        elif self.service == "local":
+            pass
         else:
-            raise Warning("The only supported backend is openai")
+            raise Warning("The only supported backend is openai or local")
 
         self.openai = OpenAI()
 

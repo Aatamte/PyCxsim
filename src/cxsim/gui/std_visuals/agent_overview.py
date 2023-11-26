@@ -58,7 +58,6 @@ class AgentOverview:
         self.current_tab = sender
 
     def draw(self):
-        print("drawed")
         with dpg.child_window(label="Agent Overview", show=self.show, border=False) as self.window:
             dpg.add_combo(label="Agent", items=[agent.name for agent in self.environment.agents], callback=self.change_agent)
             with dpg.child_window(label="Agent information", menubar=True):
