@@ -223,7 +223,7 @@ class MessageBox:
             dpg.delete_item(message)
         self.existing_messages = []
 
-        for idx, message in enumerate(self.agent.backend.full_messages):
+        for idx, message in enumerate(self.agent.io.text.format.full_messages):
             prefix = ""
             if message["role"] == "user":
                 prefix = "user: "

@@ -4,9 +4,11 @@ from cxsim.agents.tools.tool import Tool
 from cxsim.agents.traits.memory.long_term_memory import LongTermMemory
 from cxsim.agents.traits.inventory import Inventory
 from cxsim.agents.traits.memory.working_memory import WorkingMemory
+from cxsim.agents.io.io import IO
 
 from copy import deepcopy
 from abc import abstractmethod
+from collections import defaultdict
 
 
 def before_turn(func):
@@ -40,10 +42,8 @@ class Agent:
         long_term_memory (LongTermMemory): Long-term memory storage of the agent.
         tools (dict): Tools or utilities available to the agent.
     """
-    def __init__(
-            self,
-            name: str = "default"
-    ):
+
+    def __init__(self, name: str = "default"):
         """
         Initialize an agent with a given name and default attributes.
 
@@ -55,6 +55,9 @@ class Agent:
         self.y_pos = None
         self.color: tuple = (0, 0, 0)
         self.role = None
+
+        # variable registry
+        self.variable_registry = defaultdict()
 
         self.action_queue = []
 
@@ -76,14 +79,15 @@ class Agent:
         # action space
         self.action_space = {}
 
-        self.backend = None
+        # input/output
+        self.io = IO(self)
+
         self.environment = None
 
         # other
         self.goal = ""
         self.tasks = []
 
-        self.inbox = []
         self.inventory = Inventory()
 
         # agent traits
@@ -96,13 +100,13 @@ class Agent:
         self.before_turn_methods = [
             getattr(self, method_name) for method_name in dir(self)
             if callable(getattr(self, method_name))
-            and getattr(getattr(self, method_name), "_before_turn", False)
+               and getattr(getattr(self, method_name), "_before_turn", False)
         ]
 
         self.after_turn_methods = [
             getattr(self, method_name) for method_name in dir(self)
             if callable(getattr(self, method_name))
-            and getattr(getattr(self, method_name), "_after_turn", False)
+               and getattr(getattr(self, method_name), "_after_turn", False)
         ]
 
     def add_tool(self, tool: Tool):
@@ -117,12 +121,14 @@ class Agent:
         else:
             self.tools[tool.name] = tool
 
-#    def add_message(self, role: str, content: str, function_name: str = None):
-#        """Add a message to the agents messaging dictionary"""
-#        if function_name:
-#            self.messages.append({"role": role, "name": function_name, "content": content})
-#        else:
-#            self.messages.append({"role": role, "content": content})
+    def add_observation(self, observation: str):
+        self.observations.append(observation)
+
+    def get_latest_observations(self, k: int = 1):
+        return self.observations[-k:] if self.observations else None
+
+    def get_latest_actions(self, k: int = 1):
+        return self.action_history[-k:] if self.action_history else None
 
     @abstractmethod
     def step(self):
@@ -131,6 +137,9 @@ class Agent:
     @abstractmethod
     def reset(self):
         raise NotImplementedError("This method should be implemented by subclasses")
+
+    def compile(self):
+        pass
 
     def get_action_space(self):
         return self.action_space
@@ -144,8 +153,35 @@ class Agent:
     def update_inventory(self):
         self.inventory = {key: len(value) for key, value in self.inventory.items()}
 
-    def compile(self):
-        pass
+    # Variable Registry #
+
+    @property
+    def variables(self):
+        return self.variable_registry
+
+    def set_variable(self, key: str, value):
+        """
+        Set a variable in the agent's registry.
+        """
+        self.variable_registry[key] = value
+
+    def get_variable(self, key: str):
+        """
+        Retrieve a variable from the agent's registry.
+        """
+        return self.variable_registry.get(key)
+
+    def update_variables(self, variables: dict):
+        """
+        Update multiple variables in the agent's registry.
+        """
+        self.variable_registry.update(variables)
+
+    def clear_variables(self):
+        """
+        Clear all variables in the registry.
+        """
+        self.variable_registry.clear()
 
     def __isub__(self, other):
         if not isinstance(other, Item):

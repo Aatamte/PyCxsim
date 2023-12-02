@@ -44,11 +44,6 @@ class Local:
 
         return {"action": action, "params": params}
 
-# Example usage:
-result = Local.text_to_dict("run action param1=value1 param2=value2", " ", False)
-print(result)
-
-
 class OpenAI:
     def parse_function_call(self, response):
         func_call = None

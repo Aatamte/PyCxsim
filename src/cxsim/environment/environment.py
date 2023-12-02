@@ -305,6 +305,8 @@ class Environment:
         elif self.strict:
             raise ValueError("")
 
+        agent.add_observation(observation)
+
         return observation
 
     def process_turn(self, agent: Agent):
@@ -338,6 +340,9 @@ class Environment:
         self.update_simulation_state()
 
     def describe(self):
+        pass
+
+    def get(self, item, output_format: str = None):
         pass
 
     def action_logs(self):

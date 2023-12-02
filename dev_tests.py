@@ -1,92 +1,72 @@
 import numpy as np
-from cxsim import Environment, Population, PromptTemplate
+from cxsim import Environment, Population, Agent
 from cxsim.artifacts import Marketplace
-from cxsim.agents import Agent
 from cxsim.actions.action_restrictions import ActionRestriction
 from cxsim.artifacts.marketplace import BuyOrder, SellOrder, MarketPlaceQuery
 from cxsim.prompts.default_prompts import DEFAULT_DECISION_PROMPT, DEFAULT_SYSTEM_PROMPT
 from cxsim.econ import Demand, Supply, SupplyDemand
-from cxsim.agents.backends.language_backend import LanguageBackend
-from typing import Union
+from cxsim.agents.agent import after_turn
 
 
 class MyAgent(Agent):
     def __init__(self):
         super().__init__()
-        self.backend = LanguageBackend("local")
-        self.system_prompt = DEFAULT_SYSTEM_PROMPT
-        self.decision_prompt = DEFAULT_DECISION_PROMPT
 
-    def step(self):
-        if len(self.observations) != 0:
-            observation = self.observations.pop(0)
-        else:
-            observation = "N/A"
+    def compile(self):
+        DEFAULT_SYSTEM_PROMPT.remove_section("Action Space")
+        self.io.text.add_prompt(name="system", prompt=DEFAULT_SYSTEM_PROMPT)
+        self.io.text.add_prompt("decision", DEFAULT_DECISION_PROMPT)
 
-        if len(self.action_history) >= 1:
-            action_history = self.action_history[-1]
-        elif len(self.action_history) == 0:
-            action_history = "N/A"
-        else:
-            action_history = self.action_history
-
-        marketplace = self.environment["Marketplace"]
-        shirts_orderbook = marketplace["shirts"]
-
-        self.decision_prompt.set_variables(
-            {
-                "inventory": str(self.display_inventory()),
-                "current_step": self.environment.current_step,
-                "goal": self.params["goal"],
-                "max_steps": self.environment.max_steps,
-                "observation": observation,
-                "history": str(action_history),
-                "marketplace": shirts_orderbook,
-                "price": self.params["shirts expected value"],
-                "parameters": str(self.params)
-            }
-        )
-
-        self.backend.add_message("user", self.decision_prompt)
-
-        if self.params["role"] == "buyer":
-            func_call = BuyOrder("shirts", 10, 1)
-        else:
-            func_call = SellOrder("shirts", 1, 1)
-
-        _action = "SellOrder('shirts', 1, 1)"
-        _actiontwo = "BuyOrder(good='shirts', quantity = 1, price = 1)"
-
-        observation = self.environment.process_action(self, func_call)
-
-
-
-        self.observations.append(observation)
-
-        self.backend.compress_messages(n_steps_back=2)
-
-        return None
-
-    def reset(self):
         artifact_descriptions = self.environment.utils.format_artifact_descriptions(self.environment.artifacts)
         action_restrictions = self.environment.utils.format_action_restrictions(self.action_restrictions)
 
-        self.system_prompt.set_variables(
+        self.update_variables(
             {
                 "name": self.name,
                 "inventory": str(self.inventory.starting_inventory),
                 "goal": str(self.params["goal"]),
                 "action_restrictions": action_restrictions,
+                "current_step": lambda: self.environment.current_step,
                 "n_agents": str(len(self.environment.agents)),
-                "max_steps": str(self.environment.max_steps),
+                "max_steps": lambda: self.environment.max_steps,
                 "agent_names": str(self.environment.agent_names),
-                "num_artifacts": str(len(self.environment.action_handler.artifacts)),
-                "descriptions": artifact_descriptions
+                "num_artifacts": str(len(self.environment.artifacts)),
+                "descriptions": artifact_descriptions,
+                "observation": self.get_latest_observations,
+                "history": self.get_latest_actions,
+                "marketplace": self.environment["Marketplace"]["shirts"],
+                "parameters": self.params,
+                "price": self.params["shirts expected value"],
             }
         )
 
-        self.system_prompt.remove_section("Action Space")
-        self.backend.add_message("system", self.system_prompt)
+    def determine_action(self):
+        if self.params["role"] == "buyer":
+            action = BuyOrder("shirts", 10, 1)
+        else:
+            action = SellOrder("shirts", 1, 1)
+        return action
+
+    def reset(self):
+        self.io.text.add_message("system", self.io.text.get_updated_prompt("system"))
+
+    @after_turn
+    def cleanup(self):
+        self.io.text.format.compress_messages(n_steps_back=2)
+
+    def step(self):
+        self.io.text.add_message("user", self.io.text.get_updated_prompt("decision"))
+
+        action = self.determine_action()
+
+        _action = "SellOrder('shirts', 1, 1)"
+        _actiontwo = "BuyOrder(good='shirts', quantity = 1, price = 1)"
+
+        observation = self.environment.process_action(self, action)
+
+        self.io.text.add_message(role="assistant", content=str(action))
+
+        return None
 
 
 def calculate_alpha(equilibrium, price_history):
