@@ -302,3 +302,21 @@ class PromptTemplate:
                 item_str = formatter_func(key, value)
             formatted_items.append(f"{item_prefix}{item_str}{item_suffix}")
         return prefix + delimiter.join(formatted_items) + suffix
+
+    def to_txt(self, filename: str):
+        """
+        Write the current content of the PromptTemplate to a text file.
+
+        Args:
+        filename (str): The name of the file to which the content will be written.
+        """
+        # Ensure content is up-to-date
+        self.update_content()
+
+        # Write the content to the specified file
+        try:
+            with open(filename, 'w', encoding='utf-8') as file:
+                file.write(self.content)
+        except IOError as e:
+            print(f"An error occurred while writing to file: {e}")
+

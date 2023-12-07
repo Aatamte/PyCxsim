@@ -3,9 +3,6 @@
 [![docs](https://github.com/Aatamte/PyCxsim/workflows/docs/badge.svg)](https://Aatamte.github.io/PyCxsim/)
 ![Tests](https://github.com/Aatamte/PyCxsim/actions/workflows/python-tests.yml/badge.svg)
 
-Note: PyCxsim is still under active development.
-
-[Documentation](https://Aatamte.github.io/PyCxsim/).
 
 ## Installation
 
@@ -85,3 +82,8 @@ Below are the standard artifacts provided with the CAES package:
   - Messaging 
 - Gridworld
   - Agents can move around the map
+
+
+## (TODO) Documentation
+
+[Documentation](https://Aatamte.github.io/PyCxsim/).
