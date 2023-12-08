@@ -1,7 +1,7 @@
 import re
 from typing import Union, List, Tuple, Dict, Any
 import logging
-
+import os
 
 class PromptSection:
     def __init__(self, title: str = None,  tag: str = None, content: str = None, file_path: str = None,
