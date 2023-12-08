@@ -205,15 +205,14 @@ class PromptTemplate:
             logging.error(f"An error occurred while opening the file: {e}")
             raise
 
-    def update_content(self):
+    def _format_content(self):
         if not all(
                 hasattr(section, 'get_content') and hasattr(section, 'priority') for section in self.sections.values()):
             self.content = "Invalid PromptSection objects"
             return
 
-        sorted_sections = sorted(self.sections.values(),
-                                 key=lambda x: (x.priority, list(self.sections.keys()).index(x.tag)))
-        self.content = "\n\n".join([section.get_content() for section in sorted_sections])
+        sorted_sections = sorted(self.sections.values(), key=lambda x: (x.priority, list(self.sections.keys()).index(x.tag)))
+        return "\n\n".join([section.get_content() for section in sorted_sections])
 
     def sync_variables_to_sections(self):
         for section in self.sections.values():
@@ -289,18 +288,17 @@ class PromptTemplate:
         """Retrieve a section by its tag."""
         return self.sections.get(tag, None)
 
-    def get_prompt(self) -> str:
-        self.update_content()
-        return self.content
+    def _get_prompt(self) -> str:
+        return self._format_content()
 
     def __str__(self):
-        return self.get_prompt()
+        return self._get_prompt()
 
     def __setitem__(self, key: str, value: str):
         self.set_variable(key, value)
 
     def __repr__(self):
-        return self.get_prompt()
+        return self._get_prompt()
 
     def get_sections(self):
         return list(self.sections.keys())
@@ -382,20 +380,20 @@ class PromptTemplate:
             formatted_items.append(f"{item_prefix}{item_str}{item_suffix}")
         return prefix + delimiter.join(formatted_items) + suffix
 
-    def to_txt(self, filename: str):
+    def to_txt(self, filename: str, include_variables: bool = False):
         """
         Write the current content of the PromptTemplate to a text file.
 
         Args:
         filename (str): The name of the file to which the content will be written.
         """
-        # Ensure content is up-to-date
-        self.update_content()
-
         # Write the content to the specified file
         try:
             with open(filename, 'w', encoding='utf-8') as file:
-                file.write(self.content)
+                if include_variables:
+                    file.write(self._format_content())
+                else:
+                    file.write(self.content)
         except IOError as e:
             print(f"An error occurred while writing to file: {e}")
 
