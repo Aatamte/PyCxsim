@@ -1,7 +1,8 @@
 import re
-from typing import Union, List, Tuple, Dict, Any
+from typing import Dict
 import logging
 import os
+
 
 class PromptSection:
     def __init__(self, title: str = None,  tag: str = None, content: str = None, file_path: str = None,
@@ -139,11 +140,10 @@ class PromptTemplate:
         self.sections = {}
         self.variables = {}
         self._set_indicators(section_headers, variable_indicators)
-        self.content = ""
 
         # Load content from file or string
-        content = self._load_content(file_path, initial_data)
-        self._parse_content(content)
+        self.content = self._load_content(file_path, initial_data)
+        self._parse_content(self.content)
 
     def _set_indicators(self, section_headers, variable_indicators):
         mid_idx_headers = len(section_headers) // 2
@@ -396,4 +396,6 @@ class PromptTemplate:
                     file.write(self.content)
         except IOError as e:
             print(f"An error occurred while writing to file: {e}")
+
+
 
