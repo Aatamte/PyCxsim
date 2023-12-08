@@ -2,12 +2,12 @@ import time
 import logging
 import numpy as np
 import names
-import dearpygui.dearpygui as dpg
 from collections import deque
 from functools import wraps
 from dataclasses import is_dataclass, asdict
 from typing import Union, Any
 import inspect
+from dataclasses import fields
 
 # core
 from cxsim.agents.agent import Agent
@@ -277,9 +277,28 @@ class Environment:
     def _match_action_arguments(self, valid_actions, action):
         action_name, action_params = list(action.items())[0]
         action_name = action_name.lower()
-        print(valid_actions)
 
-        return action_name, action_params
+        # Get the dataclass for the action
+        action_class = valid_actions.get(action_name)
+
+        if not action_class:
+            return None, None
+
+        # Get the fields (parameters) of the action dataclass
+        dataclass_fields = [field.name for field in fields(action_class)]
+
+        # Map generic parameters to specific dataclass fields
+        mapped_params = {}
+        for i, field_name in enumerate(dataclass_fields):
+            param_key = f"param{i + 1}"
+            if param_key in action_params:
+                mapped_params[field_name] = action_params[param_key]
+            else:
+                # Handle missing parameters, possibly with default values
+                # For now, raising an error
+                raise ValueError(f"Missing parameter '{field_name}' for action '{action_name}'")
+
+        return action_name, mapped_params
 
     def process_action(self, agent, action: Union[dict, Any]) -> Any:
 

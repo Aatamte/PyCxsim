@@ -28,3 +28,43 @@ def parse_output(text):
         print(f"An error occurred: {e}")
         # Return an empty list in case of error
         return []
+
+
+def parse_text_to_json(text):
+    # Regular expression pattern to match the entire <Action> block
+    action_block_pattern = r"<Action>\s*(.*?)\s*</Action>"
+
+    # Regular expression pattern to match action and parameters within the <Action> block
+    action_pattern = r"(\w+)\((.*?)\)"
+
+    # Find the <Action> block in the text
+    action_block_match = re.search(action_block_pattern, text, re.DOTALL)
+    if not action_block_match:
+        return "No valid action block found in the text"
+
+    action_block = action_block_match.group(1)
+
+    # Find action and parameters within the <Action> block
+    action_match = re.search(action_pattern, action_block)
+    if not action_match:
+        return "No valid action found in the action block"
+
+    action = action_match.group(1)
+    params = action_match.group(2).split(',')
+
+    # Process parameters to handle different types (integers, strings)
+    processed_params = {}
+    for i, param in enumerate(params, start=1):
+        param = param.strip()
+        try:
+            # Attempt to convert to integer
+            processed_param = int(param)
+        except ValueError:
+            # If conversion fails, treat as a string (remove surrounding quotes)
+            processed_param = param.strip('\'\"')
+
+        # Use default parameter names if specific names are not provided
+        param_key = f"param{i}"
+        processed_params[param_key] = processed_param
+
+    return {action: processed_params}
