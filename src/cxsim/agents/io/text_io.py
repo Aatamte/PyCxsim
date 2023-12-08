@@ -80,7 +80,7 @@ class ChatFormat:
 
         if not override:
             if isinstance(content, PromptTemplate):
-                _content = content
+                _content = str(content)
             elif isinstance(content, str):
                 _content = content
             else:
