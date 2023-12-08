@@ -205,7 +205,6 @@ class PromptTemplate:
             logging.error(f"An error occurred while opening the file: {e}")
             raise
 
-
     def update_content(self):
         if not all(
                 hasattr(section, 'get_content') and hasattr(section, 'priority') for section in self.sections.values()):
@@ -221,15 +220,30 @@ class PromptTemplate:
             section.set_variables(self.variables)
 
     def _parse_content(self, content: str):
+        """
+        Parse the content into sections based on the section headers.
+
+        Args:
+        content (str): The content string to parse.
+        """
+        # Split the content based on section headers
         section_splits = re.split(rf"({re.escape(self.section_open)}\s*.*?\s*{re.escape(self.section_close)})", content)
+
+        if len(section_splits) == 1:
+            # If no headers are found, treat the entire content as a default section
+            self.sections['default'] = PromptSection(tag='default', content=section_splits[0].strip())
+            return
+
         for i in range(1, len(section_splits), 2):
             section_str = section_splits[i]
             tag_match = re.search(rf"{re.escape(self.section_open)}\s*(.*?)\s*{re.escape(self.section_close)}",
                                   section_str)
+
             if tag_match:
                 tag = tag_match.group(1).strip()
             else:
-                tag = None
+                continue  # Skip if the tag is not found
+
             section_content = section_splits[i + 1].strip()
 
             # Extract variables within variable indicators
@@ -239,8 +253,7 @@ class PromptTemplate:
                 self.variables[var] = None
 
             # Create a PromptSection object
-            section = PromptSection(tag=tag, content=section_content)
-            self.sections[tag or "default"] = section
+            self.sections[tag] = PromptSection(tag=tag, content=section_content)
 
     def add_section(self, section: PromptSection):
         """Add a new section or update an existing one."""
