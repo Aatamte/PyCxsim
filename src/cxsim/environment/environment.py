@@ -274,6 +274,13 @@ class Environment:
 
         self.calender.step()
 
+    def _match_action_arguments(self, valid_actions, action):
+        action_name, action_params = list(action.items())[0]
+        action_name = action_name.lower()
+        print(valid_actions)
+
+        return action_name, action_params
+
     def process_action(self, agent, action: Union[dict, Any]) -> Any:
 
         # Generate a mapping of action names from the agent's action space
@@ -288,8 +295,7 @@ class Environment:
             action_params = asdict(action)
         elif isinstance(action, dict):
             # Extract the action name and parameters
-            action_name, action_params = list(action.items())[0]
-            action_name = action_name.lower()
+            action_name, action_params = self._match_action_arguments(action_names, action)
         else:
             raise TypeError("action must be either a dataclass or a dictionary")
 
