@@ -1,5 +1,6 @@
 import re
 from typing import Union, List, Tuple, Dict, Any
+import logging
 
 
 class PromptSection:
@@ -118,9 +119,33 @@ class PromptSection:
 
 
 class PromptTemplate:
-    def __init__(self, file_path: str = None, initial_data: str = None, section_headers: str = "[]", variable_indicators: str = "{}"):
+    """
+    A class to handle prompt templates, allowing loading from a file or a string,
+    and managing sections and variables within the template.
+    """
+
+    def __init__(self, file_path: str = None, initial_data: str = None, section_headers: str = "[]",
+                 variable_indicators: str = "{}"):
+        """
+        Initialize the PromptTemplate instance.
+
+        Args:
+        file_path (str): Path to the file containing the template.
+        initial_data (str): String containing the initial data for the template.
+        section_headers (str): String to indicate the section headers.
+        variable_indicators (str): String to indicate the variable placeholders.
+        """
+        # Initialize properties
         self.sections = {}
         self.variables = {}
+        self._set_indicators(section_headers, variable_indicators)
+        self.content = ""
+
+        # Load content from file or string
+        content = self._load_content(file_path, initial_data)
+        self._parse_content(content)
+
+    def _set_indicators(self, section_headers, variable_indicators):
         mid_idx_headers = len(section_headers) // 2
         mid_idx_indicators = len(variable_indicators) // 2
         self.section_open = section_headers[:mid_idx_headers]
@@ -128,17 +153,58 @@ class PromptTemplate:
         self.variable_open = variable_indicators[:mid_idx_indicators]
         self.variable_close = variable_indicators[mid_idx_indicators:]
 
-        self.content = ""
+    def _load_content(self, file_path, initial_data):
+        """
+        Load content from a file path or a string.
 
+        Args:
+        file_path (str): Path to the file.
+        initial_data (str): String containing the data.
+
+        Returns:
+        str: The loaded content.
+        """
         if file_path:
-            with open(file_path, 'r', encoding='utf-8') as file:
-                initial_content = file.read()
+            return self._load_from_file_path(file_path)
         elif initial_data:
-            initial_content = initial_data
+            return self._load_from_str(initial_data)
         else:
+            logging.error("Either 'file_path' or 'initial_data' must be provided.")
             raise ValueError("Either 'file_path' or 'initial_data' must be provided.")
 
-        self._parse_content(initial_content)
+    def _load_from_str(self, content: str):
+        """
+        Load content from a string.
+
+        Args:
+        content (str): The content string.
+
+        Returns:
+        str: The same content string.
+        """
+        return content
+
+    def _load_from_file_path(self, file_path: str):
+        """
+        Load content from a file path.
+
+        Args:
+        file_path (str): The file path.
+
+        Returns:
+        str: The content read from the file.
+        """
+        if not os.path.exists(file_path):
+            logging.error(f"File not found: {file_path}")
+            raise FileNotFoundError(f"File not found: {file_path}")
+
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                return file.read()
+        except IOError as e:
+            logging.error(f"An error occurred while opening the file: {e}")
+            raise
+
 
     def update_content(self):
         if not all(
@@ -220,7 +286,7 @@ class PromptTemplate:
     def __setitem__(self, key: str, value: str):
         self.set_variable(key, value)
 
-    def __str__(self):
+    def __repr__(self):
         return self.get_prompt()
 
     def get_sections(self):
