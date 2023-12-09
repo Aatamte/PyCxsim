@@ -2,6 +2,7 @@ from dataclasses import fields
 from typing import List, Any
 import inspect
 
+
 def map_python_type_to_json(type_str: str) -> str:
     mapping = {
         "str": "string",
@@ -16,12 +17,10 @@ def map_python_type_to_json(type_str: str) -> str:
 
 
 class EnvironmentUtilities:
-    def __init__(self):
-        pass
+    def __init__(self, environment):
+        self.environment = environment
 
-    def format_artifact_descriptions(self, artifacts):
-        formatted_descriptions = "\n".join([f"{idx}: {artifact.get_description()}"for idx, artifact in enumerate(artifacts)])
-        return formatted_descriptions
+        self.format = Format(environment)
 
     def format_action_restrictions(self, action_restrictions):
         formatted_restrictions = ""
@@ -63,3 +62,14 @@ class EnvironmentUtilities:
             schema["parameters"]["required"].append(field_obj.name)
 
         return schema
+
+
+class Format:
+    def __init__(self, environment):
+        self.environment = environment
+
+    def artifact_descriptions(self):
+        formatted_descriptions = "\n".join(
+            [f"{idx}: {artifact.get_description()}" for idx, artifact in enumerate(self.environment.artifacts)])
+        return formatted_descriptions
+

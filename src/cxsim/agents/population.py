@@ -1,6 +1,6 @@
 import random
 from typing import List, Dict, Union, Type
-from cxsim.prompts.prompt import PromptTemplate
+from cxsim.io.text.prompts.prompt import PromptTemplate
 import copy
 
 
@@ -9,10 +9,7 @@ class Population:
             self,
             agent: Type,
             number_of_agents: int,
-            agent_kargs: dict,
-            system_prompt: Union[PromptTemplate, str] = None,
-            cognitive_prompt: Union[PromptTemplate, str] = None,
-            decision_prompt: Union[PromptTemplate, str] = None,
+            agent_kargs: dict = None,
             agent_params: Dict = None,
             action_restrictions: List = None,
             query_restrictions: List = None,
@@ -26,10 +23,7 @@ class Population:
         self.agent_params = agent_params
         self.action_restrictions = action_restrictions
         self.query_restrictions = query_restrictions
-        self.system_prompt = system_prompt
         self.prompt_arguments = prompt_arguments
-        self.cognitive_prompt = cognitive_prompt
-        self.decision_prompt = decision_prompt
         self.agent_inventory = agent_inventory
         self.resample = resample if resample else {}
         self.pre_calculated_values = {}
@@ -89,14 +83,6 @@ class Population:
         if self.query_restrictions:
             agent.query_restrictions = self.query_restrictions
 
-    def set_prompts(self, agent):
-        if self.system_prompt:
-            agent.connection.system_prompt = self._prepare_prompt(self.system_prompt)
-        if self.cognitive_prompt:
-            agent.connection.cognitive_prompt = self._prepare_prompt(self.cognitive_prompt)
-        if self.decision_prompt:
-            agent.connection.decision_prompt = self._prepare_prompt(self.decision_prompt)
-
     def _prepare_prompt(self, prompt):
         if isinstance(prompt, PromptTemplate):
             personalized_prompt = copy.deepcopy(prompt)
@@ -113,7 +99,6 @@ class Population:
             self.generate_inventory(agent)
             self.apply_restrictions(agent)
             self.generate_params(agent)
-            self.set_prompts(agent)
             population.append(agent)
         return population
 

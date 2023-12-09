@@ -9,6 +9,8 @@ from cxsim.gui.assets.path_definition import ASSET_PATH
 
 import time
 import dearpygui.dearpygui as dpg
+import os
+
 
 dpg.create_context()
 
@@ -149,8 +151,8 @@ class GUI:
             title='PyCxsim',
             width=self.dimension_config.total_width,
             height=self.dimension_config.total_height,
-            small_icon=ASSET_PATH.joinpath("large_icon.ico").__str__(),
-            large_icon=ASSET_PATH.joinpath("large_icon.ico").__str__()
+            small_icon=os.path.join(ASSET_PATH, "large_icon.ico").__str__(),
+            large_icon=os.path.join(ASSET_PATH, "large_icon.ico").__str__()
         )
         dpg.setup_dearpygui()
         dpg.show_viewport()

@@ -1,4 +1,4 @@
-from cxsim.agents.io.text_io import TextIO
+from cxsim.io.text.text_io import TextIO
 
 
 class IO:

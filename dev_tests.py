@@ -1,10 +1,12 @@
 import numpy as np
 from cxsim import Environment, Population, Agent
-from cxsim.artifacts import Marketplace
+
+from cxsim.artifacts.standard import Marketplace
+
 from cxsim.actions.action_restrictions import ActionRestriction
-from cxsim.artifacts.marketplace import BuyOrder, SellOrder, MarketPlaceQuery
-from cxsim.prompts.default_prompts import DEFAULT_DECISION_PROMPT, DEFAULT_SYSTEM_PROMPT
-from cxsim.econ import Demand, Supply, SupplyDemand
+from cxsim.artifacts.standard.marketplace import BuyOrder, SellOrder, MarketPlaceQuery
+from cxsim.io.text.prompts.default_prompts import DEFAULT_DECISION_PROMPT, DEFAULT_SYSTEM_PROMPT
+from cxsim.utilities.econ import Demand, Supply, SupplyDemand
 from cxsim.agents.agent import after_turn
 
 
@@ -17,7 +19,7 @@ class MyAgent(Agent):
         self.io.text.add_prompt(name="system", prompt=DEFAULT_SYSTEM_PROMPT)
         self.io.text.add_prompt("decision", DEFAULT_DECISION_PROMPT)
 
-        artifact_descriptions = self.environment.utils.format_artifact_descriptions(self.environment.artifacts)
+        artifact_descriptions = self.environment.utils.format.artifact_descriptions()
         action_restrictions = self.environment.utils.format_action_restrictions(self.action_restrictions)
 
         self.update_variables(
@@ -62,7 +64,7 @@ class MyAgent(Agent):
         _action = "SellOrder('shirts', 1, 1)"
         _actiontwo = "BuyOrder(good='shirts', quantity = 1, price = 1)"
 
-        observation = self.environment.process_action(self, action)
+        observation = self.environment.execute(self, action)
 
         self.io.text.add_message(role="assistant", content=str(action))
 

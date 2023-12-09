@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import is_dataclass
 from typing import Union
 import dataclasses
@@ -71,6 +71,10 @@ class Artifact:
         """
         pass
 
+    @abstractmethod
+    def reset(self, environment):
+        pass
+
     def should_continue(self):
         """
         Determine if the simulation or interaction with the artifact should continue.
@@ -90,10 +94,6 @@ class Artifact:
 
     def get_action_space_prompt(self):
         return [generate_prompt(action) for action in self.action_space]
-
-    @abstractmethod
-    def reset(self, environment):
-        pass
 
     def get_description(self):
         description = f"{self.name}\ndescription: {self.__doc__}\n"

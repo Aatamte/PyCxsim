@@ -1,9 +1,6 @@
-import numpy as np
-import plotly.graph_objs as go
-from scipy.optimize import fsolve
 from collections.abc import Callable
 
-from cxsim.econ.econ_utils import EquilibriumFinder
+from cxsim.utilities.econ.econ_utils import EquilibriumFinder
 
 
 class EconomicCurve:
@@ -43,6 +40,7 @@ class EconomicCurve:
         self.quantities = [shift_func(q) for q in self.quantities]
 
     def plot(self):
+        import plotly.graph_objs as go
         return go.Figure(
             go.Scatter(
                 x=self.quantities,
@@ -82,6 +80,7 @@ class SupplyDemand:
         )
 
     def plot(self):
+        import plotly.graph_objs as go
         # Determine the common range of quantities based on the available data
         min_quantity = max(min(self.supply.quantities), min(self.demand.quantities))
         max_quantity = min(max(self.supply.quantities), max(self.demand.quantities))

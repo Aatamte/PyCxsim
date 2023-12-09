@@ -1,5 +1,5 @@
 from typing import Union, List
-from cxsim.prompts.prompt import PromptTemplate
+from cxsim.io.text.prompts.prompt import PromptTemplate
 
 
 class TextIO:

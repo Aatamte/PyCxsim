@@ -1,6 +1,4 @@
 import dearpygui.dearpygui as dpg
-import numpy as np
-import random
 from cxsim.gui.std_visuals.logs_popup_window import LogsWindow
 from cxsim.gui.std_visuals.agent_overview import AgentOverview
 from cxsim.gui.std_tabs.marketplace_tab import MarketplaceTab

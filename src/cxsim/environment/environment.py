@@ -1,13 +1,14 @@
 import time
 import logging
-import numpy as np
-import names
 from collections import deque
 from functools import wraps
 from dataclasses import is_dataclass, asdict
 from typing import Union, Any
 import inspect
 from dataclasses import fields
+
+# third-party libraries (should be removed at some point)
+import names
 
 # core
 from cxsim.agents.agent import Agent
@@ -110,7 +111,7 @@ class Environment:
         self.event_handler = EventHandler(self)
 
         # utilities
-        self.utils: EnvironmentUtilities = EnvironmentUtilities()
+        self.utils: EnvironmentUtilities = EnvironmentUtilities(self)
 
         # agent queue
         self.agent_queue = deque()
@@ -300,7 +301,7 @@ class Environment:
 
         return action_name, mapped_params
 
-    def process_action(self, agent, action: Union[dict, Any]) -> Any:
+    def execute(self, agent, action: Union[dict, Any]) -> Any:
 
         # Generate a mapping of action names from the agent's action space
         action_names = {(item.__name__.lower()): item for value in agent.action_space.values() for item in value}

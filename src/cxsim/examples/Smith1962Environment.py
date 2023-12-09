@@ -5,7 +5,6 @@ from cxsim.actions.action_restrictions import ActionRestriction
 from cxsim.artifacts.marketplace import BuyOrder, SellOrder, MarketPlaceQuery
 from cxsim.prompts.default_prompts import DEFAULT_DECISION_PROMPT, DEFAULT_SYSTEM_PROMPT
 from cxsim.econ import Demand, Supply, SupplyDemand
-from cxsim.agents.backends.language_backend import LanguageBackend
 
 import numpy as np
 
@@ -15,7 +14,6 @@ MODEL_ID = ""
 class SmithAgent(Agent):
     def __init__(self, model_id):
         super().__init__()
-        self.backend = LanguageBackend(model_id=model_id)
         self.system_prompt = DEFAULT_SYSTEM_PROMPT
         self.decision_prompt = DEFAULT_DECISION_PROMPT
         self.functions = None

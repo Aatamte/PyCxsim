@@ -6,14 +6,13 @@
 
 ## Installation
 
-You can install the latest version of PyCxsim directly from the GitHub repository (>=Python 3.8):
+(Recommended) You can install the latest version of PyCxsim with this command:
 
 ```bash
 pip install git+https://github.com/Aatamte/PyCxsim.git
 ```
 
-or directly from pip:
-
+An (outdated) version is also hosted on Pypi: 
 ```bash
 pip install pycxsim
 ```
@@ -22,7 +21,7 @@ pip install pycxsim
 
 PyCxsim is a framework to simulate computational agents in a confined environment.
 
-### Structure
+### 
 
 ```Python
 from cxsim import Environment
@@ -47,14 +46,25 @@ for episode in cxenv.iter_episodes():
     
     for step in cxenv.iter_steps():
         # start the next step
+        
+        for agent in cxenv.agents:
+          cxenv.execute(agent, "action")
+          
         cxenv.step()
 
 ```
 
+### (TODO) Building Agents
+
+#### Multimodal 
+
+1. Text
+2. Vision
+
 
 ### GUI
 
-One of the unique (and cool!) features of Pycxsim is the embedded GUI.
+One of the unique (and cool!) features of Pycxsim is the embedded GUI. For now, the GUI is being rendered with dearpygui. 
 
 ![Image Description](./docs/assets/GUI_example.JPG)
 

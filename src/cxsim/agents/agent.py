@@ -4,7 +4,7 @@ from cxsim.agents.tools.tool import Tool
 from cxsim.agents.traits.memory.long_term_memory import LongTermMemory
 from cxsim.agents.traits.inventory import Inventory
 from cxsim.agents.traits.memory.working_memory import WorkingMemory
-from cxsim.agents.io.io import IO
+from cxsim.io.io import IO
 
 from copy import deepcopy
 from abc import abstractmethod
