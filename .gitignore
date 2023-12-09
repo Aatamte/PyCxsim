@@ -2,3 +2,5 @@
 docs/_build/
 docs/.doctrees/
 .idea
+
+/gui/node_modules/
