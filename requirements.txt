@@ -3,3 +3,4 @@ numpy>=1.19.5
 dearpygui>=1.9.1
 names>=0.3.0
 websockets~=12.0
+flask~=3.0.0
