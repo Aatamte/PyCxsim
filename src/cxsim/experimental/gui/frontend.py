@@ -1,9 +1,10 @@
+import os
 from flask import Flask, send_from_directory
-
 
 class PyCxsimFrontend:
     def __init__(self):
-        self.app = Flask(__name__, static_folder='build', static_url_path='')
+        build_dir = os.path.join(os.path.dirname(__file__), 'build')
+        self.app = Flask(__name__, static_folder=build_dir, static_url_path='')
         self.add_routes()
 
     def add_routes(self):
@@ -19,7 +20,7 @@ class PyCxsimFrontend:
     def run(self):
         self.app.run()
 
-
 if __name__ == '__main__':
     PyCxsimFrontend().run()
+
 
