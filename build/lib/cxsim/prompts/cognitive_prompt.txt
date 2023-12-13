@@ -1,0 +1,15 @@
+[cognitive prompt]
+
+Last Action: {action_history}
+
+RESULT OF ACTION: {observation}
+
+Parameters: {params}
+
+This is the reflection step.
+Consider your goal and past actions, and update your future plan and memory.
+Keep any information you might need in the future under INFORMATION
+
+FUTURE MEMORY:
+    - PLAN:
+    - INFORMATION:
