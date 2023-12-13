@@ -28,6 +28,10 @@ from cxsim.environment.event import Event, EventHandler
 from cxsim.actions.standard import STANDARD_ACTIONS
 
 
+# GUI
+from cxsim.environment.backend.websocket_server import WebSocketServer
+
+
 class UnsupportedItemType(Exception):
     """Exception raised when an unsupported item is added to the environment."""
 
@@ -124,11 +128,19 @@ class Environment:
         if self.gui:
             self.gui.compile(self)
 
+        self.backend = WebSocketServer(self)
+
         self._current_time = time.perf_counter()
         self._past_time = time.perf_counter()
 
         # mode
         self.strict = False
+
+        # other variables
+        self.status = 0
+
+        if self.backend:
+            self.backend.run()
 
     def add_agent(self, agent: Agent):
         """
@@ -347,6 +359,7 @@ class Environment:
             func()
 
     def step(self):
+        self.backend.step()
         if self.gui:
             self.gui.run_event_loop(self._current_time)
 

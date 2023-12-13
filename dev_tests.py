@@ -104,7 +104,6 @@ class Smith1962Environment:
             self,
             plot_supply_demand: bool = False,
             market_depth: int = 5,
-
     ):
         pass
 

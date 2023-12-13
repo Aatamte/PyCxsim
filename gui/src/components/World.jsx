@@ -1,14 +1,22 @@
 // World.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, IconButton, VStack, HStack } from '@chakra-ui/react';
-import { Stage, Layer, Rect } from 'react-konva';
+import { Stage, Layer, Rect, Circle } from 'react-konva';
 import { MdZoomIn, MdZoomOut, MdArrowBack, MdArrowForward, MdArrowUpward, MdArrowDownward } from 'react-icons/md';
 
 const World = () => {
+    const agents = [
+        {"name": "Agent 1", "x_position": 1, "y_position": 2},
+        {"name": "Agent 3", "x_position": 1, "y_position": 4},
+        {"name": "Agent 4", "x_position": 4, "y_position": 3}
+    ]
+
     const containerRef = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-    const [scale, setScale] = useState(1);
+    const [scale, setScale] = useState(0.75);
     const [position, setPosition] = useState({ x: 0, y: 0 });
+
+    const gridSize = 15; // Size of the grid (10x10)
 
     useEffect(() => {
         if (containerRef.current) {
@@ -19,9 +27,7 @@ const World = () => {
                 height: containerHeight,
             });
 
-            // Calculate initial position to center the grid both horizontally and vertically
-            const gridSize = 10;
-            const cellSize = containerWidth / gridSize;
+            const cellSize = Math.min(containerWidth, containerHeight) / gridSize; // Use the smaller dimension for square cells
             const gridWidth = gridSize * cellSize;
             const gridHeight = gridSize * cellSize;
             setPosition({
@@ -31,8 +37,9 @@ const World = () => {
         }
     }, []);
 
-    const gridSize = 10; // Size of the grid (10x10)
+
     const cellSize = dimensions.width / gridSize; // Cell size based on container width
+
 
     // Zoom and Pan functions
     const zoomIn = () => setScale(scale => scale * 1.2);
@@ -59,6 +66,18 @@ const World = () => {
         return grid;
     };
 
+    const renderAgents = () => {
+        return agents.map((agent, index) => (
+            <Circle
+                key={`agent-${index}`}
+                x={(agent.x_position * cellSize) + (cellSize / 2)}
+                y={(agent.y_position * cellSize) + (cellSize / 2)}
+                radius={cellSize / 2}
+                fill="blue"
+            />
+        ));
+    };
+
     return (
         <Box bg="black" w="100%" h="100%" color="white" ref={containerRef} position="relative">
             <Stage
@@ -71,8 +90,10 @@ const World = () => {
             >
                 <Layer>
                     {renderGrid()}
+                    {renderAgents()}
                 </Layer>
             </Stage>
+            {/* Pan and Zoom Buttons */}
             <VStack position="absolute" bottom="20px" left="20px" spacing="10px">
                 <IconButton icon={<MdArrowUpward />} onClick={() => pan(0, 50)} colorScheme="blue" aria-label="Pan Up" />
                 <HStack spacing="10px">
