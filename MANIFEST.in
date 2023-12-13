@@ -1,1 +1,1 @@
-recursive-include cxsim/experimental/gui *
+recursive-include src/cxsim/experimental/gui/build *

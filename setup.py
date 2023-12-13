@@ -15,7 +15,7 @@ setup(
     author="Aaron Tamte",
     author_email="aaron2804@gmail.com",
     packages=find_packages(where='src'),
-    python_requires='>=3.7',
+    python_requires='>=3.8',
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=requirements,  # List of dependencies
