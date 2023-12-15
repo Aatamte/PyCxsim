@@ -1,7 +1,7 @@
 
 
 class WebSocketClient {
-    constructor(url, port) {
+    constructor(url, port, onMessage) {
         this.url = `${url}:${port}`;
         this.socket = new WebSocket(this.url);
 
@@ -18,9 +18,19 @@ class WebSocketClient {
             console.log("WebSocket connection closed.");
         };
 
+        this.onMessage = onMessage;
+
         this.socket.onmessage = (event) => {
             this.handleMessage(event.data);
         };
+    }
+
+    handleMessage(data) {
+        data = JSON.parse(data)
+        // Call the provided message handling function
+        if (this.onMessage) {
+            this.onMessage(data);
+        }
     }
 
     getStatus() {
@@ -82,31 +92,6 @@ class WebSocketClient {
             console.log(message)
         } else {
             console.error("WebSocket is not open. Message not sent:", message);
-        }
-    }
-
-    handleMessage(data) {
-        const message = JSON.parse(data);
-        console.log(message)
-
-        switch (message.type) {
-            case 'dict':
-                // Handle dictionary
-                break;
-            case 'list':
-                // Handle list
-                break;
-            case 'dataframe':
-                // Handle DataFrame
-                break;
-            case 'numpy_array':
-                // Handle NumPy array
-                break;
-            case 'string':
-                // Handle string
-                break;
-            default:
-                console.log('Unknown data type:', message.type);
         }
     }
 

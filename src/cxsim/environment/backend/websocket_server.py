@@ -93,10 +93,14 @@ class EnvironmentWrapper:
 
     def get_env_core_variables(self):
         return {
-            "episode": self.environment.current_episode,
-            "step": self.environment.current_step,
-            "max_episodes": self.environment.max_episodes,
-            "max_steps": self.environment.max_steps
+            "type": "ENVIRONMENT_VARIABLES",
+            "content": {
+                "name": self.environment.name,
+                "currentEpisode": self.environment.current_episode,
+                "currentStep": self.environment.current_step,
+                "maxEpisodes": self.environment.max_episodes,
+                "maxSteps": self.environment.max_steps
+            }
         }
 
 

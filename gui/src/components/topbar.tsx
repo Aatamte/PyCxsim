@@ -4,11 +4,11 @@ import {
     CircularProgress, CircularProgressLabel, IconButton, Box
 } from '@chakra-ui/react';
 import LogoImage from '../assets/pycxsim_full_logo_no_background.png';
-
-import WebSocketClient from "./connection/websocket_client";
+import WebSocketClient from "./websocket_client";
 import { MdPause, MdPlayArrow, MdSkipNext, MdSkipPrevious } from "react-icons/md";
 import TurnAnimation from "./TurnAnimation";
 import { AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, AlertDialogOverlay } from '@chakra-ui/react';
+import { useData } from './DataProvider';
 
 type WebSocketStatus = "connecting" | "open" | "closing" | "closed" | "unknown";
 
@@ -29,11 +29,8 @@ const TopBar: React.FC = () => {
     const [errorUrl, setErrorUrl] = useState('');
     const cancelRef = useRef<HTMLButtonElement>(null); // Correctly typed ref for the AlertDialog
 
-        // Define the error handling callback
-    const handleReconnectError = (url: string) => {
-        setErrorUrl(url);
-        setIsErrorDialogOpen(true);
-    };
+    const { state, dispatch } = useData();
+    const environment = state.environment;
 
     useEffect(() => {
         const client = new WebSocketClient('ws://localhost', '8765');
@@ -126,11 +123,15 @@ const TopBar: React.FC = () => {
                 w="auto"
             />
             <Divider orientation="vertical" borderColor="whiteAlpha.600" mx="4" height="50%" alignSelf="center" />
-               <Flex justify="space-between" align="center" h="100%">
+            <Text fontSize="lg">
+              {environment.name}
+            </Text>
+            <Divider orientation="vertical" />
+            <Flex justify="space-between" align="center" h="100%">
         <VStack spacing={4} width="200px"> {/* Fixed width */}
           <Text fontSize="sm">Episode Progress</Text>
-          <CircularProgress value={episodeProgress} color="green.400">
-            <CircularProgressLabel>{`${currentEpisode}/${maxEpisodes}`}</CircularProgressLabel>
+          <CircularProgress value={(environment.currentEpisode / environment.maxEpisodes) * 100} color="green.400">
+            <CircularProgressLabel>{`${environment.currentEpisode}/${environment.maxEpisodes}`}</CircularProgressLabel>
           </CircularProgress>
         </VStack>
 
@@ -138,15 +139,17 @@ const TopBar: React.FC = () => {
 
         <VStack spacing={4} width="200px"> {/* Fixed width */}
           <Text fontSize="sm">Step Progress</Text>
-          <CircularProgress value={stepProgress} color="blue.400">
-            <CircularProgressLabel>{`${currentStep}/${maxSteps}`}</CircularProgressLabel>
+          <CircularProgress value={(environment.currentStep / environment.maxSteps) * 100} color="blue.400">
+            <CircularProgressLabel>{`${environment.currentStep}/${environment.maxSteps}`}</CircularProgressLabel>
           </CircularProgress>
         </VStack>
 
         <Divider orientation="vertical" />
 
         <VStack spacing={2}>
-           <Text fontSize="sm">Status: {simulationStatus}</Text> {/* Display internal status */}
+          <Text fontSize="sm">
+              {simulationStatus}
+            </Text>
           <Flex>
             <IconButton icon={<MdSkipPrevious />} size="lg" aria-label="Last Step" m="2"  onClick={() => sendButtonAction('back')} />
               <IconButton icon={<MdPause />} size="lg" aria-label="Pause" m="2"   onClick={() => sendButtonAction('pause')} />
@@ -154,18 +157,12 @@ const TopBar: React.FC = () => {
             <IconButton icon={<MdSkipNext />} size="lg" aria-label="Next Step" m="2"   onClick={() => sendButtonAction('next')} />
           </Flex>
         </VStack>
-
-        <Divider orientation="vertical" />
-        <Box flex="1" pl="4">
-          <TurnAnimation />
-        </Box>
        <Divider orientation="vertical" />
       </Flex>
             <Button colorScheme="blue" onClick={handlePing}>Ping</Button>
             <Button colorScheme="blue" onClick={handleReconnect}>Reconnect</Button>
             <VStack spacing={1} align="right">
                 <Circle size="20px" bg={webSocketIndicatorColor[webSocketStatus]} /> {/* Larger circle */}
-                <Text fontSize="sm">{webSocketStatusText[webSocketStatus]}</Text> {/* Status text */}
             </VStack>
 
         </Flex>

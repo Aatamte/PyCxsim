@@ -35,6 +35,11 @@ from cxsim.environment.backend.websocket_server import WebSocketServer
 class UnsupportedItemType(Exception):
     """Exception raised when an unsupported item is added to the environment."""
 
+ENV_STATUS = {
+    0: "Not Running",
+    1: "Initialized, not running"
+}
+
 
 class Environment:
     """
@@ -56,7 +61,6 @@ class Environment:
             step_delay: int = 2,
             gui: GUI = GUI(),
             verbose: int = 0,
-            reuse_names: bool = True,
             seed: int = None,
     ):
         """
