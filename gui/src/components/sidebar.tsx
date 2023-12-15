@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Tabs, TabList, TabPanels, TabPanel, Tab } from '@chakra-ui/react';
 import AgentsTab from "./tabs/agents/agents";
+import EnvironmentDisplay from "./EnvironmentPage";
 
 const Sidebar: React.FC = () => {
     return (
@@ -15,7 +16,7 @@ const Sidebar: React.FC = () => {
                 </TabList>
                 <TabPanels overflowY="auto" h="80vh"> {/* Added scrollable property and height */}
                     <TabPanel>
-                        <p>Environment content</p>
+                        <EnvironmentDisplay/>
                     </TabPanel>
                     <TabPanel>
                         <AgentsTab />

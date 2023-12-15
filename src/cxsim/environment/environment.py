@@ -127,7 +127,7 @@ class Environment:
         self.calender = Calender()
         self.item_handler = ItemHandler(self)
 
-        self.gui = gui
+        self.gui = None
 
         if self.gui:
             self.gui.compile(self)
@@ -141,7 +141,9 @@ class Environment:
         self.strict = False
 
         # other variables
-        self.status = 0
+        self.STATUS = 0
+        self.x_size = 10
+        self.y_size = 10
 
         if self.backend:
             self.backend.run()
@@ -229,6 +231,10 @@ class Environment:
         # assert that all artifacts have necessary functionality
         self.validate_artifacts()
 
+        #
+        self.x_size = self.n_agents
+        self.y_size = 10
+
         # go through the artifacts and set them up
         for name, artifact in self.action_handler.artifacts.items():
             artifact.set_up(self)
@@ -239,7 +245,7 @@ class Environment:
 
             for agent in self.agents:
                 agent.action_space = self.action_space.copy()
-                agent.step = wrap_with_background_task(agent.step, agent, self.gui)
+                #agent.step = wrap_with_background_task(agent.step, agent, self.gui)
                 agent.environment = self
                 agent.compile()
 
@@ -363,7 +369,10 @@ class Environment:
             func()
 
     def step(self):
-        self.backend.step()
+        if self.backend:
+            self.backend.step()
+            self._backend_while_loop()
+
         if self.gui:
             self.gui.run_event_loop(self._current_time)
 
@@ -381,6 +390,14 @@ class Environment:
         self.action_handler.step()
 
         self.update_simulation_state()
+
+    def _backend_while_loop(self):
+        while self.STATUS == 0:
+            time.sleep(0.1)
+
+        if self.STATUS == 2:
+            print("status is next")
+            self.STATUS = 0
 
     def describe(self):
         pass

@@ -1,8 +1,12 @@
 // World.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, IconButton, VStack, HStack } from '@chakra-ui/react';
-import { Stage, Layer, Rect, Circle } from 'react-konva';
+import { Text, Stage, Layer, Rect, Circle } from 'react-konva';
 import { MdZoomIn, MdZoomOut, MdArrowBack, MdArrowForward, MdArrowUpward, MdArrowDownward } from 'react-icons/md';
+import {useData} from "./DataProvider";
+
+const DEFAULT_GRID_SIZE = 10;
+
 
 const World = () => {
     const agents = [
@@ -10,13 +14,20 @@ const World = () => {
         {"name": "Agent 3", "x_position": 1, "y_position": 4},
         {"name": "Agent 4", "x_position": 4, "y_position": 3}
     ]
-
+    const { state, handleReconnect } = useData();
     const containerRef = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
     const [scale, setScale] = useState(0.75);
     const [position, setPosition] = useState({ x: 0, y: 0 });
 
-    const gridSize = 15; // Size of the grid (10x10)
+    const gridSize = state.environment.x_size || DEFAULT_GRID_SIZE;
+
+    useEffect(() => {
+        if (containerRef.current) {
+            // ... existing useEffect code ...
+        }
+    }, [containerRef, gridSize]); // Add gridSize as a dependency
+
 
     useEffect(() => {
         if (containerRef.current) {
@@ -67,14 +78,26 @@ const World = () => {
     };
 
     const renderAgents = () => {
-        return agents.map((agent, index) => (
-            <Circle
-                key={`agent-${index}`}
-                x={(agent.x_position * cellSize) + (cellSize / 2)}
-                y={(agent.y_position * cellSize) + (cellSize / 2)}
-                radius={cellSize / 2}
-                fill="blue"
-            />
+        return Object.values(state.environment.agents).map((agent, index) => (
+            <React.Fragment key={`agent-${agent.name}`}>
+                <Circle
+                    x={(agent.x_pos * cellSize) + (cellSize / 2)}
+                    y={(agent.y_pos * cellSize) + (cellSize / 2)}
+                    radius={cellSize / 2}
+                    fill="blue"
+                />
+                <Text
+                    x={(agent.x_pos * cellSize) + (cellSize / 2)}
+                    y={(agent.y_pos * cellSize) + (cellSize / 2)}
+                    text={agent.name}
+                    fontSize={12} // Adjust font size as needed
+                    fill="white" // Text color
+                    align="center"
+                    verticalAlign="middle"
+                    offsetX={(cellSize / 2)} // Center the text horizontally
+                    offsetY={(cellSize / 2)} // Center the text vertically
+                />
+            </React.Fragment>
         ));
     };
 

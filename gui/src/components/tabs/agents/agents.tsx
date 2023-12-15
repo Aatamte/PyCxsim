@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Tabs, TabList, TabPanels, Tab, TabPanel, Box, Select } from '@chakra-ui/react';
 import MessagingBox from "./io/MessagingBox";
+import {useData} from "../../DataProvider";
 
 const AgentsTab: React.FC = () => {
-    const agents = ["Agent 1", "Agent 2", "Agent 3"];
-    const [selectedAgent, setSelectedAgent] = useState(agents[0]);
+    const { state, handleReconnect } = useData();
+    const [selectedAgent, setSelectedAgent] = useState(state.environment.agentNames[0]);
 
     return (
         <Box p={0}>
@@ -13,8 +14,9 @@ const AgentsTab: React.FC = () => {
                 mb={4}
                 value={selectedAgent}
                 onChange={(e) => setSelectedAgent(e.target.value)}
+                style={{ color: 'black' }} // Inline style for black text
             >
-                {agents.map((agent, index) => (
+                {state.environment.agentNames.map((agent, index) => (
                     <option key={index} value={agent}>{agent}</option>
                 ))}
             </Select>

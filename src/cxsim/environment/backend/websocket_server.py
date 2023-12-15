@@ -2,24 +2,35 @@ import asyncio
 import websockets
 import threading
 import json
+from cxsim.environment.backend.environment_manager import EnvironmentManager
+
+
+def serialize(data):
+    try:
+        return json.dumps(data)
+    except TypeError as e:
+        print(f"Failed to serialize data: {e}")
+        return None
 
 
 class WebSocketServer:
     def __init__(self, environment, host='localhost', port=8765):
-        self.environment_wrapper = EnvironmentWrapper(environment)
+        self.environment_manager: EnvironmentManager = EnvironmentManager(environment)
         self.host = host
         self.port = port
         self.clients = set()
         self.loop = None
 
     def step(self):
+        print(self.environment_manager.environment.STATUS)
         # send over core data
-        data = self.environment_wrapper.get_env_core_variables()
+        print("sending data over websocket")
+        data = self.environment_manager.get_env_core_variables()
 
         self.send_to_all_clients(data)
 
     def compile(self):
-        data = self.environment_wrapper.get_agent_names
+        data = self.environment_manager.get_agent_names
         self.send_to_all_clients(data)
 
     async def register(self, websocket):
@@ -28,16 +39,30 @@ class WebSocketServer:
     async def unregister(self, websocket):
         self.clients.remove(websocket)
 
-    async def echo(self, websocket, path):
+    async def process_message(self, websocket, path):
         await self.register(websocket)
         try:
             async for message in websocket:
-                print(f"Received message: {message}")
+                # Decode the message from JSON format
+                try:
+                    decoded_message = json.loads(message)
+                except json.JSONDecodeError:
+                    print(f"Received non-JSON message: {message}")
+                    continue  # Skip this message
+                response = self.environment_manager.handle_message(decoded_message)
+
+                if response is not None:
+                    if isinstance(response, list):
+                        for r in response:
+                            await websocket.send(serialize(r))
+                    else:
+                        await websocket.send(serialize(response))
+
         finally:
             await self.unregister(websocket)
 
     async def start(self):
-        async with websockets.serve(self.echo, self.host, self.port):
+        async with websockets.serve(self.process_message, self.host, self.port):
             print(f"WebSocket Server started at ws://{self.host}:{self.port}")
             await asyncio.Future()  # Run the server indefinitely
 
@@ -65,51 +90,4 @@ class WebSocketServer:
 
         if self.loop is not None:
             asyncio.run_coroutine_threadsafe(self._send_to_all_clients(_data), self.loop)
-
-
-class EnvironmentWrapper:
-    def __init__(self, environment):
-        self.environment = environment
-
-    def compile(self):
-        # send over core data
-        pass
-
-    @property
-    def check_environment_status(self):
-
-        return {
-
-        }
-
-    def get_grid_size(self):
-        pass
-
-    @property
-    def get_agent_names(self):
-        return {
-            "agent_names": self.environment.agents
-        }
-
-    def get_env_core_variables(self):
-        return {
-            "type": "ENVIRONMENT_VARIABLES",
-            "content": {
-                "name": self.environment.name,
-                "currentEpisode": self.environment.current_episode,
-                "currentStep": self.environment.current_step,
-                "maxEpisodes": self.environment.max_episodes,
-                "maxSteps": self.environment.max_steps
-            }
-        }
-
-
-
-
-
-
-if __name__ == "__main__":
-    server = WebSocketServer(None)  # Replace None with an actual environment object if needed
-    server.run()
-
 
