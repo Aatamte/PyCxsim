@@ -57,8 +57,8 @@ class MyAgent(Agent):
         self.io.text.format.compress_messages(n_steps_back=2)
 
     def step(self):
+        print("step")
         self.io.text.add_message("user", self.io.text.get_updated_prompt("decision"))
-
         action = self.determine_action()
 
         _action = "SellOrder('shirts', 1, 1)"
@@ -67,6 +67,8 @@ class MyAgent(Agent):
         observation = self.environment.execute(self, action)
 
         self.io.text.add_message(role="assistant", content=str(action))
+
+        print("step messages", self.io.text.full_messages)
 
         return None
 
@@ -203,3 +205,4 @@ if __name__ == '__main__':
     smithenv = Smith1962Environment(2)
 
     smithenv.test_one()
+

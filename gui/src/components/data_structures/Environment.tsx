@@ -37,6 +37,20 @@ export default class Environment {
 
   }
 
+    clear() {
+        // Reset step and episode counters
+        this.currentStep = 0;
+        this.currentEpisode = 0;
+
+        // Clear agent-related data
+        this.agentNames = [];
+        this.agents = {};
+
+        // Clear artifact-related data
+        this.artifactNames = [];
+    }
+
+
   updateEnvironment(key: string, value: any) {
     if (key in this) {
       this[key] = value;

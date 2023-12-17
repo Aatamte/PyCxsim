@@ -6,6 +6,7 @@ from dataclasses import is_dataclass, asdict
 from typing import Union, Any
 import inspect
 from dataclasses import fields
+import random
 
 # third-party libraries (should be removed at some point)
 import names
@@ -223,6 +224,32 @@ class Environment:
             assert artifact.reset.__code__ != Artifact.reset.__code__, "process_query method must be implemented by subclass"
             assert artifact.process_action.__code__ != Artifact.process_action.__code__, "process_action method must be implemented by subclass"
 
+    def _assign_agent_positions(self):
+        # Generate all possible positions
+        all_positions = [(x, y) for x in range(self.x_size) for y in range(self.y_size)]
+
+        # Shuffle the list of positions
+        random.shuffle(all_positions)
+
+        for agent in self.agents:
+            while all_positions:
+                # Pop a position from the list
+                x_pos, y_pos = all_positions.pop()
+
+                # Check if neighboring positions are already occupied
+                neighbors = [(x_pos + dx, y_pos + dy) for dx in range(-1, 2) for dy in range(-1, 2)]
+                if not any(neighbor in all_positions for neighbor in neighbors):
+                    # Assign the position to the agent if neighbors are not in the list
+                    agent.x_pos = x_pos
+                    agent.y_pos = y_pos
+                    break
+
+            if agent.x_pos is None or agent.y_pos is None:
+                raise ValueError("Unable to assign a valid position for all agents")
+
+        if len(all_positions) < len(self.agents):
+            raise ValueError("Insufficient unique positions available for all agents")
+
     def compile(self):
         self._start_time = time.perf_counter()
         # assert that all agents have necessary functionality
@@ -232,8 +259,9 @@ class Environment:
         self.validate_artifacts()
 
         #
-        self.x_size = self.n_agents
-        self.y_size = 10
+        SIZE_FACTOR = 5
+        self.x_size = min(self.n_agents * SIZE_FACTOR, 10)
+        self.y_size = min(self.n_agents * SIZE_FACTOR, 10)
 
         # go through the artifacts and set them up
         for name, artifact in self.action_handler.artifacts.items():
@@ -243,11 +271,13 @@ class Environment:
 
             artifact.agents = self.agent_id_lookup
 
-            for agent in self.agents:
-                agent.action_space = self.action_space.copy()
-                #agent.step = wrap_with_background_task(agent.step, agent, self.gui)
-                agent.environment = self
-                agent.compile()
+        for agent in self.agents:
+            agent.action_space = self.action_space.copy()
+            #agent.step = wrap_with_background_task(agent.step, agent, self.gui)
+            agent.environment = self
+            agent.compile()
+
+        self._assign_agent_positions()
 
         self.n_artifacts = len(self.action_handler.artifacts)
         self._is_prepared = True

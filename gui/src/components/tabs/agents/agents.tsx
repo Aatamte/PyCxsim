@@ -7,6 +7,8 @@ const AgentsTab: React.FC = () => {
     const { state, handleReconnect } = useData();
     const [selectedAgent, setSelectedAgent] = useState(state.environment.agentNames[0]);
 
+
+
     return (
         <Box p={0}>
             <Select
@@ -39,19 +41,27 @@ const AgentsTab: React.FC = () => {
                     </TabList>
                     <TabPanels>
                         <TabPanel>
-                            <MessagingBox></MessagingBox>
+                            <MessagingBox selectedAgent={selectedAgent}/>
                         </TabPanel>
-                        <TabPanel>
-                            <p>Inventory Content</p>
-                            {/* Add your Inventory content here */}
-                        </TabPanel>
+                    <TabPanel>
+                        {selectedAgent && state.environment.agents[selectedAgent] ?
+                            Object.entries(state.environment.agents[selectedAgent].inventory).map(([key, value]: [string, any], index: number) => (
+                                <div key={index}>{`${key}: ${JSON.stringify(value)}`}</div>
+                            ))
+                            : <p>No agent selected or agent not found</p>
+                        }
+                    </TabPanel>
                         <TabPanel>
                             <p>Actions Content</p>
                             {/* Add your Actions content here */}
                         </TabPanel>
                         <TabPanel>
-                            <p>Parameters Content</p>
-                            {/* Add your Parameters content here */}
+                            {selectedAgent && state.environment.agents[selectedAgent] ?
+                            Object.entries(state.environment.agents[selectedAgent].parameters).map(([key, value]: [string, any], index: number) => (
+                                <div key={index}>{`${key}: ${JSON.stringify(value)}`}</div>
+                            ))
+                            : <p>No agent selected or agent not found</p>
+                        }
                         </TabPanel>
                     </TabPanels>
                 </Tabs>

@@ -9,11 +9,6 @@ const DEFAULT_GRID_SIZE = 10;
 
 
 const World = () => {
-    const agents = [
-        {"name": "Agent 1", "x_position": 1, "y_position": 2},
-        {"name": "Agent 3", "x_position": 1, "y_position": 4},
-        {"name": "Agent 4", "x_position": 4, "y_position": 3}
-    ]
     const { state, handleReconnect } = useData();
     const containerRef = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -78,6 +73,7 @@ const World = () => {
     };
 
     const renderAgents = () => {
+        console.log(state.environment.agents)
         return Object.values(state.environment.agents).map((agent, index) => (
             <React.Fragment key={`agent-${agent.name}`}>
                 <Circle

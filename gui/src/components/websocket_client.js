@@ -122,7 +122,6 @@ class WebSocketClient {
         };
 
         this.socket.onmessage = (event) => {
-            console.log("received message: ", event)
             if (this.callbacks.onMessage) {
                 this.callbacks.onMessage(JSON.parse(event.data))
             }

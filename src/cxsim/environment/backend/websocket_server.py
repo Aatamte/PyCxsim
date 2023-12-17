@@ -2,6 +2,7 @@ import asyncio
 import websockets
 import threading
 import json
+
 from cxsim.environment.backend.environment_manager import EnvironmentManager
 
 
@@ -20,12 +21,16 @@ class WebSocketServer:
         self.port = port
         self.clients = set()
         self.loop = None
+        self.environment = environment
 
     def step(self):
-        print(self.environment_manager.environment.STATUS)
         # send over core data
         print("sending data over websocket")
-        data = self.environment_manager.get_env_core_variables()
+
+        data = self.environment_manager.step_variables
+
+        for agent in self.environment.agents:
+            print(agent.io.text.full_messages)
 
         self.send_to_all_clients(data)
 
@@ -50,13 +55,7 @@ class WebSocketServer:
                     print(f"Received non-JSON message: {message}")
                     continue  # Skip this message
                 response = self.environment_manager.handle_message(decoded_message)
-
-                if response is not None:
-                    if isinstance(response, list):
-                        for r in response:
-                            await websocket.send(serialize(r))
-                    else:
-                        await websocket.send(serialize(response))
+                self.send_to_all_clients(response)
 
         finally:
             await self.unregister(websocket)
@@ -81,13 +80,22 @@ class WebSocketServer:
             await asyncio.wait([client.send(data) for client in self.clients])
 
     def send_to_all_clients(self, data):
-        # Serialize the data to a JSON string
-        try:
-            _data = json.dumps(data)
-        except TypeError as e:
-            print(f"Failed to serialize data to JSON: {e}")
+        data_list = []
+        if data is None:
             return
+        elif isinstance(data, list):
+            data_list = data
+        else:
+            data_list.append(data)
 
-        if self.loop is not None:
-            asyncio.run_coroutine_threadsafe(self._send_to_all_clients(_data), self.loop)
+        for d in data_list:
+            # Serialize the data to a JSON string
+            try:
+                _data = json.dumps(d)
+            except TypeError as e:
+                print(f"Failed to serialize data to JSON: {e}")
+                return
+
+            if self.loop is not None:
+                asyncio.run_coroutine_threadsafe(self._send_to_all_clients(_data), self.loop)
 

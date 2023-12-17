@@ -2,13 +2,11 @@ import React from 'react';
 import { Box, Text, Flex, Avatar, Spacer } from '@chakra-ui/react';
 
 interface MessageProps {
-  role: 'assistant' | 'system' | 'user';
-  sender: string;
+  role: string,
   content: string;
-  timestamp: string;
 }
 
-const Message: React.FC<MessageProps> = ({ role, sender, content, timestamp }) => {
+const Message: React.FC<MessageProps> = ({ role, content }) => {
   let bgColor;
   let textColor;
   let alignment;
@@ -43,7 +41,7 @@ const Message: React.FC<MessageProps> = ({ role, sender, content, timestamp }) =
       width="100%"
     >
       {role !== 'system' && (
-        <Avatar name={sender} size="sm" mr="2" />
+        <Avatar name={role} size="sm" mr="2" />
       )}
       <Box
         bg={bgColor}
@@ -54,12 +52,9 @@ const Message: React.FC<MessageProps> = ({ role, sender, content, timestamp }) =
         boxShadow="md"
       >
         {role !== 'system' && (
-          <Text fontWeight="bold">{sender}</Text>
+          <Text fontWeight="bold">{role}</Text>
         )}
         <Text>{content}</Text>
-        <Text fontSize="xs" color="gray.500">
-          {timestamp}
-        </Text>
       </Box>
     </Flex>
   );

@@ -64,12 +64,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const host = 'ws://localhost';
   const port = '8765';
 
+
+      // You can add additional logic here if you need to do something when the state changes
+    useEffect(() => {
+    }, [state]); // Dependency on state ensures this runs when state changes
+
+
   const handleEnvironmentVariables = (message: any) => {
       if (state.environment) {
             // Example of updating name
-              Object.entries(message.content).forEach(([key, value]) => {
-                    state.environment.updateEnvironment(key, value);
-                });
+          Object.entries(message.content).forEach(([key, value]) => {
+                state.environment.updateEnvironment(key, value);
+            });
             // Dispatch an action to trigger state update
             dispatch({ type: 'ENVIRONMENT_CHANGE', payload:  state.environment});
           }
@@ -91,6 +97,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const onMessage = (message: any) => {
     // @ts-ignore
+      console.log("message contents: ", message)
       switch (message.type) {
       case 'ENVIRONMENT_CHANGE':
           handleEnvironmentVariables(message)
@@ -114,8 +121,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const onClose = () => {
       state.status = "closed"
       dispatch({ type: 'SOCKET_VARIABLES', payload:  state.status});
-      let new_environment = new Environment();
-      dispatch({ type: 'ENVIRONMENT_CHANGE', payload:  new_environment});
+      state.environment.clear();
+      dispatch({ type: 'ENVIRONMENT_CHANGE', payload:  state.environment});
   }
 
   // Set up WebSocket connection

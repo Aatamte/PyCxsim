@@ -68,6 +68,7 @@ class TextIO:
     def full_messages(self):
         return self.format.full_messages
 
+
 class ChatFormat:
     def __init__(self):
         self.messages = []

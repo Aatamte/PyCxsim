@@ -28,8 +28,8 @@ class EnvironmentManager:
             "name": agent.name,
             "x_pos": agent.x_pos,
             "y_pos": agent.y_pos,
-            "messages": agent.io.text.messages,
-            "inventory": agent.display_inventory(),
+            "messages": agent.io.text.full_messages,
+            "inventory": agent.inventory.inventory,
             "parameters": agent.params
         }
         return content
@@ -56,7 +56,9 @@ class EnvironmentManager:
                 "currentStep": self.environment.current_step,
                 "maxEpisodes": self.environment.max_episodes,
                 "maxSteps": self.environment.max_steps,
-                "agentNames": self.environment.agent_names
+                "agentNames": self.environment.agent_names,
+                "x_size": self.environment.x_size,
+                "y_size": self.environment.y_size
             }
         }
 
@@ -66,9 +68,35 @@ class EnvironmentManager:
             "agent_names": self.environment.agents
         }
 
+    @property
+    def step_variables(self):
+        """
+
+        Returns:
+
+        """
+        resp = [
+            {
+                "type": "ENVIRONMENT_CHANGE",
+                "content": {
+                    "currentEpisode": self.environment.current_episode,
+                    "currentStep": self.environment.current_step,
+                    "maxEpisodes": self.environment.max_episodes,
+                    "maxSteps": self.environment.max_steps
+                }
+            }
+        ]
+
+        agent_vars = self.agent_data()
+
+        for ag in agent_vars:
+            resp.append(ag)
+
+        return resp
+
     def get_env_core_variables(self):
         return {
-            "type": "ENVIRONMENT_VARIABLES",
+            "type": "ENVIRONMENT_CHANGE",
             "content": {
                 "name": self.environment.name,
                 "currentEpisode": self.environment.current_episode,
