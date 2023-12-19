@@ -8,6 +8,9 @@ import { MdPause, MdPlayArrow, MdSkipNext, MdSkipPrevious } from "react-icons/md
 import TurnAnimation from "./TurnAnimation";
 import { AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, AlertDialogOverlay, Spacer } from '@chakra-ui/react';
 import { useBreakpointValue } from '@chakra-ui/react';
+import { Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react';
+import { MdMoreVert } from 'react-icons/md'; // This icon represents the nine-dot app icon, you can replace it with your preferred icon
+import { useNavigate } from 'react-router-dom';
 
 import { useData } from './DataProvider';
 
@@ -30,6 +33,7 @@ const TopBar: React.FC = () => {
     // Example of Flex direction change
     const flexDirection = useBreakpointValue({ base: 'column', md: 'row' });
 
+    const navigate = useNavigate();
 
     useEffect(() => {
 
@@ -92,35 +96,27 @@ const TopBar: React.FC = () => {
                     <Circle size="20px" bg={webSocketIndicatorColor[state.status]} />
                 </VStack>
             </Flex>
-                <Text fontSize="lg">
-                    {state.environment.name}
-                </Text>
             {/* Spacer to push content to the sides */}
             <Spacer />
-            <Divider orientation="vertical" borderColor="whiteAlpha.600" mx="4" height="5vh"/>
+
             {/* Right side: Everything else */}
             <Flex align="center">
+                <VStack spacing={2} width="200px">
+                    <Text fontSize="lg">
+                        {state.environment.name}
+                    </Text>
+               </VStack>
+                <Divider orientation="vertical" borderColor="whiteAlpha" mx={4} height="8vh" />
+                <VStack spacing={2} width="200px">
+                    <Text fontSize="md">
+                        {"Episode " + state.environment.currentEpisode + "/" + state.environment.maxEpisodes}
+                    </Text>
+                    <Text fontSize="md">
+                        {"Step " + state.environment.currentStep + "/" + state.environment.maxSteps}
+                    </Text>
+               </VStack>
+                <Divider orientation="vertical" borderColor="whiteAlpha" mx={4} height="8vh" />
                 {/* Progress and control buttons */}
-                <VStack spacing={4} width="200px">
-                    {/* Episode Progress */}
-                    <Text fontSize="sm">Episode Progress</Text>
-                    <CircularProgress value={(state.environment.currentEpisode / state.environment.maxEpisodes) * 100} color="green.400">
-                        <CircularProgressLabel>{`${state.environment.currentEpisode}/${state.environment.maxEpisodes}`}</CircularProgressLabel>
-                    </CircularProgress>
-                </VStack>
-
-                <Divider orientation="vertical" borderColor="whiteAlpha" mx={4} height="8vh" />
-
-                <VStack spacing={4} width="200px">
-                    {/* Step Progress */}
-                    <Text fontSize="sm">Step Progress</Text>
-                    <CircularProgress value={(state.environment.currentStep / state.environment.maxSteps) * 100} color="blue.400">
-                        <CircularProgressLabel>{`${state.environment.currentStep}/${state.environment.maxSteps}`}</CircularProgressLabel>
-                    </CircularProgress>
-                </VStack>
-
-                <Divider orientation="vertical" borderColor="whiteAlpha" mx={4} height="8vh" />
-
                 <VStack spacing={2}>
                     <Flex>
                         {/* Control Buttons */}
@@ -135,6 +131,31 @@ const TopBar: React.FC = () => {
 
                 {/* Reconnect Button and WebSocket Indicator */}
                 <Button colorScheme="blue" onClick={handleReconnect}>Reconnect</Button>
+
+                <Divider orientation="vertical" borderColor="whiteAlpha" mx={4} height="8vh" />
+
+            {/* App Menu Dropdown */}
+            <Menu>
+                <MenuButton
+                    as={IconButton}
+                    aria-label="Options"
+                    icon={<MdMoreVert />}
+                    size="lg"
+                />
+                <MenuList>
+                    <MenuItem onClick={() => navigate('/settings')}>
+                        <Text style={{ color: 'black' }}>
+                            Settings
+                        </Text>
+                    </MenuItem>
+                    <MenuItem onClick={() => navigate('/logs')}>
+                        <Text style={{ color: 'black' }}>
+                            Logs
+                        </Text>
+                    </MenuItem>
+                    {/* ... other menu items ... */}
+                </MenuList>
+            </Menu>
             </Flex>
         </Flex>
     );

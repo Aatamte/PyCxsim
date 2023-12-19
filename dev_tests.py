@@ -68,7 +68,7 @@ class MyAgent(Agent):
 
         self.io.text.add_message(role="assistant", content=str(action))
 
-        print("step messages", self.io.text.full_messages)
+        self.x_pos += 1
 
         return None
 

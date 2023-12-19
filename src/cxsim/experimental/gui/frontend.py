@@ -1,6 +1,7 @@
 import os
 from flask import Flask, send_from_directory
 
+
 class PyCxsimFrontend:
     def __init__(self):
         build_dir = os.path.join(os.path.dirname(__file__), 'build')
@@ -20,6 +21,7 @@ class PyCxsimFrontend:
 
     def run(self):
         self.app.run()
+
 
 if __name__ == '__main__':
     PyCxsimFrontend().run()

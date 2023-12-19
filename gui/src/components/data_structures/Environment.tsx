@@ -1,5 +1,5 @@
 import Agent from "./agent";
-
+import Artifact from "./artifact";
 
 export default class Environment {
     [key: string]: any; // Index signature
@@ -18,15 +18,17 @@ export default class Environment {
     public artifactNames: string[];
 
     public agents: Record<string, Agent>; // Using a dictionary (object) to store agents
+    public artifacts: Record<string, Artifact>; // Using a dictionary (object) to store agents
 
 
   constructor() {
     this.name = "default";
 
     this.agentNames = [];
-    this.agents = {};
-
     this.artifactNames = [];
+
+    this.artifacts = {}
+    this.agents = {}
 
     this.currentStep = 0
     this.maxSteps = 10;
@@ -39,6 +41,7 @@ export default class Environment {
 
     clear() {
         // Reset step and episode counters
+        this.name = "default"
         this.currentStep = 0;
         this.currentEpisode = 0;
 
@@ -48,6 +51,7 @@ export default class Environment {
 
         // Clear artifact-related data
         this.artifactNames = [];
+        this.artifacts = {};
     }
 
 
@@ -76,9 +80,14 @@ export default class Environment {
         }
     }
 
-  public addArtifact(name: string): void {
-      this.artifactNames.push(name)
-  }
+    public addArtifact(artifact: Artifact): void {
+        if (artifact.name in this.artifacts) {
+            console.warn(`Agent with name ${artifact.name} already exists.`);
+            return;
+        }
+
+        this.artifacts[artifact.name] = artifact;
+    }
 
   // ... other methods like removeAgent, addArtifact, etc.
 }

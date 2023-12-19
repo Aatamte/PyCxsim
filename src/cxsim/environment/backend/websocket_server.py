@@ -27,15 +27,27 @@ class WebSocketServer:
         # send over core data
         print("sending data over websocket")
 
-        data = self.environment_manager.step_variables
+        # update agents
+        data = self.environment_manager.update_agents()
+        self.send_to_all_clients(data)
 
-        for agent in self.environment.agents:
-            print(agent.io.text.full_messages)
+        # update artifacts
+        data = self.environment_manager.update_artifacts()
+        print(data)
+        self.send_to_all_clients(data)
+
+        data = self.environment_manager.step_variables
 
         self.send_to_all_clients(data)
 
     def compile(self):
-        data = self.environment_manager.get_agent_names
+        data = self.environment_manager.get_env_core_variables()
+        self.send_to_all_clients(data)
+
+        self.initialize()
+
+    def initialize(self):
+        data = self.environment_manager.init_artifacts()
         self.send_to_all_clients(data)
 
     async def register(self, websocket):

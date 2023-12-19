@@ -92,6 +92,12 @@ class Artifact:
         """
         return self.action_space
 
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "events": self.event_history
+        }
+
     def get_action_space_prompt(self):
         return [generate_prompt(action) for action in self.action_space]
 

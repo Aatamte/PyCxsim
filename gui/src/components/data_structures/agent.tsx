@@ -6,6 +6,7 @@ export default class Agent {
     public name: string;
     public x_pos: number;
     public y_pos: number;
+
     public inventory: Record<string, any>;
     public parameters: Record<string, any>;
     public messages: Record<string, any>[];
@@ -18,7 +19,6 @@ export default class Agent {
           this.parameters = {}
           this.messages = []
   }
-
 
   init() {
 

@@ -6,6 +6,29 @@ interface MessageProps {
   content: string;
 }
 
+interface MarkdownTextProps {
+  text: string;
+}
+
+const MarkdownText: React.FC<MarkdownTextProps> = ({ text }) => {
+    const convertMarkdown = (inputText: string): string => {
+        let htmlText = inputText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+        htmlText = htmlText.split('\n').map((item, index) => {
+            if (item.startsWith('- ')) {
+                return `<li key=${index}>${item.substring(2)}</li>`;
+            }
+            return `<div key=${index}>${item}</div>`;
+        }).join('');
+
+        return htmlText;
+    };
+
+    return (
+        <div dangerouslySetInnerHTML={{ __html: convertMarkdown(text) }} />
+    );
+};
+
 const Message: React.FC<MessageProps> = ({ role, content }) => {
   let bgColor;
   let textColor;
@@ -54,7 +77,7 @@ const Message: React.FC<MessageProps> = ({ role, content }) => {
         {role !== 'system' && (
           <Text fontWeight="bold">{role}</Text>
         )}
-        <Text>{content}</Text>
+         <MarkdownText text={content} />
       </Box>
     </Flex>
   );

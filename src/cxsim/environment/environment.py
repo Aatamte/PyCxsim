@@ -113,6 +113,7 @@ class Environment:
         # artifacts
         self.n_artifacts = 0
         self.artifacts = []
+        self.artifact_names = []
         self.artifact_lookup = {}
 
         # handlers
@@ -174,6 +175,7 @@ class Environment:
         """
         self.action_handler.add_artifact(artifact)
         self.artifacts.append(artifact)
+        self.artifact_names.append(artifact.name)
         self.artifact_lookup[artifact.name] = artifact
 
     def add_event(self, event: Event):
@@ -278,6 +280,9 @@ class Environment:
             agent.compile()
 
         self._assign_agent_positions()
+
+        if self.backend:
+            self.backend.compile()
 
         self.n_artifacts = len(self.action_handler.artifacts)
         self._is_prepared = True

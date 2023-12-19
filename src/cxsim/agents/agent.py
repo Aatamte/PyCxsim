@@ -35,11 +35,9 @@ class Agent:
         messages (list): Messages received or sent by the agent.
         params (dict): Parameters or settings specific to the agent.
         action_history (list): Record of past actions taken by the agent.
-        action_restrictions, query_restrictions (dict): Restrictions on actions and queries.
-        action_space, query_space (dict): Available actions and queries for the agent.
-        system_prompt (str): Prompt or message from the system.
+        action_restrictions (dict): Restrictions on actions and queries.
+        action_space (dict): Available actions and queries for the agent.
         inventory (Inventory): Inventory of items held by the agent.
-        long_term_memory (LongTermMemory): Long-term memory storage of the agent.
         tools (dict): Tools or utilities available to the agent.
     """
 
@@ -237,6 +235,19 @@ class Agent:
             self.inventory[key] = value
         else:
             self.inventory[key] = value
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "x_pos": self.x_pos,
+            "y_pos": self.y_pos,
+            "color": self.color,
+            "messages": self.io.text.full_messages,
+            "inventory": self.inventory.inventory,
+            "parameters": self.params,
+           # "actionSpace": self.action_space,
+            "actionHistory": self.action_history
+        }
 
     def get_inventory(self, item):
         return self.inventory.get_quantity(item)

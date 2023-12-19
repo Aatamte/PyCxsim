@@ -1,9 +1,27 @@
 from cxsim.agents.agent import Agent
 
 
+# methods
+
+# init_agent
+# update_agent
+
+# init_artifact
+# update_artifact
+
+class TYPES:
+    UPDATE = 1
+    INIT = 0
+    LOGS = 2
+
+
 class EnvironmentManager:
     def __init__(self, environment):
         self.environment = environment
+        self.incoming_types = {
+            "play": self.play(),
+
+        }
 
     def handle_message(self, message: dict):
         if message == "play":
@@ -15,6 +33,46 @@ class EnvironmentManager:
             resp.append(self.get_init)
             return resp
 
+## INITIALIZATION OF ELEMENTS ###
+    def init_artifacts(self):
+        response = []
+        for artifact in self.environment.artifacts:
+            response.append(
+                {
+                    "type": "INIT_ARTIFACTS",
+                    "content": artifact.to_dict()
+                }
+            )
+        return response
+
+    def init_agents(self):
+        response = []
+        for agent in self.environment.agents:
+            response.append(
+                {
+                    "type": "AGENT_INIT",
+                    "content": agent.to_dict()
+                }
+            )
+
+        return response
+
+    def update_artifacts(self):
+        response = []
+        for name, artifact in self.environment.artifact_lookup.items():
+            print(artifact)
+            response.append(
+                {
+                    "type": "INIT_ARTIFACTS",
+                    "content": artifact.to_dict()
+                }
+            )
+        return response
+
+# UPDATE ELEMENTS
+    def logs(self):
+        pass
+
     def play(self):
         self.environment.STATUS = 1
         return None
@@ -23,16 +81,21 @@ class EnvironmentManager:
         self.environment.STATUS = 2
         return None
 
-    def get_agent_data(self, agent: Agent):
-        content = {
-            "name": agent.name,
-            "x_pos": agent.x_pos,
-            "y_pos": agent.y_pos,
-            "messages": agent.io.text.full_messages,
-            "inventory": agent.inventory.inventory,
-            "parameters": agent.params
-        }
-        return content
+    def pause(self):
+        self.environment.STATUS = 0
+        return None
+
+    def update_agents(self):
+        response = []
+        for agent in self.environment.agents:
+            response.append(
+                {
+                    "type": "AGENT_UPDATE",
+                    "content": agent.to_dict()
+                }
+            )
+
+        return response
 
     def agent_data(self):
         response = []
@@ -40,7 +103,7 @@ class EnvironmentManager:
             response.append(
                 {
                     "type": "AGENT_VARIABLES",
-                    "content": self.get_agent_data(agent)
+                    "content": agent.to_dict()
                 }
             )
 
@@ -57,15 +120,10 @@ class EnvironmentManager:
                 "maxEpisodes": self.environment.max_episodes,
                 "maxSteps": self.environment.max_steps,
                 "agentNames": self.environment.agent_names,
+                "artifactNames": self.environment.artifact_names,
                 "x_size": self.environment.x_size,
                 "y_size": self.environment.y_size
             }
-        }
-
-    @property
-    def get_agent_names(self):
-        return {
-            "agent_names": self.environment.agents
         }
 
     @property

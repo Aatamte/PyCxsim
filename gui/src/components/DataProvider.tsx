@@ -2,14 +2,26 @@ import React, {createContext, useReducer, useContext, useEffect, ReactNode, useS
 import Environment from './data_structures/Environment';
 import {WebSocketManager} from "./websocket_client"; // Adjust the import path as necessary
 import Agent from "./data_structures/agent";
-
+import Artifact from "./data_structures/artifact";
 type WebSocketStatus = "connecting" | "open" | "closing" | "closed" | "unknown";
+
+class SocketParams {
+    public host: string = 'ws://localhost';
+    public port: string = '8765';
+
+    constructor() {
+        this.host = 'ws://localhost';
+        this.port = '8765';
+    }
+
+}
 
 
 // Define the shape of your application's state
 interface AppState {
   environment: Environment;
   status: WebSocketStatus;
+  socketParams: SocketParams;
 }
 
 // Define the shape of actions
@@ -22,6 +34,7 @@ type Action =
 const initialState: AppState = {
     environment: new Environment(),
     status: "closed",
+    socketParams: new SocketParams()
 };
 
 // Create context
@@ -57,31 +70,46 @@ const reducer = (state: AppState, action: Action): AppState => {
 };
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const [webSocketStatus, setWebSocketStatus] = useState<WebSocketStatus>('unknown');
-  const [wsManager, setWsManager] = useState<WebSocketManager | null>(null);
+    const [state, dispatch] = useReducer(reducer, initialState);
+    const [webSocketStatus, setWebSocketStatus] = useState<WebSocketStatus>('unknown');
+    const [wsManager, setWsManager] = useState<WebSocketManager | null>(null);
 
-  const host = 'ws://localhost';
-  const port = '8765';
-
-
-      // You can add additional logic here if you need to do something when the state changes
     useEffect(() => {
-    }, [state]); // Dependency on state ensures this runs when state changes
+
+    }, [state]);
+
+    const updateEnvironment = () => {
+        dispatch({ type: 'ENVIRONMENT_CHANGE', payload:  state.environment});
+    }
 
 
-  const handleEnvironmentVariables = (message: any) => {
+    const handleEnvironmentUpdate = (message: any) => {
+
+    }
+
+    const handleEnvironmentVariables = (message: any) => {
       if (state.environment) {
             // Example of updating name
           Object.entries(message.content).forEach(([key, value]) => {
                 state.environment.updateEnvironment(key, value);
             });
             // Dispatch an action to trigger state update
-            dispatch({ type: 'ENVIRONMENT_CHANGE', payload:  state.environment});
+            updateEnvironment();
           }
-  }
+    }
 
-  const handleAgentVariables = (message: any) => {
+    const handleAgentUpdate = (message: any) => {
+        let agent_name = message.content.name
+        console.log(agent_name)
+        Object.entries(message.content).forEach(([key, value]) => {
+                state.environment.agents[agent_name].updateAgent(key, value)
+        });
+
+        // Dispatch an action to trigger state update
+        updateEnvironment();
+    }
+
+    const handleAgentVariables = (message: any) => {
       if (state.environment) {
             // Example of updating name
             let agent = new Agent()
@@ -90,12 +118,25 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             });
             state.environment.addAgent(agent)
             // Dispatch an action to trigger state update
-            dispatch({ type: 'ENVIRONMENT_CHANGE', payload:  state.environment});
+          updateEnvironment();
           }
-  }
+    }
 
 
-  const onMessage = (message: any) => {
+    const handleArtifactInitialization = (message: any) => {
+        let agent_name = message.content.name
+        console.log(agent_name)
+            let artifact = new Artifact()
+            Object.entries(message.content).forEach(([key, value]) => {
+                    artifact.updateArtifact(key, value);
+            });
+            state.environment.addArtifact(artifact)
+        // Dispatch an action to trigger state update
+        updateEnvironment();
+    }
+
+
+    const onMessage = (message: any) => {
     // @ts-ignore
       console.log("message contents: ", message)
       switch (message.type) {
@@ -105,30 +146,38 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       case 'AGENT_VARIABLES':
           handleAgentVariables(message)
           break;
-      // ... handle other message types
+      case 'AGENT_UPDATE':
+          handleAgentUpdate(message)
+          break;
+      case 'AGENT_INIT':
+          handleAgentVariables(message)
+          break;
+      case 'INIT_ARTIFACTS':
+          handleArtifactInitialization(message)
+          break;
     }
-  };
+    };
 
-  const onOpen = () => {
+    const onOpen = () => {
       console.log("onOpen")
       state.status = "open"
       dispatch({ type: 'SOCKET_VARIABLES', payload:  state.status});
       // initialize the state
       sendData("INIT")
 
-  }
+    }
 
-  const onClose = () => {
+    const onClose = () => {
       state.status = "closed"
       dispatch({ type: 'SOCKET_VARIABLES', payload:  state.status});
       state.environment.clear();
       dispatch({ type: 'ENVIRONMENT_CHANGE', payload:  state.environment});
-  }
+    }
 
-  // Set up WebSocket connection
+    // Set up WebSocket connection
     useEffect(() => {
         const manager = new WebSocketManager(
-            host, port, {
+            state.socketParams.host, state.socketParams.port, {
                 onMessage,
              onOpen,
              onClose,

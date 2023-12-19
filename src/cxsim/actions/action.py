@@ -8,4 +8,4 @@ def do_action(action: str, parameters: List[str]):
 class Action:
     """do an action"""
     action: str
-    parameters: List[str]
+    parameters: dict
