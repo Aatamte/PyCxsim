@@ -127,11 +127,6 @@ class Environment:
         self.calender = Calender()
         self.item_handler = ItemHandler(self)
 
-        self.gui = None
-
-        if self.gui:
-            self.gui.compile(self)
-
         self.backend = WebSocketServer(self)
 
         self._current_time = time.perf_counter()
@@ -273,7 +268,6 @@ class Environment:
 
         for agent in self.agents:
             agent.action_space = self.action_space.copy()
-            #agent.step = wrap_with_background_task(agent.step, agent, self.gui)
             agent.environment = self
             agent.compile()
 
@@ -313,10 +307,6 @@ class Environment:
         if reset_artifacts:
             for artifact in self.artifacts:
                 artifact.reset(self)
-
-        if self.gui:
-            self.gui.reset(self)
-            self.gui.run_event_loop(self._current_time)
 
         return None
 
@@ -405,9 +395,6 @@ class Environment:
         if self.backend:
             self.backend.step()
             self._backend_while_loop()
-
-        if self.gui:
-            self.gui.run_event_loop(self._current_time)
 
         self._current_time = time.perf_counter()
 
