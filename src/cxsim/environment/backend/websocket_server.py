@@ -81,7 +81,6 @@ class WebSocketServer:
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
         self.loop.run_until_complete(self.start())
-        self.loop.close()
 
     def run(self):
         thread = threading.Thread(target=self.run_in_thread)
@@ -89,7 +88,7 @@ class WebSocketServer:
 
     async def _send_to_all_clients(self, data):
         if self.clients:  # Check if there are any connected clients
-            await asyncio.wait([client.send(data) for client in self.clients])
+            await asyncio.gather(*(client.send(data) for client in self.clients))
 
     def send_to_all_clients(self, data):
         data_list = []
@@ -110,4 +109,5 @@ class WebSocketServer:
 
             if self.loop is not None:
                 asyncio.run_coroutine_threadsafe(self._send_to_all_clients(_data), self.loop)
+
 
