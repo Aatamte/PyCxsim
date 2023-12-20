@@ -20,7 +20,7 @@ def package_files(directory):
 
 
 # Include files from 'gui/build'
-extra_files = package_files('src/cxsim/gui/build') + ['prompts/*.txt']
+extra_files = package_files('src/cxsim/gui/build')
 
 
 setup(
@@ -40,7 +40,7 @@ setup(
     package_dir={'': 'src'},
  #   include_package_data=True,
     package_data={
-        'cxsim': extra_files,
+        'cxsim': ['prompts/*.txt', 'gui/build/*', 'gui/build/static/*'],
    },
     # other parameters...
 )
