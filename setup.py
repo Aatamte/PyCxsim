@@ -24,9 +24,8 @@ setup(
     keywords=["Artificial Intelligence", "Simulation"],
     package_dir={'': 'src'},
     include_package_data=True,
-
-   # package_data={
-   #     'cxsim': ['prompts/*.txt', 'gui/assets/*.ico', 'experimental/gui/*'],
-   # },
+    package_data={
+        'cxsim': ['prompts/*.txt', 'gui/assets/*.ico', 'gui/*'],
+   },
     # other parameters...
 )
