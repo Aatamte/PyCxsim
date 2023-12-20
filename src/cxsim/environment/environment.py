@@ -59,7 +59,6 @@ class Environment:
             max_steps: int = 10,
             max_episodes: int = 10,
             step_delay: int = 2,
-            gui: GUI = GUI(),
             verbose: int = 0,
             seed: int = None,
     ):
@@ -75,7 +74,7 @@ class Environment:
         self.name = name
         self.verbose = verbose
         self.seed = seed
-        self.gui = gui
+        self.gui = None
         self._start_time = None
 
         # gridworld
