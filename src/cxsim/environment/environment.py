@@ -16,7 +16,6 @@ from cxsim.agents.agent import Agent
 from cxsim.agents.population import Population
 from cxsim.artifacts.artifact import Artifact
 from cxsim.actions.action_handler import ActionHandler
-from cxsim.gui.GUI import GUI
 from cxsim.utilities.background_jobs.background_task import BackgroundTask
 from cxsim.environment.utilities import EnvironmentUtilities
 

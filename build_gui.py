@@ -6,7 +6,7 @@ import shutil
 project_root = os.path.abspath(os.path.dirname(__file__))
 gui_directory = os.path.join(project_root, 'gui')
 build_directory = os.path.join(gui_directory, 'build')
-destination_directory = os.path.join(project_root, 'src', 'cxsim', 'experimental', 'gui', 'build')
+destination_directory = os.path.join(project_root, 'src', 'cxsim', 'gui', 'build')
 
 # Path to npm
 npm_path = r'C:\Program Files\nodejs\npm.cmd'
