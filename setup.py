@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-import os
+
 
 # Read the contents of your requirements.txt file
 with open('requirements.txt') as f:
@@ -8,20 +8,6 @@ with open('requirements.txt') as f:
 # Read the content of your README file
 with open("README.md", "r", encoding="utf-8") as f:
     long_description = f.read()
-
-
-# Function to list all files in a directory
-def package_files(directory):
-    paths = []
-    for (path, directories, filenames) in os.walk(directory):
-        for filename in filenames:
-            paths.append(os.path.join('..', path, filename))
-    return paths
-
-
-# Include files from 'gui/build'
-extra_files = package_files('src/cxsim/gui/build')
-
 
 setup(
     name='pycxsim',
@@ -40,7 +26,13 @@ setup(
     package_dir={'': 'src'},
  #   include_package_data=True,
     package_data={
-        'cxsim': ['prompts/*.txt', 'gui/build/*', 'gui/build/static/*'],
+        'cxsim': [
+            'prompts/*.txt',
+            'gui/build/*',
+            'gui/build/static/css/*'
+            'gui/build/static/js/*'
+            'gui/build/static/media/*'
+        ],
    },
-    # other parameters...
+
 )
