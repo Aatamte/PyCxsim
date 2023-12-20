@@ -8,7 +8,6 @@ class PyCxsimFrontend:
         self.app = Flask(__name__, static_folder=build_dir, static_url_path='')
         self.add_routes()
 
-
     def add_routes(self):
         self.app.add_url_rule('/', 'index', self.index)
         self.app.add_url_rule('/<path:path>', 'serve_static', self.serve_static)
