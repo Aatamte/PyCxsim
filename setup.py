@@ -25,7 +25,7 @@ setup(
     package_dir={'': 'src'},
  #   include_package_data=True,
     package_data={
-        'cxsim': ['prompts/*.txt', 'gui/build*'],
+        'cxsim': ['prompts/*.txt', 'gui/build/*'],
    },
     # other parameters...
 )
