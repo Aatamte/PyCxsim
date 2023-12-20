@@ -202,7 +202,7 @@ class Smith1962Environment:
 
 
 if __name__ == '__main__':
-    smithenv = Smith1962Environment(2)
+    from cxsim import PyCxsimFrontend
 
-    smithenv.test_one()
+    PyCxsimFrontend().run()
 
