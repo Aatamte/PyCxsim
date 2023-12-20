@@ -24,14 +24,14 @@ setup(
     url="https://github.com/Aatamte/PyCxsim",
     keywords=["Artificial Intelligence", "Simulation"],
     package_dir={'': 'src'},
- #   include_package_data=True,
+   include_package_data=True,
     package_data={
         'cxsim': [
             'prompts/*.txt',
-            'gui/build/*',
-            'gui/build/static/css/*'
-            'gui/build/static/js/*'
-            'gui/build/static/media/*'
+#            'gui/build/*',
+ #           'gui/build/static/css/*'
+  #          'gui/build/static/js/*'
+   #         'gui/build/static/media/*'
         ],
    },
 
