@@ -1,4 +1,4 @@
-from cxsim.actions.action_restrictions import ActionRestriction
+from cxsim.agents.actions import ActionRestriction
 from cxsim.agents.item import Item
 from cxsim.agents.tools.tool import Tool
 from cxsim.agents.traits.memory.long_term_memory import LongTermMemory
@@ -32,7 +32,6 @@ class Agent:
         color (tuple): RGB color representation of the agent that would be used in the GUI
         role: Role of the agent.
         observations (list): List of observations made by the agent.
-        messages (list): Messages received or sent by the agent.
         params (dict): Parameters or settings specific to the agent.
         action_history (list): Record of past actions taken by the agent.
         action_restrictions (dict): Restrictions on actions and queries.
@@ -62,9 +61,6 @@ class Agent:
         # holds the observations for each artifact
         self.observations = []
 
-        # holds messages
-        self.messages = []
-
         # holds agent parameters
         self.params = {}
 
@@ -79,7 +75,6 @@ class Agent:
 
         # input/output
         self.io = IO(self)
-
         self.environment = None
 
         # other
@@ -87,10 +82,6 @@ class Agent:
         self.tasks = []
 
         self.inventory = Inventory()
-
-        # agent traits
-        self.long_term_memory = LongTermMemory(100)
-        self.working_memory = WorkingMemory(self)
 
         # agent tools
         self.tools = {}

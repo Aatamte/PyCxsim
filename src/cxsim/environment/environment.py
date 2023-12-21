@@ -8,14 +8,11 @@ import inspect
 from dataclasses import fields
 import random
 
-# third-party libraries (should be removed at some point)
-import names
-
 # core
 from cxsim.agents.agent import Agent
 from cxsim.agents.population import Population
 from cxsim.artifacts.artifact import Artifact
-from cxsim.actions.action_handler import ActionHandler
+from cxsim.environment.action_handler import ActionHandler
 from cxsim.utilities.background_jobs.background_task import BackgroundTask
 from cxsim.environment.utilities import EnvironmentUtilities
 
@@ -23,10 +20,10 @@ from cxsim.environment.utilities import EnvironmentUtilities
 from cxsim.environment.calander import Calender
 from cxsim.agents.item import ItemHandler
 from cxsim.environment.event import Event, EventHandler
+from cxsim.utilities.names import get_first_name
 
 # actions
-from cxsim.actions.standard import STANDARD_ACTIONS
-
+from cxsim.agents.actions.standard import STANDARD_ACTIONS
 
 # GUI
 from cxsim.environment.backend.websocket_server import WebSocketServer
@@ -34,6 +31,7 @@ from cxsim.environment.backend.websocket_server import WebSocketServer
 
 class UnsupportedItemType(Exception):
     """Exception raised when an unsupported item is added to the environment."""
+
 
 ENV_STATUS = {
     0: "Not Running",
@@ -49,8 +47,6 @@ class Environment:
         name (str): Name of the environment.
         verbose (int): Verbosity level.
         seed (int): Seed for random number generation.
-        gui (bool): Whether to visualize the environment.
-        _start_time (float): Start time of the simulation.
         ... [other attributes]
     """
     def __init__(
@@ -151,10 +147,10 @@ class Environment:
         """
         agent.id = self.agent_idx
         self.agent_idx += 1
-        agent.name = names.get_first_name()
+        agent.name = get_first_name()
         if self.agents:
             while agent.name in [a.name for a in self.agents]:
-                agent.name = names.get_first_name()
+                agent.name = get_first_name()
         self.agent_names.append(agent.name)
         self.agents.append(agent)
         self.agent_name_lookup[agent.name] = agent

@@ -3,7 +3,7 @@ from cxsim import Environment, Population, Agent
 
 from cxsim.artifacts.standard import Marketplace
 
-from cxsim.actions.action_restrictions import ActionRestriction
+from cxsim.agents.actions import ActionRestriction
 from cxsim.artifacts.standard.marketplace import BuyOrder, SellOrder, MarketPlaceQuery
 from cxsim.io.text.prompts.default_prompts import DEFAULT_DECISION_PROMPT, DEFAULT_SYSTEM_PROMPT
 from cxsim.utilities.econ import Demand, Supply, SupplyDemand
@@ -140,6 +140,8 @@ class Smith1962Environment:
 
         env.add(market)
 
+        print(market.action_space)
+
         def buy_limit(agent, action):
             assert agent.params["shirts expected value"] > action.price, "You placed a buy order with a price higher than your expected value"
 
@@ -148,7 +150,6 @@ class Smith1962Environment:
 
         buyer_pop = Population(
             agent=MyAgent,
-            agent_kargs={},
             number_of_agents=self._n_agents,
             action_restrictions=[ActionRestriction(action=BuyOrder, func=buy_limit)],
             agent_params={
@@ -161,7 +162,6 @@ class Smith1962Environment:
 
         seller_pop = Population(
             agent=MyAgent,
-            agent_kargs={},
             number_of_agents=self._n_agents,
             action_restrictions=[ActionRestriction(action=SellOrder, func=sell_limit)],
             agent_params={

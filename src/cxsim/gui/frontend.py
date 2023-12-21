@@ -2,16 +2,21 @@ import os
 import logging
 from flask import Flask, send_from_directory
 from typing import Any, Optional
+from flask_socketio import SocketIO
 
 
-class PyCxsimFrontend:
+class TestGUI:
     def __init__(self, verbose=False):
         self.verbose = verbose
         self.logger = self._setup_logging()
 
+        # Set up Flask and Flask-SocketIO
         build_dir = os.path.join(os.path.dirname(__file__), 'build')
         self.app = Flask(__name__, static_folder=build_dir, static_url_path='')
+        self.socketio = SocketIO(self.app)
+
         self.add_routes()
+        self.add_socketio_events()
 
     def _setup_logging(self):
         """Set up logging for the application."""
@@ -22,6 +27,21 @@ class PyCxsimFrontend:
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         return logger
+
+    def add_socketio_events(self):
+        """Define SocketIO event handlers."""
+
+        @self.socketio.on('connect')
+        def handle_connect():
+            if self.verbose:
+                self.logger.info('Client connected')
+            print('Client connected')
+
+        @self.socketio.on('disconnect')
+        def handle_disconnect():
+            if self.verbose:
+                self.logger.info('Client disconnected')
+            print('Client disconnected')
 
     def add_routes(self):
         self.app.add_url_rule('/', 'index', self.index)
@@ -54,6 +74,6 @@ class PyCxsimFrontend:
 
 
 if __name__ == '__main__':
-    PyCxsimFrontend().run()
+    TestGUI().run()
 
 

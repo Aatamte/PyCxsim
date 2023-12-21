@@ -1,6 +1,4 @@
-from abc import ABC
 from typing import Dict
-import pandas as pd
 from typing import Union
 from dataclasses import dataclass, field, fields
 
@@ -90,7 +88,7 @@ class OrderBook:
         self.order_count = 0
         self.num_transactions = 0
         # store transaction history in a pandas DataFrame for easy data manipulation and analysis
-        self.history = pd.DataFrame(columns=["transaction_id", "price", "quantity", "buying_agent", "selling_agent"])
+        self.history = []
 
         self.best_bid_history = []
         self.best_ask_history = []
@@ -110,9 +108,7 @@ class OrderBook:
         self.order_count = 0
         self.num_transactions = 0
         # Reset history DataFrame
-        self.history = pd.DataFrame(
-            columns=["transaction_id", "price", "quantity", "buyer", "seller"]
-        )
+        self.history.clear()
 
     def _can_order_be_executed(self, order: InternalOrder, is_buy_order: bool) -> bool:
         if not isinstance(order, InternalOrder):
@@ -309,16 +305,14 @@ class OrderBook:
                 self.sell_orders.remove(book_order)
 
         # Update history and transaction counter
-        self.history = pd.concat([
-            self.history,
-            pd.DataFrame({
+        self.history.append({
                 "transaction_id": [self.num_transactions],
                 "price": [transaction_price],
                 "quantity": [transaction_quantity],
                 "buyer": [incoming_order.agent.name if is_incoming_buy_order else book_order.agent.name],
                 "seller": [incoming_order.agent.name if not is_incoming_buy_order else book_order.agent.name]
             })
-        ])
+
         self.num_transactions += 1
 
         assert incoming_order not in self.buy_orders, "Executed buy order still present in buy_orders."
@@ -353,7 +347,7 @@ Buy orders
 {new_line.join(map(str, buy_order_list))}
 ===================================
 Last 5 transactions:
-{self.history.sort_values(by="transaction_id", ascending=False).head(5)}
+{self.history[::-5]}
 """
 
 

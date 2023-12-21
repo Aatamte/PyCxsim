@@ -1,5 +1,5 @@
 import random
-from typing import List, Dict, Union, Type
+from typing import List, Dict, Type
 from cxsim.io.text.prompts.prompt import PromptTemplate
 import copy
 
@@ -95,7 +95,10 @@ class Population:
     def generate_agents(self):
         population = []
         for _ in range(self.number_of_agents):
-            agent = self.agent(**self.agent_kargs).copy()
+            if self.agent_kargs is not None:
+                agent = self.agent(**self.agent_kargs).copy()
+            else:
+                agent = self.agent().copy()
             self.generate_inventory(agent)
             self.apply_restrictions(agent)
             self.generate_params(agent)

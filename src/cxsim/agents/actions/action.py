@@ -1,4 +1,25 @@
+from typing import List
 import inspect
+from dataclasses import dataclass
+
+
+def do_action(action: str, parameters: List[str]):
+    return {"action": action, "parameters": parameters}
+
+
+class Action:
+    def __init__(
+            self,
+            name: str,
+            parameters: dict
+    ):
+        pass
+
+    def from_dict(self):
+        pass
+
+    def from_dataclass(self):
+        pass
 
 
 class ActionRestriction:
@@ -20,3 +41,13 @@ class ActionRestriction:
 
     def __repr__(self):
         return str(inspect.getsource(self.restriction_function))
+
+
+@dataclass
+class Skip:
+    value: str = "None"
+
+
+STANDARD_ACTIONS = [
+    Skip
+]
