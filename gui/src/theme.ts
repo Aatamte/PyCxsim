@@ -21,7 +21,6 @@ const colors = {
     800: '#22292d',
     900: '#111317', // Darkest
   },
-  // You can add more color palettes for different aspects of your UI
 };
 
 const fontSizes = {

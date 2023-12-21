@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Text, Flex, Avatar, Spacer } from '@chakra-ui/react';
+import { Box, Text, Flex, Avatar } from '@chakra-ui/react';
 
 interface MessageProps {
   role: string,

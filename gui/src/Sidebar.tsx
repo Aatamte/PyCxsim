@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Tabs, TabList, TabPanels, TabPanel, Tab } from '@chakra-ui/react';
 import { useSearchParams } from 'react-router-dom';
-import AgentsTab from "./tabs/agents/agents";
-import EnvironmentDisplay from "./EnvironmentPage";
-import ArtifactPage from "./tabs/artifacts/ArtifactPage";
+import AgentsTab from "./pages/AgentPage";
+import EnvironmentDisplay from "./pages/EnvironmentPage";
+import ArtifactPage from "./pages/ArtifactPage";
 
-const Sidebar: React.FC = () => {
+
+type SidebarProps = {
+    sidebarWidth: number;
+    setSidebarWidth: (width: number) => void;
+};
+
+const Sidebar: React.FC<SidebarProps> = ({ sidebarWidth, setSidebarWidth }) => {
     const [searchParams] = useSearchParams();
     const [tabIndex, setTabIndex] = useState(0);
 
@@ -16,16 +22,16 @@ const Sidebar: React.FC = () => {
         };
 
     useEffect(() => {
+
         // Read the 'tab' query parameter from the URL
         const tabQueryParam = searchParams.get('tab');
-        // Determine the index of the tab based on the parameter value
-
         const newTabIndex = tabIndexMap[tabQueryParam as string];
-        // If the tab index is found, update the state, otherwise default to first tab
+
         if (newTabIndex !== undefined) {
             setTabIndex(newTabIndex);
         }
-    }, [searchParams]);
+    }, [searchParams, sidebarWidth]); // Include sidebarWidth in dependencies
+
 
     const handleTabsChange = (index: number) => {
         setTabIndex(index);
@@ -37,7 +43,7 @@ const Sidebar: React.FC = () => {
     };
 
     return (
-        <Box h="90vh" bg="#444" color="white" p="20px">
+        <Box h="93vh" bg="#444" color="white" p="20px">
             <Tabs
                 variant="enclosed"
                 isFitted
@@ -50,7 +56,7 @@ const Sidebar: React.FC = () => {
                     <Tab>Agents</Tab>
                     <Tab>Artifacts</Tab>
                 </TabList>
-                <TabPanels overflowY="auto" h="80vh">
+                <TabPanels overflowY="hidden">
                     <TabPanel>
                         <EnvironmentDisplay />
                     </TabPanel>

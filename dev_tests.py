@@ -68,8 +68,6 @@ class MyAgent(Agent):
 
         self.io.text.add_message(role="assistant", content=str(action))
 
-        self.x_pos += 1
-
         return None
 
 
@@ -202,7 +200,8 @@ class Smith1962Environment:
 
 
 if __name__ == '__main__':
-    from cxsim import PyCxsimFrontend
 
-    PyCxsimFrontend().run()
+    env = Smith1962Environment(n_agents=25)
+
+    env.test_one()
 

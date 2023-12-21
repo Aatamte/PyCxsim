@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import {Tabs, TabList, TabPanels, Tab, TabPanel, Box, Select, Flex, Text} from '@chakra-ui/react';
-import {useData} from "../../DataProvider";
+import {useData} from "../DataProvider";
 import {  Table, Thead, Tr, Th, Tbody, Td } from '@chakra-ui/react';
 
 

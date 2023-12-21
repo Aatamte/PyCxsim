@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Tabs, TabList, TabPanels, Tab, TabPanel, Box, Select, Flex, Text} from '@chakra-ui/react';
-import MessagingBox from "./io/MessagingBox";
-import {useData} from "../../DataProvider";
+import MessagingBox from "./AgentPageComponents/MessagingBox";
+import {useData} from "../DataProvider";
 import { useSearchParams } from 'react-router-dom';
 
 import { Table, Thead, Tbody, Tr, Th, Td } from '@chakra-ui/react';
@@ -46,8 +46,6 @@ const AgentsTab: React.FC = () => {
         searchParams.set('tab', 'agents');
         setSearchParams(searchParams);
     };
-
-
     return (
         <Box p={0}>
             <Flex align="center" mb={4}>
@@ -70,8 +68,6 @@ const AgentsTab: React.FC = () => {
                 borderColor="gray.200"
                 w="full" // Set the width to full to use the full container width
                 // Optionally set a specific width or max-width
-                // maxWidth="800px"
-                // height="500px" // Optionally set a specific height
             >
                 <Tabs isFitted variant="enclosed">
                     <TabList mb="1em">
@@ -80,8 +76,12 @@ const AgentsTab: React.FC = () => {
                         <Tab>Actions</Tab>
                         <Tab>Other</Tab>
                     </TabList>
-                    <TabPanels>
-                        <TabPanel>
+                    <TabPanels
+                        h="70vh" // Set a fixed height for the box
+                        overflowY="auto" // Enable vertical scrolling
+                        overflowX={'hidden'}
+                    >
+                        <TabPanel >
                             <MessagingBox selectedAgent={selectedAgent}/>
                         </TabPanel>
                             <TabPanel>

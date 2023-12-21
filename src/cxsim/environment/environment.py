@@ -137,8 +137,8 @@ class Environment:
 
         # other variables
         self.STATUS = 0
-        self.x_size = 10
-        self.y_size = 10
+        self.x_size = None
+        self.y_size = None
 
         if self.backend:
             self.backend.run()
@@ -219,7 +219,7 @@ class Environment:
             assert artifact.reset.__code__ != Artifact.reset.__code__, "process_query method must be implemented by subclass"
             assert artifact.process_action.__code__ != Artifact.process_action.__code__, "process_action method must be implemented by subclass"
 
-    def _assign_agent_positions(self):
+    def _assign_agent_positions(self, spacing=1):
         # Generate all possible positions
         all_positions = [(x, y) for x in range(self.x_size) for y in range(self.y_size)]
 
@@ -231,10 +231,14 @@ class Environment:
                 # Pop a position from the list
                 x_pos, y_pos = all_positions.pop()
 
-                # Check if neighboring positions are already occupied
-                neighbors = [(x_pos + dx, y_pos + dy) for dx in range(-1, 2) for dy in range(-1, 2)]
-                if not any(neighbor in all_positions for neighbor in neighbors):
-                    # Assign the position to the agent if neighbors are not in the list
+                # Check if positions within 'spacing' are already occupied
+                neighbors = [(x_pos + dx, y_pos + dy)
+                             for dx in range(-spacing, spacing + 1)
+                             for dy in range(-spacing, spacing + 1)
+                             if (dx, dy) != (0, 0)]
+
+                if not any(neighbor in [(a.x_pos, a.y_pos) for a in self.agents] for neighbor in neighbors):
+                    # Assign the position to the agent if neighbors are not occupied
                     agent.x_pos = x_pos
                     agent.y_pos = y_pos
                     break
@@ -243,7 +247,8 @@ class Environment:
                 raise ValueError("Unable to assign a valid position for all agents")
 
         if len(all_positions) < len(self.agents):
-            raise ValueError("Insufficient unique positions available for all agents")
+            raise ValueError(f"Insufficient unique positions available for all agents. Size of grid: {self.x_size, self.y_size}")
+
 
     def compile(self):
         self._start_time = time.perf_counter()
@@ -253,10 +258,13 @@ class Environment:
         # assert that all artifacts have necessary functionality
         self.validate_artifacts()
 
-        #
-        SIZE_FACTOR = 5
-        self.x_size = min(self.n_agents * SIZE_FACTOR, 10)
-        self.y_size = min(self.n_agents * SIZE_FACTOR, 10)
+        size_factor = 5
+
+        if self.x_size is None:
+            self.x_size = min(self.n_agents * size_factor, 15)
+
+        if self.y_size is None:
+            self.y_size = min(self.n_agents * size_factor, 15)
 
         # go through the artifacts and set them up
         for name, artifact in self.action_handler.artifacts.items():
@@ -285,8 +293,8 @@ class Environment:
         """
 
         if not self.agents or len(self.agents) == 0:
-            raise ValueError("agents must be passed through the <set_agents> function before  "
-                             "the first episode is run")
+            raise ValueError("agents must be added to the environment before  "
+                             "the first step is run")
 
         if not self._is_prepared:
             self.compile()
@@ -307,6 +315,10 @@ class Environment:
         if reset_artifacts:
             for artifact in self.artifacts:
                 artifact.reset(self)
+
+        if self.backend:
+            self.backend.step()
+            self._backend_while_loop()
 
         return None
 

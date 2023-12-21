@@ -22,7 +22,7 @@ export default class Environment {
 
 
   constructor() {
-    this.name = "default";
+    this.name = "N/A";
 
     this.agentNames = [];
     this.artifactNames = [];
@@ -41,7 +41,7 @@ export default class Environment {
 
     clear() {
         // Reset step and episode counters
-        this.name = "default"
+        this.name = "N/A"
         this.currentStep = 0;
         this.currentEpisode = 0;
 

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useData } from './DataProvider';
+import {useData} from "../DataProvider";
 import {
     CircularProgress,
     CircularProgressLabel,

@@ -10,7 +10,7 @@ import {
   useColorMode,
   VStack,
 } from '@chakra-ui/react';
-import {useData} from "./DataProvider";
+import {useData} from "../DataProvider";
 import { useNavigate } from 'react-router-dom';
 
 type Settings = {

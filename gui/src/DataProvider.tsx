@@ -8,47 +8,40 @@ type WebSocketStatus = "connecting" | "open" | "closing" | "closed" | "unknown";
 class SocketParams {
     public host: string = 'ws://localhost';
     public port: string = '8765';
+    public status: WebSocketStatus = "closed"
 
     constructor() {
         this.host = 'ws://localhost';
         this.port = '8765';
+        this.status = "closed"
     }
 
 }
 
-
 // Define the shape of your application's state
 interface AppState {
   environment: Environment;
-  status: WebSocketStatus;
   socketParams: SocketParams;
 }
 
 // Define the shape of actions
 type Action =
   | { type: 'ENVIRONMENT_CHANGE', payload: Environment }
-  | {type: 'SOCKET_VARIABLES', payload: WebSocketStatus}
+  | {type: 'SOCKET_VARIABLES', payload: SocketParams}
   // ... other action types
 
 // Initial state
 const initialState: AppState = {
     environment: new Environment(),
-    status: "closed",
     socketParams: new SocketParams()
 };
 
 // Create context
-const DataContext = createContext<
-    {
-      state: AppState;
-      dispatch: React.Dispatch<Action>;
-      handleReconnect: () => void;
-      sendData: (data: any) => void;
-    }>({
-      state: initialState,
-      dispatch: () => null,
-      handleReconnect: () => {},
-    sendData: () => {},
+const DataContext = createContext({
+  state: initialState,
+  dispatch: (() => {}) as React.Dispatch<Action>,
+  handleReconnect: async () => false, // handleReconnect is now an async function returning a boolean
+  sendData: (() => {}) as (data: any) => void,
 });
 
 // Reducer function to update state
@@ -62,7 +55,7 @@ const reducer = (state: AppState, action: Action): AppState => {
     case 'SOCKET_VARIABLES':
       return {
         ...state,
-        status: action.payload,
+        socketParams: action.payload,
       };
     default:
       return state;
@@ -81,7 +74,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const updateEnvironment = () => {
         dispatch({ type: 'ENVIRONMENT_CHANGE', payload:  state.environment});
     }
-
 
     const handleEnvironmentUpdate = (message: any) => {
 
@@ -160,16 +152,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const onOpen = () => {
       console.log("onOpen")
-      state.status = "open"
-      dispatch({ type: 'SOCKET_VARIABLES', payload:  state.status});
+        state.socketParams.status = "open"
+      dispatch({ type: 'SOCKET_VARIABLES', payload:  state.socketParams});
       // initialize the state
       sendData("INIT")
 
     }
 
     const onClose = () => {
-      state.status = "closed"
-      dispatch({ type: 'SOCKET_VARIABLES', payload:  state.status});
+      state.socketParams.status = "closed"
+      dispatch({ type: 'SOCKET_VARIABLES', payload:  state.socketParams});
       state.environment.clear();
       dispatch({ type: 'ENVIRONMENT_CHANGE', payload:  state.environment});
     }
@@ -197,18 +189,23 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
       }, []);
 
-      // Function to manually trigger a reconnect
-      const handleReconnect = () => {
-
-        wsManager?.manualReconnect().then(success => {
+    // Function to manually trigger a reconnect
+    const handleReconnect = async () => {
+        try {
+            const success = await wsManager?.manualReconnect();
             if (success) {
                 console.debug("Reconnect successful");
-                onOpen();
+                onOpen(); // Assuming onOpen is a callback that handles the 'open' event.
+                return true;
             } else {
                 console.debug("Reconnect failed");
+                return false;
             }
-        });
-      };
+        } catch (error) {
+            console.error("Reconnection attempt threw an error:", error);
+            return false;
+        }
+    };
 
       // Function to send data via WebSocket
       const sendData = (data: any) => {
@@ -219,17 +216,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       };
 
-  // Update WebSocket status
-  useEffect(() => {
-    if (wsManager) {
-      const interval = setInterval(() => {
-          setWebSocketStatus(wsManager.client.getStatus());
-          state.status = webSocketStatus
-      }, 1000); // Update status every 1 second
-
-      return () => clearInterval(interval);
-    }
-  }, [wsManager]);
 
   return (
     <DataContext.Provider value={{ state, dispatch, handleReconnect, sendData }}>

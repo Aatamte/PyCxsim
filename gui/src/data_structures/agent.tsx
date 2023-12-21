@@ -18,11 +18,11 @@ export default class Agent {
           this.inventory = {}
           this.parameters = {}
           this.messages = []
-  }
+   }
 
-  init() {
+    init() {
 
-  }
+    }
 
     updateAgent(key: string, value: any) {
         if (key in this) {
@@ -41,7 +41,7 @@ export default class Agent {
         }
     }
 
-        private isJsonString(str: string): boolean {
+    private isJsonString(str: string): boolean {
         try {
             JSON.parse(str);
         } catch (e) {
@@ -50,4 +50,4 @@ export default class Agent {
         return true;
     }
 
-}
+    }

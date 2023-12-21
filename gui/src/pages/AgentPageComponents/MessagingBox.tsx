@@ -1,9 +1,9 @@
 import React, { useState, useEffect} from 'react';
 import { Box, VStack, Input, Flex, IconButton, Collapse } from '@chakra-ui/react';
 import { MdSend } from 'react-icons/md';
-import { AiOutlineRobot } from 'react-icons/ai'; // Import a different AI-related icon
-import Message from './TextMessaging';
-import {useData} from "../../../DataProvider";
+
+import Message from "../AgentPageComponents/TextMessaging";
+import {useData} from "../../DataProvider";
 
 interface MessageProps {
   role: string,
@@ -59,7 +59,8 @@ const MessagingBox: React.FC<MessagingBoxProps> = ({ selectedAgent }) => {
     };
 
     return (
-        <Box>
+        <Box
+        >
             <Collapse in={!isSystemMessageCollapsed} style={{ fontSize }}>
                 {messages[0] && isValidMessage(messages[0]) && <Message {...messages[0]} />}
             </Collapse>
