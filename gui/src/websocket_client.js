@@ -22,10 +22,7 @@ export default class SocketClient {
             // Define callback functions
             this.sio.on('connect', this.handleConnect);
             this.sio.on('disconnect', this.handleDisconnect);
-            this.sio.on('environment', this.handleEnvironment);
-            this.sio.on('gui', this.handleGUI);
             this.sio.on('data', this.handleData);
-            this.sio.on('request', this.handleRequest);
             this.sio.on('connect_error', this.handleError);
             this.sio.on('connect_failed', this.handleError);
 

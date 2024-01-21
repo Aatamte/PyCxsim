@@ -59,9 +59,6 @@ class SocketIOClient:
         try:
             self.sio.on('connect', self.on_connect)
             self.sio.on('disconnect', self.on_disconnect)
-            self.sio.on('environment', self.on_environment)
-            self.sio.on('request', self.on_request)
-            self.sio.on('gui', self.on_set)
             self.sio.on('data', self.on_set)
             self.sio.connect(self.url)
 

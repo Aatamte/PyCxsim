@@ -29,16 +29,14 @@ class GUI:
         return len(self.connected_environments) >= 1 and len(self.connected_guis) >= 1 and not self.set_up_complete
 
     def set_up(self):
-        print("running phases")
-
         self.send_to_environments(
-            "event", {
+            {
                 "content": "hello"
             }
         )
 
         self.send_to_guis(
-            "data", {
+            {
                 "content": "hello"
             }
         )
@@ -103,13 +101,13 @@ class GUI:
         if self.verbose:
             self.logger.info(message)
 
-    def send_to_environments(self, event: str, data: Dict):
+    def send_to_environments(self, data: Dict):
         for client_id in self.connected_environments:
-            self.socketio.emit(event, data, room=client_id)
+            self.socketio.emit("data", data, room=client_id)
 
-    def send_to_guis(self, event: str, data: Dict):
+    def send_to_guis(self, data: Dict):
         for client_id in self.connected_guis:
-            self.socketio.emit(event, data, room=client_id)
+            self.socketio.emit("data", data, room=client_id)
 
     def emit_event(self, event, data):
         if event == 'environment':
