@@ -2,6 +2,8 @@ import os
 import subprocess
 import shutil
 
+# uses npm to build ready-to-serve static files for the gui, moves files into the pycxsim directory
+
 # Define the absolute paths
 project_root = os.path.abspath(os.path.dirname(__file__))
 gui_directory = os.path.join(project_root, 'gui')

@@ -26,7 +26,7 @@ from cxsim.utilities.names import get_first_name
 from cxsim.agents.actions.standard import STANDARD_ACTIONS
 
 # GUI
-from cxsim.environment.backend.websocket_server import WebSocketServer
+from cxsim.environment.client.socketio_client import SocketIOClient
 
 
 class UnsupportedItemType(Exception):
@@ -57,6 +57,7 @@ class Environment:
             step_delay: int = 2,
             verbose: int = 0,
             seed: int = None,
+            use_client: bool = True
     ):
         """
         Initialize the environment.
@@ -70,7 +71,7 @@ class Environment:
         self.name = name
         self.verbose = verbose
         self.seed = seed
-        self.gui = None
+        self.use_client = use_client
         self._start_time = None
 
         # gridworld
@@ -78,11 +79,13 @@ class Environment:
 
         # logger
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.INFO)
 
         self._should_stop_simulation = False
+
         self._is_first_step = True
         self._is_prepared = False
+
         self.step_delay = step_delay
 
         self.current_step = 0
@@ -100,7 +103,6 @@ class Environment:
         self.agent_id_lookup = {}
 
         # actions
-        self.max_actions = 1
         self.action_space = {}
         self.standard_actions = STANDARD_ACTIONS
 
@@ -123,7 +125,7 @@ class Environment:
         self.calender = Calender()
         self.item_handler = ItemHandler(self)
 
-        self.backend = WebSocketServer(self)
+        self.socket_client = SocketIOClient(self)
 
         self._current_time = time.perf_counter()
         self._past_time = time.perf_counter()
@@ -136,8 +138,8 @@ class Environment:
         self.x_size = None
         self.y_size = None
 
-        if self.backend:
-            self.backend.run()
+        if self.use_client:
+            self.socket_client.connect()
 
     def add_agent(self, agent: Agent):
         """
@@ -245,7 +247,6 @@ class Environment:
         if len(all_positions) < len(self.agents):
             raise ValueError(f"Insufficient unique positions available for all agents. Size of grid: {self.x_size, self.y_size}")
 
-
     def compile(self):
         self._start_time = time.perf_counter()
         # assert that all agents have necessary functionality
@@ -276,9 +277,6 @@ class Environment:
             agent.compile()
 
         self._assign_agent_positions()
-
-        if self.backend:
-            self.backend.compile()
 
         self.n_artifacts = len(self.action_handler.artifacts)
         self._is_prepared = True
@@ -312,8 +310,7 @@ class Environment:
             for artifact in self.artifacts:
                 artifact.reset(self)
 
-        if self.backend:
-            self.backend.step()
+        if self.use_client:
             self._backend_while_loop()
 
         return None
@@ -399,11 +396,10 @@ class Environment:
         for func in agent.after_turn_methods:
             func()
 
-    def step(self):
-        if self.backend:
-            self.backend.step()
-            self._backend_while_loop()
+        if self.use_client:
+            self.socket_client.sync()
 
+    def step(self):
         self._current_time = time.perf_counter()
 
         for _ in range(len(self.agent_queue)):
@@ -419,6 +415,9 @@ class Environment:
 
         self.update_simulation_state()
 
+        if self.use_client:
+            self._backend_while_loop()
+
     def _backend_while_loop(self):
         while self.STATUS == 0:
             time.sleep(0.1)
@@ -427,8 +426,48 @@ class Environment:
             print("status is next")
             self.STATUS = 0
 
-    def describe(self):
-        pass
+    @property
+    def metadata(self):
+        # Basic attributes
+        env_dict = {
+            "name": self.name,
+            "verbose": self.verbose,
+            "seed": self.seed,
+            "use_client": self.use_client,
+            "current_step": self.current_step,
+            "max_steps": self.max_steps,
+            "current_episode": self.current_episode,
+            "max_episodes": self.max_episodes,
+            "step_delay": self.step_delay,
+            "n_agents": self.n_agents,
+            "n_artifacts": self.n_artifacts,
+            "strict": self.strict,
+            "status": ENV_STATUS.get(self.STATUS, "Unknown"),
+            "x_size": self.x_size,
+            "y_size": self.y_size
+        }
+
+        return env_dict
+
+    def to_dict(self, ):
+        # Basic attributes
+        env_dict = {"name": self.name, "verbose": self.verbose, "seed": self.seed, "use_client": self.use_client,
+                    "current_step": self.current_step, "max_steps": self.max_steps,
+                    "current_episode": self.current_episode, "max_episodes": self.max_episodes,
+                    "step_delay": self.step_delay, "starting_block_size": self.starting_block_size,
+                    "n_agents": self.n_agents, "n_artifacts": self.n_artifacts, "strict": self.strict,
+                    "status": ENV_STATUS.get(self.STATUS, "Unknown"), "x_size": self.x_size, "y_size": self.y_size,
+                    "agent_queue": [agent.name for agent in self.agent_queue]}
+
+        # Agent Queue - include only the names of the agents
+        agent_data = []
+
+        for agent in self.agents:
+            agent_data.append(agent.to_dict())
+
+        print(agent_data)
+
+        return env_dict
 
     def get(self, item, output_format: str = None):
         pass

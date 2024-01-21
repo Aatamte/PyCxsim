@@ -182,7 +182,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ sidebarWidth }) => {
     const { state, sendData } = useData();
 
     const sendButtonAction = (action: string) => {
-        sendData(action);
+        sendData("environment", action);
     };
 
     return (
@@ -219,9 +219,9 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ sidebarWidth }) => {
 
             {/* Status Placeholder */}
             <VStack spacing={0} align="center">
-                <CText fontSize="lg" fontWeight="bold">Status</CText>
-                <CText fontSize="md">Placeholder</CText>
-                {/* Add status indicators or information here */}
+                <CText fontSize="md">{state.environment.status}</CText>
+                <CText fontSize="md">{state.environment.agentQueue}</CText>
+
             </VStack>
         </Flex>
     );

@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 from cxsim import Environment, Population, Agent
 
@@ -57,10 +59,10 @@ class MyAgent(Agent):
         self.io.text.format.compress_messages(n_steps_back=2)
 
     def step(self):
-        print("step")
+        print("agent step")
         self.io.text.add_message("user", self.io.text.get_updated_prompt("decision"))
         action = self.determine_action()
-
+        time.sleep(1)
         _action = "SellOrder('shirts', 1, 1)"
         _actiontwo = "BuyOrder(good='shirts', quantity = 1, price = 1)"
 
@@ -188,20 +190,21 @@ class Smith1962Environment:
                 for agent in env.iter_agent_turns():
                     env.process_turn(agent)
 
-                price_history = market["shirts"].history["price"].values
+#                price_history = market["shirts"].history["price"]
 
-                if len(price_history) != 0:
-                    alpha = calculate_alpha(equilibrium_price, price_history)
-                    alpha_history.append(alpha)
+        #        if len(price_history) != 0:
+          #          alpha = calculate_alpha(equilibrium_price, price_history)
+           #         alpha_history.append(alpha)
 
-                print(f"""STEP {env.current_step}\nEquilibrium Price: {equilibrium_price}\nprevious transactions: {price_history}\nalpha values: {alpha_history}""")
+               # print(f"""STEP {env.current_step}\nEquilibrium Price: {equilibrium_price}\nprevious transactions: {price_history}\nalpha values: {alpha_history}""")
 
                 env.step()
 
 
 if __name__ == '__main__':
-
-    env = Smith1962Environment(n_agents=25)
+    env = Smith1962Environment(
+        n_agents=25
+    )
 
     env.test_one()
 

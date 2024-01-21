@@ -20,31 +20,35 @@ export default class Environment {
     public agents: Record<string, Agent>; // Using a dictionary (object) to store agents
     public artifacts: Record<string, Artifact>; // Using a dictionary (object) to store agents
 
+    public agentQueue: string[];
+    public status: string;
 
-  constructor() {
-    this.name = "N/A";
+    constructor() {
+        this.name = "N/A";
 
-    this.agentNames = [];
-    this.artifactNames = [];
+        this.agentNames = [];
+        this.artifactNames = [];
 
-    this.artifacts = {}
-    this.agents = {}
+        this.artifacts = {}
+        this.agents = {}
 
-    this.currentStep = 0
-    this.maxSteps = 10;
-    this.currentEpisode = 0;
-    this.maxEpisodes = 10;
-    this.x_size = 10;
-    this.y_size = 10
+        this.currentStep = 0
+        this.maxSteps = 10;
+        this.currentEpisode = 0;
+        this.maxEpisodes = 10;
+        this.x_size = 10;
+        this.y_size = 10;
 
-  }
+        this.agentQueue = [];
+        this.status = "stopped";
+    }
 
     clear() {
         // Reset step and episode counters
         this.name = "N/A"
         this.currentStep = 0;
         this.currentEpisode = 0;
-
+        this.status = "stopped";
         // Clear agent-related data
         this.agentNames = [];
         this.agents = {};
@@ -89,5 +93,7 @@ export default class Environment {
         this.artifacts[artifact.name] = artifact;
     }
 
-  // ... other methods like removeAgent, addArtifact, etc.
+    public initialize() {
+
+    }
 }

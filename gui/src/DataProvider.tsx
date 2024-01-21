@@ -1,18 +1,20 @@
 import React, {createContext, useReducer, useContext, useEffect, ReactNode, useState} from 'react';
 import Environment from './data_structures/Environment';
-import {WebSocketManager} from "./websocket_client"; // Adjust the import path as necessary
+import SocketClient from "./websocket_client"; // Adjust the import path as necessary
+
 import Agent from "./data_structures/agent";
 import Artifact from "./data_structures/artifact";
+
 type WebSocketStatus = "connecting" | "open" | "closing" | "closed" | "unknown";
 
 class SocketParams {
-    public host: string = 'ws://localhost';
-    public port: string = '8765';
+    public host: string = 'localhost';
+    public port: number = 8765;
     public status: WebSocketStatus = "closed"
 
     constructor() {
-        this.host = 'ws://localhost';
-        this.port = '8765';
+        this.host = 'localhost';
+        this.port = 8765;
         this.status = "closed"
     }
 
@@ -41,7 +43,7 @@ const DataContext = createContext({
   state: initialState,
   dispatch: (() => {}) as React.Dispatch<Action>,
   handleReconnect: async () => false, // handleReconnect is now an async function returning a boolean
-  sendData: (() => {}) as (data: any) => void,
+  sendData: (() => {}) as (ev: any, data: any) => void,
 });
 
 // Reducer function to update state
@@ -64,19 +66,10 @@ const reducer = (state: AppState, action: Action): AppState => {
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [state, dispatch] = useReducer(reducer, initialState);
-    const [webSocketStatus, setWebSocketStatus] = useState<WebSocketStatus>('unknown');
-    const [wsManager, setWsManager] = useState<WebSocketManager | null>(null);
-
-    useEffect(() => {
-
-    }, [state]);
+    const [socket, setSocket] = useState(new SocketClient())
 
     const updateEnvironment = () => {
         dispatch({ type: 'ENVIRONMENT_CHANGE', payload:  state.environment});
-    }
-
-    const handleEnvironmentUpdate = (message: any) => {
-
     }
 
     const handleEnvironmentVariables = (message: any) => {
@@ -114,7 +107,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
     }
 
-
     const handleArtifactInitialization = (message: any) => {
         let agent_name = message.content.name
         console.log(agent_name)
@@ -126,7 +118,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // Dispatch an action to trigger state update
         updateEnvironment();
     }
-
 
     const onMessage = (message: any) => {
     // @ts-ignore
@@ -150,14 +141,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     };
 
-    const onOpen = () => {
-      console.log("onOpen")
-        state.socketParams.status = "open"
-      dispatch({ type: 'SOCKET_VARIABLES', payload:  state.socketParams});
-      // initialize the state
-      sendData("INIT")
-
-    }
+    const onConnect = () => {
+        console.log("onOpen");
+        state.socketParams.status = "open";
+        dispatch({ type: 'SOCKET_VARIABLES', payload: state.socketParams });
+        socket.send("request", "environment")
+    };
 
     const onClose = () => {
       state.socketParams.status = "closed"
@@ -166,36 +155,56 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       dispatch({ type: 'ENVIRONMENT_CHANGE', payload:  state.environment});
     }
 
-    // Set up WebSocket connection
+    const onEnvironment = () => {
+      state.socketParams.status = "closed"
+      dispatch({ type: 'SOCKET_VARIABLES', payload:  state.socketParams});
+      state.environment.clear();
+      dispatch({ type: 'ENVIRONMENT_CHANGE', payload:  state.environment});
+    }
+
+
+    const onGUI = (data: any) => {
+        console.log('Received GUI data: ', data);
+
+        state.environment.name = data.name
+        state.environment.x_size = data.x_size
+        state.environment.y_size = data.y_size
+        state.environment.currentEpisode = data.current_episode
+        state.environment.maxEpisodes = data.max_episodes
+        state.environment.currentStep = data.current_step
+        state.environment.maxSteps = data.max_steps
+        state.environment.agentQueue = data.agent_queue
+        state.environment.status = data.status
+        updateEnvironment();
+    }
+
+
     useEffect(() => {
-        const manager = new WebSocketManager(
-            state.socketParams.host, state.socketParams.port, {
-                onMessage,
-             onOpen,
-             onClose,
-             onError: (error: any) => { console.error("WebSocket error", error); },
-          }
+        // Define the callback functions
+        const callbacks = {
+            onConnect: onConnect,
+            onDisconnect: onClose,
+            onMessage: onMessage,
+            onEnvironment: onEnvironment,
+            onGUI: onGUI,
+            onError: (error: any) => console.error("WebSocket error", error)
+        };
+
+        socket.connect(
+            state.socketParams.host,
+            state.socketParams.port,
+            callbacks
         );
 
-        setWsManager(manager);
-
-        // Start the automatic reconnect scheduler
-        manager.startReconnectScheduler();
-
-        return () => {
-          // Clean up WebSocket connection when component unmounts
-          manager.stopReconnectScheduler();
-          manager.client.close();
-        };
-      }, []);
+    }, []);
 
     // Function to manually trigger a reconnect
     const handleReconnect = async () => {
         try {
-            const success = await wsManager?.manualReconnect();
+            const success = true
             if (success) {
                 console.debug("Reconnect successful");
-                onOpen(); // Assuming onOpen is a callback that handles the 'open' event.
+                onConnect(); // Assuming onOpen is a callback that handles the 'open' event.
                 return true;
             } else {
                 console.debug("Reconnect failed");
@@ -207,14 +216,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-      // Function to send data via WebSocket
-      const sendData = (data: any) => {
-        if (wsManager?.client.getStatus() === 'open') {
-          wsManager.client.sendMessage(data);
-        } else {
-          console.error("WebSocket is not open. Cannot send data.");
-        }
-      };
+    const sendData = (ev: any, data: any) => {
+        socket.send(ev, data);
+    };
 
 
   return (
