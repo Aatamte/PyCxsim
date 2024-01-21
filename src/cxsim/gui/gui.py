@@ -2,8 +2,7 @@ import os
 import logging
 from flask import Flask, send_from_directory, request
 from flask_socketio import SocketIO
-from typing import Optional, Any
-
+from typing import Optional, Any, Dict
 
 class GUI:
     def __init__(self, verbose=False, dev_mode=False):
@@ -31,7 +30,20 @@ class GUI:
 
     def set_up(self):
         print("running phases")
-        self.phase_one_completed = True
+
+        self.send_to_environments(
+            "event", {
+                "content": "hello"
+            }
+        )
+
+        self.send_to_guis(
+            "data", {
+                "content": "hello"
+            }
+        )
+
+        self.set_up_complete = True
 
     def _setup_logging(self):
         logger = logging.getLogger('PyCxsimFrontend')
@@ -91,13 +103,19 @@ class GUI:
         if self.verbose:
             self.logger.info(message)
 
+    def send_to_environments(self, event: str, data: Dict):
+        for client_id in self.connected_environments:
+            self.socketio.emit(event, data, room=client_id)
+
+    def send_to_guis(self, event: str, data: Dict):
+        for client_id in self.connected_guis:
+            self.socketio.emit(event, data, room=client_id)
+
     def emit_event(self, event, data):
         if event == 'environment':
-            for client_id in self.connected_environments:
-                self.socketio.emit(event, data, room=client_id)
+            self.send_to_environments(event, data)
         elif event in ['gui', 'data']:
-            for client_id in self.connected_guis:
-                self.socketio.emit(event, data, room=client_id)
+            self.send_to_guis(event, data)
 
     def add_routes(self):
         if not self.dev_mode:
