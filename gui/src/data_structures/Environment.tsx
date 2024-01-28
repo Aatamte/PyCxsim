@@ -1,6 +1,20 @@
 import Agent from "./agent";
 import Artifact from "./artifact";
 
+enum LogLevel {
+    DEBUG = "DEBUG",
+    INFO = "INFO",
+    WARNING = "WARNING",
+    ERROR = "ERROR",
+    CRITICAL = "CRITICAL"
+}
+
+interface LogEntry {
+    timestamp: Date;
+    level: LogLevel;
+    message: string;
+}
+
 export default class Environment {
     [key: string]: any; // Index signature
     public name: string;
@@ -23,6 +37,9 @@ export default class Environment {
     public agentQueue: string[];
     public status: string;
 
+    public logs: LogEntry[]; // Logs data structure
+
+
     constructor() {
         this.name = "N/A";
 
@@ -41,6 +58,8 @@ export default class Environment {
 
         this.agentQueue = [];
         this.status = "stopped";
+
+        this.logs = []; // Initialize the logs array
     }
 
     clear() {
@@ -59,13 +78,13 @@ export default class Environment {
     }
 
 
-  updateEnvironment(key: string, value: any) {
-    if (key in this) {
-      this[key] = value;
-    } else {
-      console.warn(`Key ${key} is not a valid property of Environment`);
+    updateEnvironment(key: string, value: any) {
+        if (key in this) {
+          this[key] = value;
+        } else {
+          console.warn(`Key ${key} is not a valid property of Environment`);
+        }
     }
-  }
 
   // Example of an additional method
     public addAgent(agent: Agent): void {
@@ -96,4 +115,21 @@ export default class Environment {
     public initialize() {
 
     }
+
+    // Method to add a log entry
+    public addLog(level: LogLevel, message: string): void {
+        const logEntry: LogEntry = {
+            timestamp: new Date(), // Current timestamp
+            level: level,
+            message: message,
+        };
+        this.logs.push(logEntry); // Add the log entry to the logs array
+    }
+
+        // Method to clear logs
+    public clearLogs(): void {
+        this.logs = []; // Reset the logs array
+    }
+
+
 }

@@ -178,11 +178,12 @@ const Agents: React.FC<agentProps> = ({ agents, cellSize, navigate }) => {
 type InfoPanelProps = {
     sidebarWidth: number;
 };
+
 const InfoPanel: React.FC<InfoPanelProps> = ({ sidebarWidth }) => {
     const { state, sendData } = useData();
 
     const sendButtonAction = (action: string) => {
-        sendData("environment", action);
+        sendData("data", action);
     };
 
     return (

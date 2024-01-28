@@ -26,7 +26,7 @@ from cxsim.utilities.names import get_first_name
 from cxsim.agents.actions.standard import STANDARD_ACTIONS
 
 # GUI
-from cxsim.environment.client.socketio_client import SocketIOClient
+from cxsim.environment.client.socketio_client import GUIServerConnection
 
 
 class UnsupportedItemType(Exception):
@@ -125,7 +125,7 @@ class Environment:
         self.calender = Calender()
         self.item_handler = ItemHandler(self)
 
-        self.socket_client = SocketIOClient(self)
+        self.server_connection = GUIServerConnection(self)
 
         self._current_time = time.perf_counter()
         self._past_time = time.perf_counter()
@@ -139,7 +139,7 @@ class Environment:
         self.y_size = None
 
         if self.use_client:
-            self.socket_client.connect()
+            self.server_connection.connect()
 
     def add_agent(self, agent: Agent):
         """
@@ -285,7 +285,7 @@ class Environment:
         """
         Resets the environment
         """
-
+        self.log("INFO", "resetting environment")
         if not self.agents or len(self.agents) == 0:
             raise ValueError("agents must be added to the environment before  "
                              "the first step is run")
@@ -397,7 +397,7 @@ class Environment:
             func()
 
         if self.use_client:
-            self.socket_client.sync()
+            self.server_connection.sync()
 
     def step(self):
         self._current_time = time.perf_counter()
@@ -465,8 +465,6 @@ class Environment:
         for agent in self.agents:
             agent_data.append(agent.to_dict())
 
-        print(agent_data)
-
         return env_dict
 
     def get(self, item, output_format: str = None):
@@ -505,16 +503,33 @@ class Environment:
     def agent_queue_length(self):
         return len(self.agent_queue)
 
-    def log(self, level, msg, *args, **kwargs):
+    def log(self, level: Union[int, str], msg: str, *args, **kwargs):
         """
         Convenience method for logging messages.
 
-        :param level: The logging level.
+        :param level: The logging level, either as a string or an integer.
         :param msg: The format string for the message.
         :param args: The arguments to merge into msg.
         :param kwargs: Other keyword arguments.
         """
+        # Map string levels to their numeric values
+        str_to_level = {
+            'DEBUG': logging.DEBUG,
+            'INFO': logging.INFO,
+            'WARNING': logging.WARNING,
+            'ERROR': logging.ERROR,
+            'CRITICAL': logging.CRITICAL
+        }
+
+        # Convert string level to numeric if necessary
+        if isinstance(level, str):
+            level = str_to_level.get(level.upper(), logging.INFO)  # Default to INFO if level is unrecognized
+
+        # Log the message
         self.logger.log(level, msg, *args, **kwargs)
+        
+        if self.use_client:
+            self.server_connection.send_message("logs", {"level": level, "msg": msg})
 
     def __repr__(self):
         newline = '\n'

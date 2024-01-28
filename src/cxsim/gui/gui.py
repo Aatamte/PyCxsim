@@ -4,7 +4,8 @@ from flask import Flask, send_from_directory, request
 from flask_socketio import SocketIO
 from typing import Optional, Any, Dict
 
-class GUI:
+
+class GUIServer:
     def __init__(self, verbose=False, dev_mode=False):
         self.verbose = verbose
         self.dev_mode = dev_mode
@@ -18,33 +19,34 @@ class GUI:
         self.add_routes()
         self.add_socketio_events()
 
-        self.phase_one_completed: bool = False
-        self.phase_two_completed: bool = False
-        self.phase_three_completed: bool = False
-
         self.set_up_complete: bool = False
+
+        self._kv_storage = {
+            "connected_gui": self.has_connected_gui,
+            "connected_environment": self.has_connected_environment
+        }
 
     @property
     def is_ready_for_set_up(self):
         return len(self.connected_environments) >= 1 and len(self.connected_guis) >= 1 and not self.set_up_complete
 
-    def set_up(self):
-        self.send_to_environments(
-            {
-                "content": "hello"
-            }
-        )
+    @property
+    def has_connected_gui(self):
+        return len(self.connected_guis) >= 1
 
-        self.send_to_guis(
-            {
-                "content": "hello"
-            }
-        )
+    @property
+    def has_connected_environment(self):
+        return len(self.connected_environments) >= 1
+
+    def set_up(self):
+        print("setting up the connection")
+        self.send("environment", "initial handshake", {"content": "hello"})
+        self.send("gui", "initial handshake", {"content": "hello"})
 
         self.set_up_complete = True
 
     def _setup_logging(self):
-        logger = logging.getLogger('PyCxsimFrontend')
+        logger = logging.getLogger('PyCxSim GUI Server')
         level = logging.DEBUG if self.verbose else logging.INFO
         logger.setLevel(level)
         handler = logging.StreamHandler()
@@ -74,8 +76,23 @@ class GUI:
             print("registering client...")
             self._handle_register_client(request.sid, data)
 
-        for event in ['environment', 'gui', 'data']:
-            self.socketio.on(event)(self._handle_custom_event)
+        @self.socketio.on('data')
+        def handle_data(data):
+            self._handle_data(data)
+
+    def _handle_server_request(self, data):\
+        print("internal_sever_request: ", data)
+
+    def _handle_data(self, data):
+        header = data.get("header")
+
+        self._log_info(f'_handle data: {data}')
+        source = data.get('source')
+
+        if source == "environment":
+            self.send("gui", data["header"], data["content"])
+        elif source == "GUI":
+            self.send("environment", data["header"], data["content"])
 
     def _handle_connect(self, client_id):
         self.socketio.emit('request', "id", room=client_id)
@@ -97,23 +114,18 @@ class GUI:
         if self.is_ready_for_set_up:
             self.set_up()
 
-    def _log_info(self, message):
-        if self.verbose:
-            self.logger.info(message)
+    def send(self, location: str, header: str, data: Dict):
+        msg = {
+            "header": header,
+            "content": data
+        }
 
-    def send_to_environments(self, data: Dict):
-        for client_id in self.connected_environments:
-            self.socketio.emit("data", data, room=client_id)
-
-    def send_to_guis(self, data: Dict):
-        for client_id in self.connected_guis:
-            self.socketio.emit("data", data, room=client_id)
-
-    def emit_event(self, event, data):
-        if event == 'environment':
-            self.send_to_environments(event, data)
-        elif event in ['gui', 'data']:
-            self.send_to_guis(event, data)
+        if location == "environment":
+            for client_id in self.connected_environments:
+                self.socketio.emit("data", msg, room=client_id)
+        elif location == "gui":
+            for client_id in self.connected_guis:
+                self.socketio.emit("data", msg, room=client_id)
 
     def add_routes(self):
         if not self.dev_mode:
@@ -128,17 +140,17 @@ class GUI:
         self._log_info(f"Serving static file: {path}")
         return send_from_directory(self.app.static_folder, path)
 
-    def _handle_custom_event(self, data):
-        event = request.event['message']
-        self._log_info(f'Received data on {event}: {data}')
-        self.emit_event(event, data)
-
     def _remove_client(self, client_id):
         self.connected_guis.discard(client_id)
         self.connected_environments.discard(client_id)
+
         self._log_info(f'Client {client_id} removed from all sets')
 
-    def run(self, host: Optional[str] = None, port: Optional[int] = None,
+    def _log_info(self, message):
+        if self.verbose:
+            self.logger.info(message)
+
+    def start(self, host: Optional[str] = None, port: Optional[int] = None,
             debug: Optional[bool] = None, load_dotenv: bool = True, **options: Any):
         self._log_info(f"Starting Flask application with dev_mode={self.dev_mode} and verbose={self.verbose}")
         import threading
@@ -148,14 +160,11 @@ class GUI:
             threading.Thread(target=lambda: webbrowser.open(url)).start()
         self.app.run(host=host, port=port, debug=debug, load_dotenv=load_dotenv, **options)
 
-    def reset_phases(self):
-        self.phase_one_completed: bool = False
-        self.phase_two_completed: bool = False
-        self.phase_three_completed: bool = False
-
 
 if __name__ == '__main__':
-    GUI(verbose=True, dev_mode=True).run(host='localhost', port=8765)
+    server = GUIServer(verbose=True, dev_mode=True)
+
+    server.start(host='localhost', port=8765)
 
 
 

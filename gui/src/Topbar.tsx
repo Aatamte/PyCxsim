@@ -1,67 +1,62 @@
 import React, { useState, useEffect, useRef } from 'react';
 import LogoImage from './assets/pycxsim_full_logo_no_background.png';
-import { Flex, Image, Text, Button, Circle, Divider, Spacer, Box, Menu, MenuButton, MenuList, MenuItem, IconButton, useToast } from '@chakra-ui/react';
+import {
+    Flex,
+    Image,
+    Text,
+    Button,
+    Circle,
+    Divider,
+    Spacer,
+    Box,
+    Menu,
+    MenuButton,
+    MenuList,
+    MenuItem,
+    IconButton,
+    useToast,
+    useColorMode
+} from '@chakra-ui/react';
 
 import { MdMoreVert } from 'react-icons/md'; // This icon represents the nine-dot app icon, you can replace it with your preferred icon
 import { useNavigate } from 'react-router-dom';
-
 import { useData } from './DataProvider';
 
 type WebSocketStatus = "connecting" | "open" | "closing" | "closed" | "unknown";
 
+const webSocketIndicatorColor = {
+    open: 'green.400',
+    connecting: 'orange.400',
+    closed: 'red.400',
+    closing: 'orange.400',
+    unknown: 'orange.400',
+};
+
 const TopBar: React.FC = () => {
     const { state, handleReconnect, sendData } = useData();
     const navigate = useNavigate();
+    const { colorMode } = useColorMode();
+    const bgColor = { light: 'gray.100', dark: '#333' };
+    const color = { light: 'black', dark: 'white' };
+    const borderColor = { light: 'gray.200', dark: 'gray.600' };
+    const menuListBgColor = { light: 'white', dark: 'gray.700' };
     const toast = useToast();
 
-    const connectButton = async () => {
-        // Create an initial toast with a loading indicator
-        const toastId = toast({
-            title: "Connecting...",
-            description: `Attempting to connect to ${state.socketParams.host}:${state.socketParams.port}`,
-            status: "info",
-            duration: null, // Keep it open indefinitely
-            isClosable: true,
-            position: "top",
-        });
+        // Ensure the server connection status is a valid WebSocketStatus
+    const serverConnectionStatus = state.kv_storage.get("server_connection");
+    const isValidStatus = Object.keys(webSocketIndicatorColor).includes(serverConnectionStatus);
+    const serverStatus: WebSocketStatus = isValidStatus ? serverConnectionStatus as WebSocketStatus : "unknown";
 
-        try {
-            const result = await handleReconnect(); // wait for the promise to resolve
 
-            // Update the toast based on the result
-            if (result) {
-                toast.update(toastId, {
-                    title: "Connected",
-                    description: "You have successfully connected.",
-                    status: "success",
-                    duration: 3000, // Close after 3 seconds
-                });
-            } else {
-                toast.update(toastId, {
-                    title: "Connection Failed",
-                    description: "Unable to reconnect. Please try again.",
-                    status: "error",
-                    duration: 3000, // Close after 3 seconds
-                });
-            }
-        } catch (error) {
-            // Handle any errors that occur during the reconnect process
-            toast.update(toastId, {
-                title: "Connection Error",
-                description: `Error occurred: ${error}`,
-                status: "error",
-                duration: 3000, // Close after 3 seconds
-            });
-        }
-    };
+    // Placeholder functions for connection actions
+    const reconnectServer = async () => {/* Implementation here */};
 
-    const webSocketIndicatorColor: Record<WebSocketStatus, string> = {
-        open: 'green.400',
-        connecting: 'orange.400',
-        closed: 'red.400',
-        closing: 'orange.400',
-        unknown: 'orange.400'
-    };
+    const disconnectServer = () => {/* Implementation here */};
+
+    const reconnectEnvironment = async () => {/* Implementation here */};
+
+    const disconnectEnvironment = () => {/* Implementation here */};
+
 
     return (
         <Flex
@@ -82,10 +77,33 @@ const TopBar: React.FC = () => {
 
             <Spacer /> {/* This pushes everything else to the right */}
 
-            {/* Reconnect Button */}
-            <Button colorScheme="blue" onClick={connectButton} leftIcon={<Circle size="20px" bg={webSocketIndicatorColor[state.socketParams.status]} />}>
-                Connect
-            </Button>
+            {/* Environment Connection Menu */}
+            <Menu>
+                <MenuButton as={Button} colorScheme="blue" mx={2} rightIcon={<Circle size="10px" bg={webSocketIndicatorColor[state.socketParams.environment_status]} />} >
+                    Environment
+                </MenuButton>
+                <MenuList>
+                    <Box px={4} py={2}>
+                        <Text color={color[colorMode]}>Status: {state.socketParams.environment_status}</Text>
+                    </Box>
+                    <MenuItem onClick={reconnectEnvironment} color={color[colorMode]}>Reconnect Environment</MenuItem>
+                    <MenuItem onClick={disconnectEnvironment} color={color[colorMode]}>Disconnect Environment</MenuItem>
+                </MenuList>
+            </Menu>
+
+             {/* Server Connection Menu */}
+            <Menu>
+                <MenuButton as={Button} colorScheme="blue" mx={2} rightIcon={<Circle size="10px" bg={webSocketIndicatorColor[serverStatus]} />} >
+                    Server
+                </MenuButton>
+                <MenuList>
+                    <Box px={4} py={2}>
+                        <Text color={color[colorMode]}>Status: {serverStatus}</Text>
+                    </Box>
+                    <MenuItem onClick={reconnectServer} color={color[colorMode]}>Reconnect Server</MenuItem>
+                    <MenuItem onClick={disconnectServer} color={color[colorMode]}>Disconnect Server</MenuItem>
+                </MenuList>
+            </Menu>
 
             <Divider orientation="vertical" height="5vh" mx={4} />
 

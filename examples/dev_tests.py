@@ -203,7 +203,7 @@ class Smith1962Environment:
 
 if __name__ == '__main__':
     env = Smith1962Environment(
-        n_agents=25
+        n_agents=10
     )
 
     env.test_one()
