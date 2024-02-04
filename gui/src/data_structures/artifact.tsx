@@ -9,7 +9,7 @@ export default class Artifact {
         this.name = "default"
     }
 
-    updateArtifact(key: string, value: any) {
+    set(key: string, value: any) {
         if (key in this) {
             // Attempt to parse the value if it's a string that looks like JSON
             if (typeof value === 'string' && this.isJsonString(value)) {

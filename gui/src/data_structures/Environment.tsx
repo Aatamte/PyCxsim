@@ -28,9 +28,6 @@ export default class Environment {
     public x_size: number;
     public y_size: number;
 
-    public agentNames: string[];
-    public artifactNames: string[];
-
     public agents: Record<string, Agent>; // Using a dictionary (object) to store agents
     public artifacts: Record<string, Artifact>; // Using a dictionary (object) to store agents
 
@@ -42,9 +39,6 @@ export default class Environment {
 
     constructor() {
         this.name = "N/A";
-
-        this.agentNames = [];
-        this.artifactNames = [];
 
         this.artifacts = {}
         this.agents = {}
@@ -68,12 +62,11 @@ export default class Environment {
         this.currentStep = 0;
         this.currentEpisode = 0;
         this.status = "stopped";
+
         // Clear agent-related data
-        this.agentNames = [];
         this.agents = {};
 
         // Clear artifact-related data
-        this.artifactNames = [];
         this.artifacts = {};
     }
 
@@ -112,9 +105,24 @@ export default class Environment {
         this.artifacts[artifact.name] = artifact;
     }
 
-    public initialize() {
-
+    public set(key: string, value: any): void {
+        if (key in this) {
+            this[key] = value;
+        } else {
+            console.warn(`Key '${key}' is not a valid property of Environment`);
+        }
     }
+
+    // Use a getter to dynamically get agent names
+    public get agentNames(): string[] {
+        return Object.keys(this.agents);
+    }
+
+    // Use a getter to dynamically get artifact names
+    public get artifactNames(): string[] {
+        return Object.keys(this.artifacts);
+    }
+
 
     // Method to add a log entry
     public addLog(level: LogLevel, message: string): void {
@@ -130,6 +138,4 @@ export default class Environment {
     public clearLogs(): void {
         this.logs = []; // Reset the logs array
     }
-
-
 }

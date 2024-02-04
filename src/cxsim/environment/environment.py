@@ -3,7 +3,7 @@ import logging
 from collections import deque
 from functools import wraps
 from dataclasses import is_dataclass, asdict
-from typing import Union, Any
+from typing import Union, Any, Dict
 import inspect
 from dataclasses import fields
 import random
@@ -101,6 +101,7 @@ class Environment:
         self.agent_idx = 0
         self.agent_name_lookup = {}
         self.agent_id_lookup = {}
+        self.agent_dict: Dict[str, Agent] = {}
 
         # actions
         self.action_space = {}
@@ -156,6 +157,7 @@ class Environment:
         self.agent_names.append(agent.name)
         self.agents.append(agent)
         self.agent_name_lookup[agent.name] = agent
+
         self.n_agents = len(self.agents)
 
     def add_artifact(self, artifact: Artifact):
@@ -280,6 +282,7 @@ class Environment:
 
         self.n_artifacts = len(self.action_handler.artifacts)
         self._is_prepared = True
+        self.server_connection.full_refresh()
 
     def reset(self, reset_agents: bool = True, reset_artifacts: bool = True, create_new_agent_queue: bool = True) -> None:
         """
@@ -397,7 +400,7 @@ class Environment:
             func()
 
         if self.use_client:
-            self.server_connection.sync()
+            self.server_connection.full_refresh()
 
     def step(self):
         self._current_time = time.perf_counter()
@@ -444,28 +447,25 @@ class Environment:
             "strict": self.strict,
             "status": ENV_STATUS.get(self.STATUS, "Unknown"),
             "x_size": self.x_size,
-            "y_size": self.y_size
+            "y_size": self.y_size,
+            "agentQueue": [agent.name for agent in list(self.agent_queue)]
         }
 
         return env_dict
 
-    def to_dict(self, ):
-        # Basic attributes
-        env_dict = {"name": self.name, "verbose": self.verbose, "seed": self.seed, "use_client": self.use_client,
-                    "current_step": self.current_step, "max_steps": self.max_steps,
-                    "current_episode": self.current_episode, "max_episodes": self.max_episodes,
-                    "step_delay": self.step_delay, "starting_block_size": self.starting_block_size,
-                    "n_agents": self.n_agents, "n_artifacts": self.n_artifacts, "strict": self.strict,
-                    "status": ENV_STATUS.get(self.STATUS, "Unknown"), "x_size": self.x_size, "y_size": self.y_size,
-                    "agent_queue": [agent.name for agent in self.agent_queue]}
-
-        # Agent Queue - include only the names of the agents
-        agent_data = []
-
+    @property
+    def agent_metadata(self):
+        agent_data = {}
         for agent in self.agents:
-            agent_data.append(agent.to_dict())
+            agent_data[agent.name] = agent.to_dict()
+        return agent_data
 
-        return env_dict
+    @property
+    def artifact_metadata(self):
+        artifact_data = {}
+        for artifact in self.artifacts:
+            artifact_data[artifact.name] = artifact.to_dict()
+        return artifact_data
 
     def get(self, item, output_format: str = None):
         pass
@@ -498,6 +498,12 @@ class Environment:
 
     def load(self, filepath):
         pass
+
+    def handle_gui_event(self, action: str):
+        print("environment", action)
+        if action == "next":
+            self.STATUS = 2
+
 
     @property
     def agent_queue_length(self):

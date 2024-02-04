@@ -43,10 +43,15 @@ const TopBar: React.FC = () => {
     const toast = useToast();
 
         // Ensure the server connection status is a valid WebSocketStatus
-    const serverConnectionStatus = state.kv_storage.get("server_connection");
+    const serverConnectionStatus = state.kv_storage.get("gui_connection");
     const isValidStatus = Object.keys(webSocketIndicatorColor).includes(serverConnectionStatus);
     const serverStatus: WebSocketStatus = isValidStatus ? serverConnectionStatus as WebSocketStatus : "unknown";
 
+
+    // Ensure the server connection status is a valid WebSocketStatus
+    const EnvironmentConnectionStatus = state.kv_storage.get("environment_connection");
+    const isValidEnvStatus = Object.keys(webSocketIndicatorColor).includes(EnvironmentConnectionStatus);
+    const envStatus: WebSocketStatus = isValidEnvStatus ? EnvironmentConnectionStatus as WebSocketStatus : "unknown";
 
     // Placeholder functions for connection actions
     const reconnectServer = async () => {/* Implementation here */};
@@ -79,12 +84,12 @@ const TopBar: React.FC = () => {
 
             {/* Environment Connection Menu */}
             <Menu>
-                <MenuButton as={Button} colorScheme="blue" mx={2} rightIcon={<Circle size="10px" bg={webSocketIndicatorColor[state.socketParams.environment_status]} />} >
+                <MenuButton as={Button} colorScheme="blue" mx={2} rightIcon={<Circle size="10px" bg={webSocketIndicatorColor[envStatus]} />} >
                     Environment
                 </MenuButton>
                 <MenuList>
                     <Box px={4} py={2}>
-                        <Text color={color[colorMode]}>Status: {state.socketParams.environment_status}</Text>
+                        <Text color={color[colorMode]}>Status: {envStatus}</Text>
                     </Box>
                     <MenuItem onClick={reconnectEnvironment} color={color[colorMode]}>Reconnect Environment</MenuItem>
                     <MenuItem onClick={disconnectEnvironment} color={color[colorMode]}>Disconnect Environment</MenuItem>

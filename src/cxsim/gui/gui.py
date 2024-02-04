@@ -4,6 +4,10 @@ from flask import Flask, send_from_directory, request
 from flask_socketio import SocketIO
 from typing import Optional, Any, Dict
 
+# core methods to update react with the correct info
+
+#
+
 
 class GUIServer:
     def __init__(self, verbose=False, dev_mode=False):
@@ -21,14 +25,30 @@ class GUIServer:
 
         self.set_up_complete: bool = False
 
-        self._kv_storage = {
-            "connected_gui": self.has_connected_gui,
-            "connected_environment": self.has_connected_environment
+    def set_up(self):
+        print("setting up the connection")
+        self.send_connection_statuses()
+        self.send("environment", "full_refresh", {})
+        self.send("gui", "initial handshake", {"content": "hello"})
+
+    def get_connections_status(self):
+        return {
+            "gui_connection": "open" if self.has_connected_gui else "closed",
+            "environment_connection": "open" if self.has_connected_environment else "closed"
+        }
+
+    def send_connection_statuses(self):
+        self.send("gui", "kv_storage", self.get_connections_status())
+        self.send("environment", "kv_storage", self.get_connections_status())
+
+    def get_kv_storage(self):
+        return {
+            **self.get_connections_status(),
         }
 
     @property
     def is_ready_for_set_up(self):
-        return len(self.connected_environments) >= 1 and len(self.connected_guis) >= 1 and not self.set_up_complete
+        return len(self.connected_environments) >= 1 and len(self.connected_guis) >= 1
 
     @property
     def has_connected_gui(self):
@@ -37,13 +57,6 @@ class GUIServer:
     @property
     def has_connected_environment(self):
         return len(self.connected_environments) >= 1
-
-    def set_up(self):
-        print("setting up the connection")
-        self.send("environment", "initial handshake", {"content": "hello"})
-        self.send("gui", "initial handshake", {"content": "hello"})
-
-        self.set_up_complete = True
 
     def _setup_logging(self):
         logger = logging.getLogger('PyCxSim GUI Server')
@@ -97,10 +110,13 @@ class GUIServer:
     def _handle_connect(self, client_id):
         self.socketio.emit('request', "id", room=client_id)
         self._log_info(f'Client connected: {client_id}')
+        self.send_connection_statuses()
 
     def _handle_disconnect(self, client_id):
         self._remove_client(client_id)
         self._log_info(f'Client disconnected: {client_id}')
+        self.set_up_complete = False
+        self.send_connection_statuses()
 
     def _handle_register_client(self, client_id, data):
         client_type = data.get('type')
@@ -126,6 +142,8 @@ class GUIServer:
         elif location == "gui":
             for client_id in self.connected_guis:
                 self.socketio.emit("data", msg, room=client_id)
+        else:
+            raise RuntimeError("location is invalid")
 
     def add_routes(self):
         if not self.dev_mode:

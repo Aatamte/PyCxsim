@@ -56,22 +56,22 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [socket, setSocket] = useState(new SocketClient())
 
       // Define the update function
-      const update = () => {
-        dispatch({ type: 'UPDATE_ENVIRONMENT', payload: state.environment });
-        dispatch({ type: 'UPDATE_KV', payload: state.kv_storage });
-        dispatch({ type: 'UPDATE_SOCKET', payload: state.socketParams });
+      const update = (_state: any) => {
+        dispatch({ type: 'UPDATE_ENVIRONMENT', payload: _state.environment });
+        dispatch({ type: 'UPDATE_KV', payload: _state.kv_storage });
+        dispatch({ type: 'UPDATE_SOCKET', payload: _state.socketParams });
       };
+
     const onConnect = () => {
         console.log("onOpen");
-        state.kv_storage.set("server_connection", "open")
-        state.kv_storage.set("environment_connection", "closed")
         sendData("server", "kv_storage")
-        update()
+        update(state)
     };
 
     const onClose = () => {
         state.kv_storage.set("server_connection", "closed")
-        update()
+        state.environment.clear()
+        update(state)
     }
 
     useEffect(() => {
@@ -109,8 +109,30 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    const onSet = (message: any) => {
+    const forEnvironment = (header : string, content: any) => {
+        Object.entries(content).forEach(([key, value]) => {
+            state.environment.set(key, value)
+        })
+    }
 
+    const forAgents = (header : string, content: Record<string, any>) => {
+        Object.entries(content).forEach(([key, value]) => {
+            var agent = new Agent()
+            Object.entries(value).forEach(([key, value]) => {
+                agent.set(key, value)
+            })
+            state.environment.addAgent(agent)
+        })
+    }
+
+    const forArtifacts = (header : string, content: Record<string, any>) => {
+        Object.entries(content).forEach(([key, value]) => {
+            let artifact = new Artifact()
+            Object.entries(value).forEach(([key, value]) => {
+                artifact.set(key, value)
+            })
+            state.environment.addArtifact(artifact)
+        })
     }
 
     const onData = (msg: any) => {
@@ -120,7 +142,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.log(header)
         if (header === "logs") {
             state.environment.addLog(content.level, content.msg)
+        } else if (header === "kv_storage") {
+            // Use Object.entries to iterate over [key, value] pairs
+            Object.entries(content).forEach(([key, value]) => {
+                state.kv_storage.set(key, value); // Set key-value pair in kv_storage
+            });
+        } else if (header === "full_refresh") {
+            forEnvironment(header, content)
+        } else if (header === "forAgents") {
+            forAgents(header, content)
+        } else if (header === "forArtifacts") {
+            forArtifacts(header, content)
         }
+
+        update(state)
     };
 
     const sendData = (header: string, content: any) => {

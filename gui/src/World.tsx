@@ -1,5 +1,5 @@
 // World.jsx
-import React, { useState, useRef, useEffect, RefObject } from 'react';
+import React, { useState, useRef, useEffect, RefObject, useLayoutEffect } from 'react';
 import {
     Box,
     IconButton,
@@ -183,7 +183,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ sidebarWidth }) => {
     const { state, sendData } = useData();
 
     const sendButtonAction = (action: string) => {
-        sendData("data", action);
+        sendData("action", action);
     };
 
     return (
@@ -221,7 +221,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ sidebarWidth }) => {
             {/* Status Placeholder */}
             <VStack spacing={0} align="center">
                 <CText fontSize="md">{state.environment.status}</CText>
-                <CText fontSize="md">{state.environment.agentQueue}</CText>
+                <CText fontSize="md">Next Agent: {state.environment.agentQueue?.at(0)}</CText>
 
             </VStack>
         </Flex>
@@ -277,15 +277,12 @@ const World: React.FC<worldProps> = ({ sidebarWidth }) => {
         }
     };
 
-    // Effect for window resize
-    useEffect(() => {
+    useLayoutEffect(() => {
+        updateDimensions();
         window.addEventListener('resize', updateDimensions);
         return () => window.removeEventListener('resize', updateDimensions);
-    }, []);
+    }, [sidebarWidth]); // Depend on sidebarWidth if its size impacts the component
 
-    useEffect(() => {
-        updateDimensions();
-    }, [sidebarWidth, containerRef]); // Listen for changes in sidebarWidth
 
     const handleWheel = (e: any) => {
         if (isPanning) {
@@ -307,6 +304,14 @@ const World: React.FC<worldProps> = ({ sidebarWidth }) => {
     const zoomIn = () => setScale(scale => scale * 1.2);
     const zoomOut = () => setScale(scale => scale / 1.2);
     const pan = (dx: number, dy: number) => setPosition(pos => ({ x: pos.x + dx, y: pos.y + dy }));
+
+    const AgentContent = () => {
+        return <Agents agents={state.environment.agents} cellSize={cellSize} navigate={navigate} />
+    }
+
+    useEffect(() => {
+
+    }, [state]);
 
     const mainContent = () => {
         return (
@@ -331,7 +336,7 @@ const World: React.FC<worldProps> = ({ sidebarWidth }) => {
             >
                <Layer>
                     <Grid gridSize={gridSize} cellSize={cellSize} indexBoxSize={indexBoxSize}/>
-                    <Agents agents={state.environment.agents} cellSize={cellSize} navigate={navigate} />
+                   {AgentContent()}
                 </Layer>
             </Stage>
             <IconButton

@@ -13,7 +13,7 @@ export default class SocketClient {
         if (!this.sio) {
             this.callbacks = { ...this.callbacks, ...callbacks };
             this.sio = socketio(url, {
-                autoConnect: false,
+                autoConnect: true,
                 logger: true,
                 engineio_logger: true,
                 reconnection: false
