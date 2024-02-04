@@ -17,75 +17,59 @@ interface LogEntry {
 
 export default class Environment {
     [key: string]: any; // Index signature
-    public name: string;
+    public name: string = "N/A";
 
-    public currentStep: number;
-    public maxSteps: number;
+    public currentStep: number = 0
+    public maxSteps: number = 10
 
-    public currentEpisode: number;
-    public maxEpisodes: number;
+    public currentEpisode: number = 0;
+    public maxEpisodes: number = 10;
 
-    public x_size: number;
-    public y_size: number;
+    public x_size: number = 10
+    public y_size: number = 10
 
-    public agents: Record<string, Agent>; // Using a dictionary (object) to store agents
-    public artifacts: Record<string, Artifact>; // Using a dictionary (object) to store agents
+    public agents: Record<string, Agent> = {}
+    public artifacts: Record<string, Artifact> = {}
 
-    public agentQueue: string[];
-    public status: string;
+    public agentQueue: string[] = []
+    public status: string = "Stopped"
 
-    public logs: LogEntry[]; // Logs data structure
+    public logs: LogEntry[] = [];
 
 
-    constructor() {
-        this.name = "N/A";
-
-        this.artifacts = {}
-        this.agents = {}
-
-        this.currentStep = 0
-        this.maxSteps = 10;
-        this.currentEpisode = 0;
-        this.maxEpisodes = 10;
-        this.x_size = 10;
-        this.y_size = 10;
-
-        this.agentQueue = [];
-        this.status = "stopped";
-
-        this.logs = []; // Initialize the logs array
+    constructor(environment?: Partial<Environment>) {
+        // Initialize from existing environment instance if provided
+        if (environment) {
+            Object.assign(this, environment);
+        } else {
+            // Default initialization
+            this.name = "N/A";
+            this.agents = {};
+            this.artifacts = {};
+            this.currentStep = 0;
+            this.maxSteps = 10;
+            this.currentEpisode = 0;
+            this.maxEpisodes = 10;
+            this.x_size = 10;
+            this.y_size = 10;
+            this.agentQueue = [];
+            this.status = "stopped";
+            this.logs = [];
+        }
     }
 
     clear() {
-        // Reset step and episode counters
-        this.name = "N/A"
-        this.currentStep = 0;
-        this.currentEpisode = 0;
-        this.status = "stopped";
-
-        // Clear agent-related data
-        this.agents = {};
-
-        // Clear artifact-related data
-        this.artifacts = {};
-    }
-
-
-    updateEnvironment(key: string, value: any) {
-        if (key in this) {
-          this[key] = value;
-        } else {
-          console.warn(`Key ${key} is not a valid property of Environment`);
-        }
+        return new Environment(); // Return a new instance with default values
     }
 
   // Example of an additional method
-    public addAgent(agent: Agent): void {
+    public addAgent(agent: Agent): Environment {
         if (agent.name in this.agents) {
             console.warn(`Agent with name ${agent.name} already exists.`);
-            return;
+            return this;
         }
         this.agents[agent.name] = agent;
+        return this;
     }
 
     public removeAgent(agentName: string): void {
@@ -96,21 +80,24 @@ export default class Environment {
         }
     }
 
-    public addArtifact(artifact: Artifact): void {
+    public addArtifact(artifact: Artifact): Environment {
         if (artifact.name in this.artifacts) {
             console.warn(`Agent with name ${artifact.name} already exists.`);
-            return;
+            return this;
         }
 
         this.artifacts[artifact.name] = artifact;
+        return this;
     }
 
-    public set(key: string, value: any): void {
+    public set(key: string, value: any): Environment {
+        this[key] = value;
         if (key in this) {
-            this[key] = value;
         } else {
             console.warn(`Key '${key}' is not a valid property of Environment`);
+            return this;
         }
+        return this;
     }
 
     // Use a getter to dynamically get agent names
@@ -125,13 +112,15 @@ export default class Environment {
 
 
     // Method to add a log entry
-    public addLog(level: LogLevel, message: string): void {
+    public addLog(level: LogLevel, message: string): Environment {
         const logEntry: LogEntry = {
             timestamp: new Date(), // Current timestamp
             level: level,
             message: message,
         };
         this.logs.push(logEntry); // Add the log entry to the logs array
+
+        return this;
     }
 
         // Method to clear logs

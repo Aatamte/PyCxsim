@@ -33,7 +33,7 @@ const webSocketIndicatorColor = {
 };
 
 const TopBar: React.FC = () => {
-    const { state, handleReconnect, sendData } = useData();
+    const { environment, kv_storage, sendData } = useData();
     const navigate = useNavigate();
     const { colorMode } = useColorMode();
     const bgColor = { light: 'gray.100', dark: '#333' };
@@ -43,13 +43,13 @@ const TopBar: React.FC = () => {
     const toast = useToast();
 
         // Ensure the server connection status is a valid WebSocketStatus
-    const serverConnectionStatus = state.kv_storage.get("gui_connection");
+    const serverConnectionStatus = kv_storage.get("gui_connection");
     const isValidStatus = Object.keys(webSocketIndicatorColor).includes(serverConnectionStatus);
     const serverStatus: WebSocketStatus = isValidStatus ? serverConnectionStatus as WebSocketStatus : "unknown";
 
 
     // Ensure the server connection status is a valid WebSocketStatus
-    const EnvironmentConnectionStatus = state.kv_storage.get("environment_connection");
+    const EnvironmentConnectionStatus = kv_storage.get("environment_connection");
     const isValidEnvStatus = Object.keys(webSocketIndicatorColor).includes(EnvironmentConnectionStatus);
     const envStatus: WebSocketStatus = isValidEnvStatus ? EnvironmentConnectionStatus as WebSocketStatus : "unknown";
 
@@ -77,7 +77,7 @@ const TopBar: React.FC = () => {
             <Flex flex="2" align="center" mr={4}>
                 <Image src={LogoImage} alt="Logo" maxW="30%" h="auto" />
                 <Divider orientation="vertical" height="5vh" mx={4} />
-                <Text fontSize="lg" mr={4}>{state.environment.name}</Text>
+                <Text fontSize="lg" mr={4}>{environment.name}</Text>
             </Flex>
 
             <Spacer /> {/* This pushes everything else to the right */}

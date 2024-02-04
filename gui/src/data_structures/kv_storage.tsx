@@ -8,8 +8,9 @@ class KVStorage<T> {
     }
 
     // Set a value for a given key
-    set(key: StorageKey, value: T): void {
+    set(key: StorageKey, value: T): KVStorage<T> {
         this.storage[key] = value;
+        return this;
     }
 
     // Get a value by key, returns undefined if the key does not exist
@@ -32,8 +33,10 @@ class KVStorage<T> {
     }
 
     // Clear all key-value pairs in the storage
-    clear(): void {
+    clear(): KVStorage<T> {
         this.storage = {};
+        
+        return this
     }
 }
 

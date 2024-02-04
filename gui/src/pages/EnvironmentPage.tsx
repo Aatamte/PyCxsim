@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, {useEffect, memo } from 'react';
 import {useData} from "../DataProvider";
 import {
     CircularProgress,
@@ -17,13 +16,18 @@ import {
     Heading
 } from "@chakra-ui/react";
 
-const EnvironmentDisplay: React.FC = () => {
-    const { state } = useData();
+const EnvironmentDisplay: React.FC = memo(() => {
+    const { environment } = useData();
+
+    useEffect(() => {
+        console.log("environment changed!")
+
+    }, [environment]);
 
     return (
         <Box p={5}>
             {/* Header Section */}
-            <Heading mb={4}>{state.environment.name}</Heading>
+            <Heading mb={4}>{environment.name}</Heading>
 
             {/* Tabs Section */}
             <Tabs isFitted variant="enclosed">
@@ -37,15 +41,15 @@ const EnvironmentDisplay: React.FC = () => {
                     <TabPanel>
                         <VStack spacing={4} align="stretch">
                             {/* Environment Info */}
-                            <Text fontSize="md">Agents: {state.environment.agentNames.join(', ')}</Text>
-                            <Text fontSize="md">Grid Size: {state.environment.x_size} x {state.environment.y_size}</Text>
-                            <Text fontSize="md">Artifacts: {state.environment.artifactNames.join(', ')}</Text>
+                            <Text fontSize="md">Agents: {environment.agentNames.join(', ')}</Text>
+                            <Text fontSize="md">Grid Size: {environment.x_size} x {environment.y_size}</Text>
+                            <Text fontSize="md">Artifacts: {environment.artifactNames.join(', ')}</Text>
 
                             {/* Episode Progress */}
                             <Flex align="center" justify="space-between">
                                 <Text fontSize="md">Episode Progress</Text>
-                                <CircularProgress value={(state.environment.currentEpisode / state.environment.maxEpisodes) * 100} color="green.400">
-                                    <CircularProgressLabel>{`${state.environment.currentEpisode}/${state.environment.maxEpisodes}`}</CircularProgressLabel>
+                                <CircularProgress value={(environment.currentEpisode / environment.maxEpisodes) * 100} color="green.400">
+                                    <CircularProgressLabel>{`${environment.currentEpisode}/${environment.maxEpisodes}`}</CircularProgressLabel>
                                 </CircularProgress>
                             </Flex>
 
@@ -54,8 +58,8 @@ const EnvironmentDisplay: React.FC = () => {
                             {/* Step Progress */}
                             <Flex align="center" justify="space-between">
                                 <Text fontSize="md">Step Progress</Text>
-                                <CircularProgress value={(state.environment.currentStep / state.environment.maxSteps) * 100} color="blue.400">
-                                    <CircularProgressLabel>{`${state.environment.currentStep}/${state.environment.maxSteps}`}</CircularProgressLabel>
+                                <CircularProgress value={(environment.currentStep / environment.maxSteps) * 100} color="blue.400">
+                                    <CircularProgressLabel>{`${environment.currentStep}/${environment.maxSteps}`}</CircularProgressLabel>
                                 </CircularProgress>
                             </Flex>
                         </VStack>
@@ -70,7 +74,7 @@ const EnvironmentDisplay: React.FC = () => {
             </Tabs>
         </Box>
     );
-};
+});
 
 export default EnvironmentDisplay;
 

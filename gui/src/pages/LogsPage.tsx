@@ -6,15 +6,15 @@ import { format } from 'date-fns'; // For formatting timestamps
 
 const LogsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { state } = useData(); // Assuming `state` has the necessary logs
+  const { environment } = useData(); // Assuming `state` has the necessary logs
 
-  const logs = state.environment.logs; // Assuming logs are stored here
+  const logs = environment.logs; // Assuming logs are stored here
 
     useEffect(() => {
-    // This function is called whenever `state.environment.logs` changes.
+    // This function is called whenever `environment.logs` changes.
     // You don't necessarily need to do anything here if just re-rendering is enough.
     console.log('Logs have been updated');
-  }, [state.environment.logs]); // Depend on `state.environment.logs` to trigger this effect
+  }, [environment.logs]); // Depend on `environment.logs` to trigger this effect
 
 
   // Helper function to determine color based on log level

@@ -1,78 +1,121 @@
-import React, {createContext, useReducer, useContext, useEffect, ReactNode, useState} from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import Environment from './data_structures/Environment';
-import SocketClient from "./websocket_client"; // Adjust the import path as necessary
+import SocketClient from "./websocket_client";
 import SocketParams from "./data_structures/SocketParams";
-import Agent from "./data_structures/agent";
-import Artifact from "./data_structures/artifact";
 import KVStorage from "./data_structures/kv_storage";
+import Artifact from "./data_structures/artifact";
+import Agent from "./data_structures/agent";
 
-// Define the shape of your application's state
-interface AppState {
+// Define the context shape
+interface DataContextType {
   environment: Environment;
   socketParams: SocketParams;
   kv_storage: KVStorage<any>;
+  sendData: (header: string, content: any) => void;
 }
 
-// Define the shape of actions
-type Action =
-  | { type: 'UPDATE_ENVIRONMENT', payload: Environment }
-  | {type: 'UPDATE_SOCKET', payload: SocketParams}
-  | { type: 'UPDATE_KV', payload: KVStorage<any>}
-
-
-
-// Initial state
-const initialState: AppState = {
-    environment: new Environment(),
-    socketParams: new SocketParams(),
-    kv_storage: new KVStorage<any>()
-};
-
-// Create context with the extended type
-// Create context
-const DataContext = createContext({
-  state: initialState,
-  dispatch: (() => {}) as React.Dispatch<Action>,
-  handleReconnect: async () => false, // handleReconnect is now an async function returning a boolean
-  sendData: (() => {}) as (ev: any, data: any) => void,
+// Create the context with an initial default value
+const DataContext = createContext<DataContextType>({
+  environment: new Environment(),
+  socketParams: new SocketParams(),
+  kv_storage: new KVStorage<any>(),
+  sendData: () => {}
 });
 
-// Reducer function
-const reducer = (state: AppState, action: Action): AppState => {
-  switch (action.type) {
-    case 'UPDATE_ENVIRONMENT':
-      return { ...state, environment: action.payload };
-    case 'UPDATE_SOCKET': // Ensure this case matches your actual action type
-      return { ...state, socketParams: action.payload };
-    case 'UPDATE_KV': // Handle KV storage updates if applicable
-      return { ...state, kv_storage: action.payload };
-    default:
-      return state;
-  }
-};
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [state, dispatch] = useReducer(reducer, initialState);
-    const [socket, setSocket] = useState(new SocketClient())
-
-      // Define the update function
-      const update = (_state: any) => {
-        dispatch({ type: 'UPDATE_ENVIRONMENT', payload: _state.environment });
-        dispatch({ type: 'UPDATE_KV', payload: _state.kv_storage });
-        dispatch({ type: 'UPDATE_SOCKET', payload: _state.socketParams });
-      };
+  const [environment, setEnvironment] = useState(new Environment());
+  const [socketParams, setSocketParams] = useState(new SocketParams());
+  const [kv_storage, setKVStorage] = useState(new KVStorage<any>());
+  const [socket] = useState(new SocketClient());
 
     const onConnect = () => {
-        console.log("onOpen");
-        sendData("server", "kv_storage")
-        update(state)
+        sendData("server", "kv_storage");
     };
 
     const onClose = () => {
-        state.kv_storage.set("server_connection", "closed")
-        state.environment.clear()
-        update(state)
-    }
+        setKVStorage(kv_storage.set("server_connection", "closed"));
+        setEnvironment(environment.clear());
+    };
+
+    const updateAgent = (env: Environment, agentPairs: Record<string, any>) => {
+        let updatedEnv = new Environment({ ...env });
+
+        Object.entries(agentPairs).forEach(([agentName, agentObject]) => {
+            let agent = new Agent();
+
+            Object.entries(agentObject).forEach(([key, value]) => {
+                agent.set(key, value);
+            });
+            updatedEnv = updatedEnv.addAgent(agent);
+        });
+
+        return updatedEnv; // Return the updated environment
+    };
+
+    const updateArtifact = (env: Environment, artifactPairs: Record<string, any>) => {
+        let updatedEnv = new Environment({ ...env });
+
+        Object.entries(artifactPairs).forEach(([artifactName, artifactObject]) => {
+            let artifact = new Artifact(); // Assuming Artifact has a default constructor
+
+            Object.entries(artifactObject).forEach(([key, value]) => {
+                artifact.set(key, value); // Assuming Artifact has a 'set' method to update properties
+            });
+
+            updatedEnv = updatedEnv.addArtifact(artifact); // Update the environment with the new artifact
+        });
+
+        return updatedEnv; // Return the updated environment
+    };
+
+    const updateEnvironment = (env: Environment, environmentPairs: Record<string, any>) => {
+        let updatedEnv = new Environment({ ...env });
+
+        Object.entries(environmentPairs).forEach(([key, value]) => {
+            updatedEnv = updatedEnv.set(key, value); // Update the environment with the new values
+        });
+
+        return updatedEnv; // Return the updated environment
+    };
+
+    // Method to handle kv_storage updates
+    const handleKVStorage = (kvPairs: Record<string, any>) => {
+        Object.entries(kvPairs).forEach(([key, value]) => {
+            // Assuming kv_storage.set() updates the instance and returns it for chaining
+            setKVStorage(kv_storage.set(key, value));
+        });
+    };
+
+    const onData = (msg: any) => {
+        const { header, content } = msg;
+        console.log("onData: ", msg)
+        console.log(header)
+
+        let updatedEnv = environment; // Start with the current environment state
+        switch (header) {
+            case "logs":
+                // Handle logs if necessary
+                break;
+            case "kv_storage":
+                handleKVStorage(content);
+                break;
+            case "agents":
+                updatedEnv = updateAgent(updatedEnv, content); // Update agents and get the updated environment
+                break;
+            case "artifacts":
+                updatedEnv = updateArtifact(updatedEnv, content); // Update artifacts and get the updated environment
+                break;
+            case "environment":
+                updatedEnv = updateEnvironment(updatedEnv, content); // Update environment properties and get the updated environment
+                break;
+            default:
+                console.log("Unhandled message type:", header);
+                break;
+        }
+    console.log(header, updatedEnv)
+    setEnvironment(updatedEnv); // Update the state with the updated environment
+};
 
     useEffect(() => {
         // Define the callback functions
@@ -84,95 +127,23 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
 
         socket.connect(
-            state.socketParams.host,
-            state.socketParams.port,
+            socketParams.host,
+            socketParams.port,
             callbacks
         );
 
     }, []);
 
-    // Function to manually trigger a reconnect
-    const handleReconnect = async () => {
-        try {
-            const success = true
-            if (success) {
-                console.debug("Reconnect successful");
-                onConnect(); // Assuming onOpen is a callback that handles the 'open' event.
-                return true;
-            } else {
-                console.debug("Reconnect failed");
-                return false;
-            }
-        } catch (error) {
-            console.error("Reconnection attempt threw an error:", error);
-            return false;
-        }
-    };
-
-    const forEnvironment = (header : string, content: any) => {
-        Object.entries(content).forEach(([key, value]) => {
-            state.environment.set(key, value)
-        })
-    }
-
-    const forAgents = (header : string, content: Record<string, any>) => {
-        Object.entries(content).forEach(([key, value]) => {
-            var agent = new Agent()
-            Object.entries(value).forEach(([key, value]) => {
-                agent.set(key, value)
-            })
-            state.environment.addAgent(agent)
-        })
-    }
-
-    const forArtifacts = (header : string, content: Record<string, any>) => {
-        Object.entries(content).forEach(([key, value]) => {
-            let artifact = new Artifact()
-            Object.entries(value).forEach(([key, value]) => {
-                artifact.set(key, value)
-            })
-            state.environment.addArtifact(artifact)
-        })
-    }
-
-    const onData = (msg: any) => {
-        const header = msg["header"]
-        const content = msg["content"]
-        console.log("onData: ", msg)
-        console.log(header)
-        if (header === "logs") {
-            state.environment.addLog(content.level, content.msg)
-        } else if (header === "kv_storage") {
-            // Use Object.entries to iterate over [key, value] pairs
-            Object.entries(content).forEach(([key, value]) => {
-                state.kv_storage.set(key, value); // Set key-value pair in kv_storage
-            });
-        } else if (header === "full_refresh") {
-            forEnvironment(header, content)
-        } else if (header === "forAgents") {
-            forAgents(header, content)
-        } else if (header === "forArtifacts") {
-            forArtifacts(header, content)
-        }
-
-        update(state)
-    };
-
-    const sendData = (header: string, content: any) => {
-        const msg = {
-            "header": header,
-            "content": content,
-            "source": "GUI"
-        }
-        socket.send("data", msg);
-    };
+  const sendData = (header: string, content: any) => {
+    const msg = { header, content, source: "GUI" };
+    socket.send("data", msg);
+  };
 
   return (
-    <DataContext.Provider value={{ state, dispatch, handleReconnect, sendData}}>
+    <DataContext.Provider value={{ environment, kv_storage, socketParams, sendData }}>
       {children}
     </DataContext.Provider>
   );
 };
 
-// Custom hook to use the data context
 export const useData = () => useContext(DataContext);

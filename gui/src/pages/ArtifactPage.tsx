@@ -7,13 +7,13 @@ import {  Table, Thead, Tr, Th, Tbody, Td } from '@chakra-ui/react';
 
 
 const ArtifactPage: React.FC = () => {
-    const { state, handleReconnect } = useData();
-    const [selectedArtifact, setSelectedArtifact] = useState(state.environment.artifactNames[0]);
+    const { environment } = useData();
+    const [selectedArtifact, setSelectedArtifact] = useState(environment.artifactNames[0]);
 
     const getArtifactProperties = () => {
-        console.log(state.environment.agents)
-        console.log(state.environment.artifacts)
-        const artifact = state.environment.artifacts[selectedArtifact];
+        console.log(environment.agents)
+        console.log(environment.artifacts)
+        const artifact = environment.artifacts[selectedArtifact];
         return artifact ? Object.entries(artifact) : [];
     };
 
@@ -27,7 +27,7 @@ const ArtifactPage: React.FC = () => {
                     onChange={(e) => setSelectedArtifact(e.target.value)}
                     style={{ color: 'black' }} // Inline style for black text
                 >
-                    {state.environment.artifactNames.map((agent, index) => (
+                    {environment.artifactNames.map((agent, index) => (
                         <option key={index} value={agent}>{agent}</option>
                     ))}
                 </Select>

@@ -19,8 +19,8 @@ const MessagingBox: React.FC<MessagingBoxProps> = ({ selectedAgent }) => {
         // Define the fontSize constant
     const fontSize = '10px'; // Example size, adjust as needed
 
-    const { state, handleReconnect,  } = useData();
-    const [messages, setMessages] = useState(state.environment.agents[selectedAgent]?.messages || []);
+    const { environment  } = useData();
+    const [messages, setMessages] = useState(environment.agents[selectedAgent]?.messages || []);
 
     const [newMessage, setNewMessage] = useState('');
     const [currentUser, setCurrentUser] = useState('user');
@@ -28,14 +28,14 @@ const MessagingBox: React.FC<MessagingBoxProps> = ({ selectedAgent }) => {
 
     // Update messages when selectedAgent changes
     useEffect(() => {
-        setMessages(state.environment.agents[selectedAgent]?.messages || []);
-    }, [selectedAgent, state.environment.currentStep]);
+        setMessages(environment.agents[selectedAgent]?.messages || []);
+    }, [selectedAgent, environment.currentStep]);
 
 
     useEffect(() => {
     // For example, log when state changes
-        console.log("State updated", state);
-    }, [state]); // Dependency on state ensures this runs when state changes
+        console.log("State updated", environment);
+    }, [environment]); // Dependency on state ensures this runs when state changes
 
     const handleMessageSubmit = () => {
         if (newMessage.trim() !== '') {

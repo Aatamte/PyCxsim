@@ -3,7 +3,7 @@ import React, {useState, useEffect} from 'react';
 import { Grid, Box, Flex } from '@chakra-ui/react';
 import TopBar from "./Topbar";
 import Sidebar from "./Sidebar";
-import World from "./World";
+import World from "./world/World";
 import {DataProvider} from "./DataProvider";
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import SettingsPage from "./pages/SettingsPage";

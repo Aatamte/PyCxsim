@@ -34,9 +34,9 @@ const InventoryTable = ({ inventory }: { inventory: { [key: string]: any } }) =>
 };
 
 const AgentsTab: React.FC = () => {
-    const { state } = useData();
+    const { environment } = useData();
     const [searchParams, setSearchParams] = useSearchParams();
-    const [selectedAgent, setSelectedAgent] = useState(state.environment.agentNames[0] || '');
+    const [selectedAgent, setSelectedAgent] = useState(environment.agentNames[0] || '');
 
     const handleSelectAgent = (agentName: string) => {
         setSelectedAgent(agentName);
@@ -56,7 +56,7 @@ const AgentsTab: React.FC = () => {
                     onChange={(e) => handleSelectAgent(e.target.value)}
                     style={{ color: 'black' }} // Inline style for black text
                 >
-                    {state.environment.agentNames.map((agent, index) => (
+                    {environment.agentNames.map((agent, index) => (
                         <option key={index} value={agent}>{agent}</option>
                     ))}
                 </Select>
@@ -85,8 +85,8 @@ const AgentsTab: React.FC = () => {
                             <MessagingBox selectedAgent={selectedAgent}/>
                         </TabPanel>
                             <TabPanel>
-                                {selectedAgent && state.environment.agents[selectedAgent] ? (
-                                    <InventoryTable inventory={state.environment.agents[selectedAgent].inventory} />
+                                {selectedAgent && environment.agents[selectedAgent] ? (
+                                    <InventoryTable inventory={environment.agents[selectedAgent].inventory} />
                                 ) : (
                                     <Text>No agent selected or agent not found</Text>
                                 )}
@@ -96,8 +96,8 @@ const AgentsTab: React.FC = () => {
                             {/* Add your Actions content here */}
                         </TabPanel>
                         <TabPanel>
-                            {selectedAgent && state.environment.agents[selectedAgent] ? (
-                                <InventoryTable inventory={state.environment.agents[selectedAgent].parameters} />
+                            {selectedAgent && environment.agents[selectedAgent] ? (
+                                <InventoryTable inventory={environment.agents[selectedAgent].parameters} />
                             ) : (
                                 <Text>No agent selected or agent not found</Text>
                             )}
