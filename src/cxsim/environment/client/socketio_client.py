@@ -29,10 +29,10 @@ class GUIServerConnection:
         self.send_message("environment", data)
 
         agent_data = self.environment.agent_metadata
-        #self.send_message("agents", agent_data)
+        self.send_message("agents", agent_data)
 
         artifact_data = self.environment.artifact_metadata
-        #self.send_message("artifacts", artifact_data)
+        self.send_message("artifacts", artifact_data)
 
     def on_connect(self):
         self.connected = True  # Set flag to True when connected

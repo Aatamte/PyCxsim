@@ -87,34 +87,29 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
     };
 
-    const onData = (msg: any) => {
-        const { header, content } = msg;
-        console.log("onData: ", msg)
-        console.log(header)
+const onData = (msg: any) => {
+    const { header, content } = msg;
 
-        let updatedEnv = environment; // Start with the current environment state
-        switch (header) {
-            case "logs":
-                // Handle logs if necessary
-                break;
-            case "kv_storage":
-                handleKVStorage(content);
-                break;
-            case "agents":
-                updatedEnv = updateAgent(updatedEnv, content); // Update agents and get the updated environment
-                break;
-            case "artifacts":
-                updatedEnv = updateArtifact(updatedEnv, content); // Update artifacts and get the updated environment
-                break;
-            case "environment":
-                updatedEnv = updateEnvironment(updatedEnv, content); // Update environment properties and get the updated environment
-                break;
-            default:
-                console.log("Unhandled message type:", header);
-                break;
-        }
-    console.log(header, updatedEnv)
-    setEnvironment(updatedEnv); // Update the state with the updated environment
+    switch (header) {
+        case "logs":
+            // Handle logs if necessary
+            break;
+        case "kv_storage":
+            handleKVStorage(content);
+            break;
+        case "agents":
+            setEnvironment((prevEnv) => updateAgent(prevEnv, content));
+            break;
+        case "artifacts":
+            setEnvironment((prevEnv) => updateArtifact(prevEnv, content));
+            break;
+        case "environment":
+            setEnvironment((prevEnv) => updateEnvironment(prevEnv, content));
+            break;
+        default:
+            console.log("Unhandled message type:", header);
+            break;
+    }
 };
 
     useEffect(() => {

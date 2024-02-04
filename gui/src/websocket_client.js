@@ -32,7 +32,6 @@ export default class SocketClient {
     }
 
     handleData = (data) => {
-        console.log("received data: ", data)
         if (this.callbacks.onData) {
             this.callbacks.onData(data);
         }
