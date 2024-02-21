@@ -1,33 +1,31 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
+
 import Environment from './data_structures/Environment';
 import SocketClient from "./websocket_client";
-import SocketParams from "./data_structures/SocketParams";
 import KVStorage from "./data_structures/kv_storage";
 import Artifact from "./data_structures/artifact";
 import Agent from "./data_structures/agent";
 
+import LogsTable, {LogEntry, LogLevel} from "./data_structures/LogsTable";
+
 // Define the context shape
 interface DataContextType {
   environment: Environment;
-  socketParams: SocketParams;
   kv_storage: KVStorage<any>;
+  logsTable: LogsTable;
+  addLog: (level: LogLevel, message: string) => void; // Function to add a log
   sendData: (header: string, content: any) => void;
 }
 
 // Create the context with an initial default value
-const DataContext = createContext<DataContextType>({
-  environment: new Environment(),
-  socketParams: new SocketParams(),
-  kv_storage: new KVStorage<any>(),
-  sendData: () => {}
-});
+const DataContext = createContext<DataContextType>({} as DataContextType);
 
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [environment, setEnvironment] = useState(new Environment());
-  const [socketParams, setSocketParams] = useState(new SocketParams());
   const [kv_storage, setKVStorage] = useState(new KVStorage<any>());
   const [socket] = useState(new SocketClient());
+  const [logsTable] = useState(new LogsTable());
 
     const onConnect = () => {
         sendData("server", "kv_storage");
@@ -79,13 +77,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return updatedEnv; // Return the updated environment
     };
 
-    // Method to handle kv_storage updates
-    const handleKVStorage = (kvPairs: Record<string, any>) => {
-        Object.entries(kvPairs).forEach(([key, value]) => {
-            // Assuming kv_storage.set() updates the instance and returns it for chaining
-            setKVStorage(kv_storage.set(key, value));
-        });
-    };
 
 const onData = (msg: any) => {
     const { header, content } = msg;
@@ -95,7 +86,7 @@ const onData = (msg: any) => {
             // Handle logs if necessary
             break;
         case "kv_storage":
-            handleKVStorage(content);
+
             break;
         case "agents":
             setEnvironment((prevEnv) => updateAgent(prevEnv, content));
@@ -122,8 +113,8 @@ const onData = (msg: any) => {
         };
 
         socket.connect(
-            socketParams.host,
-            socketParams.port,
+            'localhost',
+            8765,
             callbacks
         );
 
@@ -134,8 +125,13 @@ const onData = (msg: any) => {
     socket.send("data", msg);
   };
 
+  // Function to add a log entry and update sessionStorage
+  const addLog = (level: LogLevel, message: string) => {
+    logsTable.addLog(level, message);
+  };
+
   return (
-    <DataContext.Provider value={{ environment, kv_storage, socketParams, sendData }}>
+    <DataContext.Provider value={{ logsTable, addLog, environment, kv_storage, sendData }}>
       {children}
     </DataContext.Provider>
   );

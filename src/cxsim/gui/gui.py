@@ -38,6 +38,7 @@ class GUIServer:
         }
 
     def send_connection_statuses(self):
+        print("sending connection statuses")
         self.send("gui", "kv_storage", self.get_connections_status())
         self.send("environment", "kv_storage", self.get_connections_status())
 

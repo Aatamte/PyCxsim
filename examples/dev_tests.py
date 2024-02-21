@@ -185,6 +185,8 @@ class Smith1962Environment:
 
         alpha_history = []
 
+        print(env.agents)
+
         for episode in env.iter_episodes():
             env.reset()
 

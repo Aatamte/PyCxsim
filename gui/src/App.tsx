@@ -5,6 +5,7 @@ import TopBar from "./Topbar";
 import Sidebar from "./Sidebar";
 import World from "./world/World";
 import {DataProvider} from "./DataProvider";
+import { Provider } from 'react-redux';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import SettingsPage from "./pages/SettingsPage";
 import LogsPage from "./pages/LogsPage";
@@ -14,6 +15,7 @@ import SplitterLayout from 'react-splitter-layout';
 
 import './css/CustomSplitterLayout.css'; // Path to your custom CSS file
 
+import {store} from "./store";
 
 const HomePage = () => {
     const initialSidebarPercentage = 50;
@@ -54,6 +56,7 @@ const App = () => {
   return (
       <ChakraProvider theme={customTheme}>
       <DataProvider>
+          <Provider store={store}>
         <BrowserRouter>
           <div>
             <Routes>
@@ -63,8 +66,10 @@ const App = () => {
             </Routes>
           </div>
         </BrowserRouter>
+          </Provider>
       </DataProvider>
       </ChakraProvider>
+
   );
 };
 

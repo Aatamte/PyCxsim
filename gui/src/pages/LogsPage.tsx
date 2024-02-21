@@ -1,20 +1,29 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, VStack, HStack, Text, Button, Tag } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-import { useData } from "../DataProvider";
 import { format } from 'date-fns'; // For formatting timestamps
+import { useData } from '../DataProvider'; // Adjust the import path as needed
+import { LogLevel, LogEntry} from "../data_structures/LogsTable";
 
 const LogsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { environment } = useData(); // Assuming `state` has the necessary logs
+   const { logsTable, addLog } = useData(); // Use useData hook to access logsTable and addLog\
+  const [logs, setLogs] = useState<LogEntry[]>([]); // Manage logs as component state
 
-  const logs = environment.logs; // Assuming logs are stored here
+  // Function to add a mock log entry
+  const addMockLog = () => {
+    const mockLevels = Object.values(LogLevel);
+    const randomLevel = mockLevels[Math.floor(Math.random() * mockLevels.length)] as LogLevel;
+    addLog(randomLevel, `Mock log message at ${new Date().toISOString()}`);
+    // Update component state after adding a new log
+    setLogs(logsTable.getLogs());
+  };
 
-    useEffect(() => {
-    // This function is called whenever `environment.logs` changes.
-    // You don't necessarily need to do anything here if just re-rendering is enough.
-    console.log('Logs have been updated');
-  }, [environment.logs]); // Depend on `environment.logs` to trigger this effect
+  useEffect(() => {
+    // Initial load of logs
+    setLogs(logsTable.getLogs());
+  }, []); // Empty dependency array ensures this runs once on mount
+
 
 
   // Helper function to determine color based on log level
@@ -35,11 +44,16 @@ const LogsPage: React.FC = () => {
         Back to Home
       </Button>
 
+      {/* Button to add a mock log entry */}
+      <Button colorScheme="green" onClick={addMockLog} mb={4}>
+        Add Mock Log
+      </Button>
+
       <VStack spacing={4} align="stretch">
         <Text fontSize="2xl" fontWeight="bold" mb={2}>
           Application Logs
         </Text>
-        {logs && logs.length > 0 ? (
+        {logs.length > 0 ? (
           logs.map((log, index) => (
             <Box key={index} p={4} shadow="md" borderWidth="1px" borderRadius="md">
               <HStack justifyContent="space-between">
@@ -62,5 +76,6 @@ const LogsPage: React.FC = () => {
 };
 
 export default LogsPage;
+
 
 

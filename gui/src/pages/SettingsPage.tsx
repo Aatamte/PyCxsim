@@ -18,7 +18,7 @@ type Settings = {
 };
 
 const SettingsPage: React.FC = () => {
-  const { environment, socketParams } = useData();
+  const { environment } = useData();
   const [settings, setSettings] = useState<Settings>({colorScheme: 'light' });
   const { setColorMode } = useColorMode();
   const navigate = useNavigate();
@@ -58,7 +58,7 @@ const SettingsPage: React.FC = () => {
               id='host'
               name='host'
               type='text'
-              value={socketParams.host}
+              value={"localhost"}
               onChange={handleInputChange}
             />
           </FormControl>
@@ -69,7 +69,7 @@ const SettingsPage: React.FC = () => {
               id='port'
               name='port'
               type='number'
-              value={socketParams.port}
+              value={8765}
               onChange={handleInputChange}
             />
           </FormControl>

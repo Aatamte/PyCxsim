@@ -32,6 +32,7 @@ export default class SocketClient {
     }
 
     handleData = (data) => {
+        console.log("Data recieved: ", data)
         if (this.callbacks.onData) {
             this.callbacks.onData(data);
         }
@@ -94,8 +95,6 @@ export default class SocketClient {
 
     // Send data to server
     send(event, data) {
-        console.log('Socket instance:', this.sio);
-        console.log('Socket active:', this.sio?.active);
         console.log('Event:', event, 'Data:', data);
 
         if (this.sio) {

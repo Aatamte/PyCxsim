@@ -114,7 +114,7 @@ const World: React.FC<worldProps> = ({ sidebarWidth }) => {
     // Increment updateCount to force re-render of Agents component
     useEffect(() => {
         setUpdateCount(updateCount => updateCount + 1);
-    }, [environment.agents]); // Depend on agents
+    }, [environment]); // Depend on agents
 
     const mainContent = () => {
         return (

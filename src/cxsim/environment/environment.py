@@ -28,6 +28,9 @@ from cxsim.agents.actions.standard import STANDARD_ACTIONS
 # GUI
 from cxsim.environment.client.socketio_client import GUIServerConnection
 
+# database
+from cxsim.environment.storage.temp_db import TemporaryDatabase
+
 
 class UnsupportedItemType(Exception):
     """Exception raised when an unsupported item is added to the environment."""
@@ -140,6 +143,7 @@ class Environment:
         self.y_size = None
 
         if self.use_client:
+            self.database = TemporaryDatabase()
             self.server_connection.connect()
 
     def add_agent(self, agent: Agent):

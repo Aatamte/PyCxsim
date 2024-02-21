@@ -1,5 +1,3 @@
-import time
-
 import socketio
 from typing import Dict
 

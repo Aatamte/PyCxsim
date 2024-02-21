@@ -1,7 +1,7 @@
 type StorageKey = string; // Define a type for storage keys for better readability and future flexibility
 
 class KVStorage<T> {
-    private storage: Record<StorageKey, T>;
+    public storage: Record<StorageKey, T>;
 
     constructor() {
         this.storage = {};
