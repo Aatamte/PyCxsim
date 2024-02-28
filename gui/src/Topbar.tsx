@@ -66,8 +66,6 @@ const TopBar: React.FC = () => {
     const clearSessionStorage = () => {
         sessionStorage.clear();
         console.log('Session storage cleared');
-        // Optionally, refresh the page or reset state in your app as needed
-        // window.location.reload(); // Uncomment if you want to reload the page
     };
 
 
@@ -90,17 +88,6 @@ const TopBar: React.FC = () => {
         dispatch(updateKVStorage({ key: 'counter', value: newCounterValue }));
     };
 
-        // Function to render kv_storage content
-    const renderKVStorageContent = () => {
-        // This example assumes you want to display all key-value pairs
-        const entries = Object.entries(kvStorage.storage); // Accessing storage directly from the KVStorage instance
-        return entries.map(([key, value], index) => (
-            <Text key={index} color="white" mx={2}>
-                {key}: {value.toString()}
-            </Text>
-        ));
-    };
-
     return (
         <Flex
             bg="#333"
@@ -119,14 +106,6 @@ const TopBar: React.FC = () => {
             </Flex>
 
             <Spacer /> {/* This pushes everything else to the right */}
-
-            {/* Button to clear session storage */}
-            <Button colorScheme="red" mx={2} onClick={clearSessionStorage}>
-                Clear Session Storage
-            </Button>
-            <Button colorScheme="teal" mx={2} onClick={handleChangeKVStorage}>
-                Update KV Storage
-            </Button>
 
             {/* Environment Connection Menu */}
             <Menu>

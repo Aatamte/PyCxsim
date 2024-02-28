@@ -1,3 +1,5 @@
+import datetime
+
 from cxsim.environment.database.cx_table import CxTable
 from cxsim.environment.database.cx_data_types import CxDataType
 
@@ -18,7 +20,14 @@ class CxAgents(CxTable):
     messages = CxDataType(list)
 
 
+class CxLogs(CxTable):
+    timestamp = CxDataType(datetime.datetime)
+    level = CxDataType(str)
+    msg = CxDataType(str)
+
+
 DEFAULT_TABLES = [
     CxMetadata,
-    CxAgents
+    CxAgents,
+    CxLogs
 ]

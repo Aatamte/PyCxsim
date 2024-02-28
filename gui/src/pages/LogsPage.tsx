@@ -2,29 +2,45 @@ import React, { useState, useEffect } from 'react';
 import { Box, VStack, HStack, Text, Button, Tag } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns'; // For formatting timestamps
-import { useData } from '../DataProvider'; // Adjust the import path as needed
-import { LogLevel, LogEntry} from "../data_structures/LogsTable";
+import axios from 'axios'; // Using axios for API requests
+
+// LogLevel enum
+export enum LogLevel {
+    DEBUG = "DEBUG",
+    INFO = "INFO",
+    WARNING = "WARNING",
+    ERROR = "ERROR",
+    CRITICAL = "CRITICAL"
+}
+
+// LogEntry interface
+export interface LogEntry {
+    timestamp: Date;
+    level: LogLevel;
+    msg: string;
+}
 
 const LogsPage: React.FC = () => {
   const navigate = useNavigate();
-   const { logsTable, addLog } = useData(); // Use useData hook to access logsTable and addLog\
   const [logs, setLogs] = useState<LogEntry[]>([]); // Manage logs as component state
 
-  // Function to add a mock log entry
-  const addMockLog = () => {
-    const mockLevels = Object.values(LogLevel);
-    const randomLevel = mockLevels[Math.floor(Math.random() * mockLevels.length)] as LogLevel;
-    addLog(randomLevel, `Mock log message at ${new Date().toISOString()}`);
-    // Update component state after adding a new log
-    setLogs(logsTable.getLogs());
+  const fetchLogs = async () => {
+    console.log("fetching logs");
+    try {
+      // Replace with your API endpoint
+      const response = await axios.get('http://localhost:8000/tables/cxlogs');
+      setLogs(response.data.reverse()); // Assuming the API returns an array of log entries
+    } catch (err) {
+      console.log("err", err);
+    }
   };
 
   useEffect(() => {
-    // Initial load of logs
-    setLogs(logsTable.getLogs());
-  }, []); // Empty dependency array ensures this runs once on mount
+    fetchLogs(); // Fetch logs immediately when component mounts
+    const intervalId = setInterval(fetchLogs, 3000); // Polling every 3 seconds
 
-
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+  }, []);
 
   // Helper function to determine color based on log level
   const getTagColor = (level: string) => {
@@ -44,11 +60,6 @@ const LogsPage: React.FC = () => {
         Back to Home
       </Button>
 
-      {/* Button to add a mock log entry */}
-      <Button colorScheme="green" onClick={addMockLog} mb={4}>
-        Add Mock Log
-      </Button>
-
       <VStack spacing={4} align="stretch">
         <Text fontSize="2xl" fontWeight="bold" mb={2}>
           Application Logs
@@ -64,7 +75,7 @@ const LogsPage: React.FC = () => {
                   {format(new Date(log.timestamp), 'PPpp')} {/* Formatting timestamp */}
                 </Text>
               </HStack>
-              <Text mt={2}>{log.message}</Text>
+              <Text mt={2}>{log.msg}</Text>
             </Box>
           ))
         ) : (

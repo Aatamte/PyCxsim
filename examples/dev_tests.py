@@ -128,7 +128,9 @@ class Smith1962Environment:
             name="Smith 1962",
             max_steps=30,
             max_episodes=1,
-            step_delay=1
+            step_delay=1,
+            use_database=True,
+            use_client=False
         )
 
         sd = SupplyDemand(supply=supply, demand=demand)

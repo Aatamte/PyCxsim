@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # Import CORS
 from cxsim.environment.database.cx_database import CxDatabase
 import threading
 from typing import Union
@@ -7,6 +8,8 @@ from typing import Union
 class CxAPI:
     def __init__(self, db: Union[str, CxDatabase] = None):
         self.app = Flask(__name__)
+        CORS(self.app)  # Enable CORS for all routes
+
         if isinstance(db, CxDatabase):
             self.database = db
         elif isinstance(db, str):

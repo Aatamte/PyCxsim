@@ -1,3 +1,4 @@
+import datetime
 import time
 import logging
 from collections import deque
@@ -30,7 +31,7 @@ from cxsim.environment.client.socketio_client import GUIServerConnection
 
 # database
 from cxsim.environment.database.cx_database import CxDatabase
-from cxsim.environment.database.default_tables import CxMetadata, CxAgents
+from cxsim.environment.database.default_tables import CxMetadata, CxAgents, CxLogs
 
 # api
 from cxsim.environment.api.cx_api import CxAPI
@@ -65,8 +66,8 @@ class Environment:
             verbose: int = 0,
             seed: int = None,
             use_client: bool = True,
-            use_database: bool = False,
-            use_api: bool = False,
+            use_database: Union[bool, CxDatabase] = False,
+            use_api: Union[bool, CxAPI] = False,
     ):
         """
         Initialize the environment.
@@ -156,21 +157,13 @@ class Environment:
         if self.use_database:
             self.database = CxDatabase()
             self.database.connect()
-            CxMetadata().upsert(
-                key="name",
-                value=self.name
-            )
-            CxMetadata().upsert(
-                key="max_steps",
-                value=self.max_steps
-            )
-            CxMetadata().upsert(
-                key="max_episodes",
-                value=self.max_episodes
-            )
 
         if self.use_api:
-            pass
+            if not self.use_database:
+                raise Warning("Must set use_database=True for use_api=True")
+            else:
+                self.api = CxAPI(self.database)
+                self.api.run()
 
     def add_agent(self, agent: Agent):
         """
@@ -312,7 +305,20 @@ class Environment:
 
         self.n_artifacts = len(self.action_handler.artifacts)
         self._is_prepared = True
+
         self.server_connection.full_refresh()
+
+        if self.use_database:
+            self._sync_to_database()
+
+    def _sync_to_database(self):
+        CxMetadata().upsert(key="name", value=self.name)
+        CxMetadata().upsert(key="max_steps", value=self.max_steps)
+        CxMetadata().upsert(key="max_episodes", value=self.max_episodes)
+        CxMetadata().upsert(key="n_artifacts", value=self.n_artifacts)
+        CxMetadata().upsert(key="n_agents", value=self.n_agents)
+        CxMetadata().upsert(key="x_size", value=self.x_size)
+        CxMetadata().upsert(key="y_size", value=self.y_size)
 
     def reset(self, reset_agents: bool = True, reset_artifacts: bool = True, create_new_agent_queue: bool = True) -> None:
         """
@@ -385,7 +391,7 @@ class Environment:
         return action_name, mapped_params
 
     def execute(self, agent, action: Union[dict, Any]) -> Any:
-
+        self.log("INFO", f"{agent.name} is executing action: {action}")
         # Generate a mapping of action names from the agent's action space
         action_names = {(item.__name__.lower()): item for value in agent.action_space.values() for item in value}
 
@@ -434,6 +440,7 @@ class Environment:
 
     def step(self):
         self._current_time = time.perf_counter()
+        self.log("INFO", f"{self.current_episode}: {self.current_step} is executing action:")
 
         for _ in range(len(self.agent_queue)):
             agent = self.agent_queue.popleft()
@@ -563,9 +570,13 @@ class Environment:
 
         # Log the message
         self.logger.log(level, msg, *args, **kwargs)
-        
-        if self.use_client:
-            self.server_connection.send_message("logs", {"level": level, "msg": msg})
+
+        if self.use_database:
+            CxLogs().add(
+                timestamp=datetime.datetime.utcnow(),
+                level=level,
+                msg=msg
+            )
 
     def __repr__(self):
         newline = '\n'
