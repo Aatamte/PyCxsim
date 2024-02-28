@@ -29,7 +29,11 @@ from cxsim.agents.actions.standard import STANDARD_ACTIONS
 from cxsim.environment.client.socketio_client import GUIServerConnection
 
 # database
-from cxsim.environment.storage.temp_db import TemporaryDatabase
+from cxsim.environment.database.cx_database import CxDatabase
+from cxsim.environment.database.default_tables import CxMetadata, CxAgents
+
+# api
+from cxsim.environment.api.cx_api import CxAPI
 
 
 class UnsupportedItemType(Exception):
@@ -60,7 +64,9 @@ class Environment:
             step_delay: int = 2,
             verbose: int = 0,
             seed: int = None,
-            use_client: bool = True
+            use_client: bool = True,
+            use_database: bool = False,
+            use_api: bool = False,
     ):
         """
         Initialize the environment.
@@ -75,6 +81,8 @@ class Environment:
         self.verbose = verbose
         self.seed = seed
         self.use_client = use_client
+        self.use_database = use_database
+        self.use_api = use_api
         self._start_time = None
 
         # gridworld
@@ -143,8 +151,26 @@ class Environment:
         self.y_size = None
 
         if self.use_client:
-            self.database = TemporaryDatabase()
             self.server_connection.connect()
+
+        if self.use_database:
+            self.database = CxDatabase()
+            self.database.connect()
+            CxMetadata().upsert(
+                key="name",
+                value=self.name
+            )
+            CxMetadata().upsert(
+                key="max_steps",
+                value=self.max_steps
+            )
+            CxMetadata().upsert(
+                key="max_episodes",
+                value=self.max_episodes
+            )
+
+        if self.use_api:
+            pass
 
     def add_agent(self, agent: Agent):
         """

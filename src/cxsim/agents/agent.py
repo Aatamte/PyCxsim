@@ -236,7 +236,6 @@ class Agent:
             "messages": self.io.text.full_messages,
             "inventory": self.inventory.inventory,
             "parameters": self.params,
-           # "actionSpace": self.action_space,
             "actionHistory": self.action_history
         }
 
