@@ -43,7 +43,8 @@ class UnsupportedItemType(Exception):
 
 ENV_STATUS = {
     0: "Not Running",
-    1: "Initialized, not running"
+    1: "Initialized, not running",
+    2: "Running"
 }
 
 
@@ -309,9 +310,9 @@ class Environment:
         self.server_connection.full_refresh()
 
         if self.use_database:
-            self._sync_to_database()
+            self._sync_to_cx_metadata()
 
-    def _sync_to_database(self):
+    def _sync_to_cx_metadata(self):
         CxMetadata().upsert(key="name", value=self.name)
         CxMetadata().upsert(key="max_steps", value=self.max_steps)
         CxMetadata().upsert(key="max_episodes", value=self.max_episodes)
@@ -319,6 +320,23 @@ class Environment:
         CxMetadata().upsert(key="n_agents", value=self.n_agents)
         CxMetadata().upsert(key="x_size", value=self.x_size)
         CxMetadata().upsert(key="y_size", value=self.y_size)
+        CxMetadata().upsert(key="current_episode", value=self.current_episode)
+        CxMetadata().upsert(key="current_step", value=self.current_step)
+        CxMetadata().upsert(key="current_status", value=ENV_STATUS.get(self.STATUS, "Unknown"))
+
+        # Check if agent_queue is not empty before accessing the first element
+        next_agent_name = self.agent_queue[0].name if self.agent_queue else "None"
+        CxMetadata().upsert(key="next_agent", value=next_agent_name)
+
+    def _sync_agent(self, agent: Agent):
+        CxAgents().upsert(
+            name=agent.name,
+            x_pos=agent.x_pos,
+            y_pos=agent.y_pos,
+            parameters=agent.params,
+            inventory=agent.inventory.inventory,
+            messages=agent.io.text.full_messages
+        )
 
     def reset(self, reset_agents: bool = True, reset_artifacts: bool = True, create_new_agent_queue: bool = True) -> None:
         """
@@ -362,7 +380,8 @@ class Environment:
         if self.current_episode >= self.max_episodes:
             self._should_stop_simulation = True
 
-        self.calender.step()
+        if self.use_database:
+            self._sync_to_cx_metadata()
 
     def _match_action_arguments(self, valid_actions, action):
         action_name, action_params = list(action.items())[0]
@@ -434,6 +453,9 @@ class Environment:
         # After turn methods
         for func in agent.after_turn_methods:
             func()
+
+        if self.use_database:
+            self._sync_agent(agent=agent)
 
         if self.use_client:
             self.server_connection.full_refresh()

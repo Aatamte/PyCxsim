@@ -1,12 +1,26 @@
 import React, { useState } from 'react';
 import { Tabs, TabList, TabPanels, Tab, TabPanel, Box, Select, Flex, Text} from '@chakra-ui/react';
 import MessagingBox from "./AgentPageComponents/MessagingBox";
-import {useData} from "../DataProvider";
 import { useSearchParams } from 'react-router-dom';
-
 import { Table, Thead, Tbody, Tr, Th, Td } from '@chakra-ui/react';
+import useFetchWithInterval from "../useFetchWithInterval";
 
-const InventoryTable = ({ inventory }: { inventory: { [key: string]: any } }) => {
+interface MessageProps {
+  role: string;
+  content: string;
+  timestamp?: string; // Optional timestamp property
+}
+
+interface AgentItem {
+    name: string;
+    x_pos: string;
+    y_pos: string;
+    parameters: Record<string, string>;
+    inventory: Record<string, number>;
+    messages: MessageProps[];
+}
+
+const InventoryTable = ({ inventory }: { inventory: Record<string, number> }) => {
     if (!inventory || Object.keys(inventory).length === 0) {
         return <Text>No items in inventory.</Text>;
     }
@@ -24,7 +38,7 @@ const InventoryTable = ({ inventory }: { inventory: { [key: string]: any } }) =>
                     {Object.entries(inventory).map(([key, value], index) => (
                         <Tr key={index}>
                             <Td>{key}</Td>
-                            <Td>{JSON.stringify(value)}</Td>
+                            <Td>{value.toString()}</Td>
                         </Tr>
                     ))}
                 </Tbody>
@@ -34,18 +48,16 @@ const InventoryTable = ({ inventory }: { inventory: { [key: string]: any } }) =>
 };
 
 const AgentsTab: React.FC = () => {
-    const { environment } = useData();
-    const [searchParams, setSearchParams] = useSearchParams();
-    const [selectedAgent, setSelectedAgent] = useState(environment.agentNames[0] || '');
+    const [selectedAgent, setSelectedAgent] = useState<string>('');
+    const { data, error } = useFetchWithInterval<AgentItem[]>('http://localhost:8000/tables/cxagents', 3000);
 
     const handleSelectAgent = (agentName: string) => {
         setSelectedAgent(agentName);
-        // Update the search parameters to include both 'tab' and 'agent'
-        searchParams.set('agent', encodeURIComponent(agentName));
-        // Retain the tab parameter when selecting an agent
-        searchParams.set('tab', 'agents');
-        setSearchParams(searchParams);
     };
+
+
+    const selectedAgentData = data?.find(data => data.name === selectedAgent);
+
     return (
         <Box p={0}>
             <Flex align="center" mb={4}>
@@ -53,22 +65,15 @@ const AgentsTab: React.FC = () => {
                 <Select
                     placeholder="Select agent"
                     value={selectedAgent}
+                    color={"black"}
                     onChange={(e) => handleSelectAgent(e.target.value)}
-                    style={{ color: 'black' }} // Inline style for black text
                 >
-                    {environment.agentNames.map((agent, index) => (
-                        <option key={index} value={agent}>{agent}</option>
+                    {data?.map((agent, index) => (
+                        <option key={index} value={agent.name}>{agent.name}</option>
                     ))}
                 </Select>
             </Flex>
-            <Box
-                borderWidth="1px"
-                borderRadius="lg"
-                p={0} // Increased padding
-                borderColor="gray.200"
-                w="full" // Set the width to full to use the full container width
-                // Optionally set a specific width or max-width
-            >
+            <Box borderWidth="1px" borderRadius="lg" p={0} borderColor="gray.200" w="full">
                 <Tabs isFitted variant="enclosed">
                     <TabList mb="1em">
                         <Tab>I/O</Tab>
@@ -76,30 +81,26 @@ const AgentsTab: React.FC = () => {
                         <Tab>Actions</Tab>
                         <Tab>Other</Tab>
                     </TabList>
-                    <TabPanels
-                        h="70vh" // Set a fixed height for the box
-                        overflowY="auto" // Enable vertical scrolling
-                        overflowX={'hidden'}
-                    >
-                        <TabPanel >
-                            <MessagingBox selectedAgent={selectedAgent}/>
-                        </TabPanel>
-                            <TabPanel>
-                                {selectedAgent && environment.agents[selectedAgent] ? (
-                                    <InventoryTable inventory={environment.agents[selectedAgent].inventory} />
-                                ) : (
-                                    <Text>No agent selected or agent not found</Text>
-                                )}
-                            </TabPanel>
+                    <TabPanels h="70vh" overflowY="auto">
                         <TabPanel>
-                            <p>Actions Content</p>
-                            {/* Add your Actions content here */}
+                            {selectedAgentData && <MessagingBox messages={selectedAgentData.messages} />}
                         </TabPanel>
                         <TabPanel>
-                            {selectedAgent && environment.agents[selectedAgent] ? (
-                                <InventoryTable inventory={environment.agents[selectedAgent].parameters} />
+                            {selectedAgentData ? (
+                                <InventoryTable inventory={selectedAgentData.inventory} />
                             ) : (
-                                <Text>No agent selected or agent not found</Text>
+                                <Text>No agent selected or agent not found.</Text>
+                            )}
+                        </TabPanel>
+                        <TabPanel>
+                            <Text>Actions content goes here...</Text>
+                        </TabPanel>
+                        <TabPanel>
+                            {selectedAgentData ? (
+                                // Assuming you want to display the parameters the same way as the inventory
+                                <InventoryTable inventory={selectedAgentData.parameters as unknown as Record<string, number>} />
+                            ) : (
+                                <Text>No agent selected or agent not found.</Text>
                             )}
                         </TabPanel>
                     </TabPanels>

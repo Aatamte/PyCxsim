@@ -30,6 +30,7 @@ import {MdLock} from "react-icons/md";
 import InfoPanel from "./InfoPanel";
 import Grid from "./GridPlane";
 import AgentLayer from "./AgentLayer";
+import useFetchWithInterval from "../useFetchWithInterval";
 
 const DEFAULT_GRID_SIZE = 10;
 
@@ -37,10 +38,13 @@ type worldProps = {
     sidebarWidth: number;
 };
 
+interface DataItem {
+    key: string;
+    value: string;
+}
 
 const World: React.FC<worldProps> = ({ sidebarWidth }) => {
-    const { environment } = useData();
-    const [updateCount, setUpdateCount] = useState(0); // State to track updates
+    const { data, error } = useFetchWithInterval<DataItem[]>('http://localhost:8000/tables/cxmetadata', 3000);
 
     const containerRef: RefObject<HTMLDivElement> = useRef(null);
     const mainContentRef: RefObject<HTMLDivElement> = useRef(null); // New ref for main content
@@ -49,15 +53,24 @@ const World: React.FC<worldProps> = ({ sidebarWidth }) => {
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [isPanning, setIsPanning] = useState(false);
     const navigate = useNavigate();
-    const gridSize = environment.x_size || DEFAULT_GRID_SIZE;
+
     const [showControls, setShowControls] = useState(false);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
     const [isLocked, setIsLocked] = useState(false);
     const [cellSize, setCellSize] = useState(0); // New state for cell size
 
+    const findValueByKey = (key: string): number => {
+      if (!data) return 10; // Early return if data is not available
+
+      const item = data.find(d => d.key === key);
+      return item ? Number(item.value): 10; // Gracefully handle undefined
+    };
+
+    const gridSize = findValueByKey('x_size')
     const indexBoxSize = 20; // Size of the boxes for indices
     const extraRows = 2; // Extra rows for spacing
     const effectiveGridSize = gridSize + extraRows;
+
 
     const updateCellSize = (containerWidth: number, containerHeight: number) => {
         if (!isLocked) {
@@ -111,11 +124,6 @@ const World: React.FC<worldProps> = ({ sidebarWidth }) => {
     const zoomOut = () => setScale(scale => scale / 1.2);
     const pan = (dx: number, dy: number) => setPosition(pos => ({ x: pos.x + dx, y: pos.y + dy }));
 
-    // Increment updateCount to force re-render of Agents component
-    useEffect(() => {
-        setUpdateCount(updateCount => updateCount + 1);
-    }, [environment]); // Depend on agents
-
     const mainContent = () => {
         return (
             <Box
@@ -139,7 +147,7 @@ const World: React.FC<worldProps> = ({ sidebarWidth }) => {
             >
                <Layer>
                     <Grid gridSize={gridSize} cellSize={cellSize} indexBoxSize={indexBoxSize}/>
-                   <AgentLayer agents={environment.agents} cellSize={cellSize} navigate={navigate} key={updateCount} />
+                   <AgentLayer cellSize={cellSize} navigate={navigate} />
                 </Layer>
             </Stage>
             <IconButton

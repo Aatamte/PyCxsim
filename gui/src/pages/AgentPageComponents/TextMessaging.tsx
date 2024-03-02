@@ -58,7 +58,7 @@ const Message: React.FC<MessageProps> = ({ role, content }) => {
 
   return (
     <Flex
-      p="2"
+      p="1"
       alignItems="flex-start"
       justifyContent={alignment}
       width="100%"
@@ -70,12 +70,13 @@ const Message: React.FC<MessageProps> = ({ role, content }) => {
         bg={bgColor}
         color={textColor}
         borderRadius="md"
-        p="2"
-        maxW="70%"
+        p="1"
+        maxW="60%" // Reduced max width
         boxShadow="md"
+        fontSize="xs" // Smaller font size
       >
         {role !== 'system' && (
-          <Text fontWeight="bold">{role}</Text>
+          <Text fontWeight="bold" fontSize="xs">{role}</Text> // Smaller role text
         )}
          <MarkdownText text={content} />
       </Box>

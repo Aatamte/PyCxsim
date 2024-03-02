@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, VStack, HStack, Text, Button, Tag } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns'; // For formatting timestamps
-import axios from 'axios'; // Using axios for API requests
+import useFetchWithInterval from "../useFetchWithInterval";
 
 // LogLevel enum
 export enum LogLevel {
@@ -20,27 +20,10 @@ export interface LogEntry {
     msg: string;
 }
 
+
 const LogsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [logs, setLogs] = useState<LogEntry[]>([]); // Manage logs as component state
-
-  const fetchLogs = async () => {
-    console.log("fetching logs");
-    try {
-      // Replace with your API endpoint
-      const response = await axios.get('http://localhost:8000/tables/cxlogs');
-      setLogs(response.data.reverse()); // Assuming the API returns an array of log entries
-    } catch (err) {
-      console.log("err", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchLogs(); // Fetch logs immediately when component mounts
-    const intervalId = setInterval(fetchLogs, 3000); // Polling every 3 seconds
-
-    return () => clearInterval(intervalId); // Cleanup interval on component unmount
-  }, []);
+  const { data, error } = useFetchWithInterval<LogEntry[]>('http://localhost:8000/tables/cxlogs', 3000);
 
   // Helper function to determine color based on log level
   const getTagColor = (level: string) => {
@@ -54,6 +37,9 @@ const LogsPage: React.FC = () => {
     }
   };
 
+  // Create a new reversed array for rendering
+  const reversedData = data ? [...data].reverse() : [];
+
   return (
     <Box p={4}>
       <Button colorScheme="blue" onClick={() => navigate('/')} mb={4}>
@@ -64,8 +50,8 @@ const LogsPage: React.FC = () => {
         <Text fontSize="2xl" fontWeight="bold" mb={2}>
           Application Logs
         </Text>
-        {logs.length > 0 ? (
-          logs.map((log, index) => (
+        {reversedData.length > 0 ? (
+          reversedData.map((log, index) => (
             <Box key={index} p={4} shadow="md" borderWidth="1px" borderRadius="md">
               <HStack justifyContent="space-between">
                 <Tag size="sm" variant="solid" colorScheme={getTagColor(log.level)}>
@@ -85,6 +71,7 @@ const LogsPage: React.FC = () => {
     </Box>
   );
 };
+
 
 export default LogsPage;
 

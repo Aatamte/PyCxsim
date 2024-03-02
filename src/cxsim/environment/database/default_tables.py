@@ -29,5 +29,5 @@ class CxLogs(CxTable):
 DEFAULT_TABLES = [
     CxMetadata,
     CxAgents,
-    CxLogs
+    CxLogs,
 ]
