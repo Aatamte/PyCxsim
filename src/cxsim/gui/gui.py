@@ -9,9 +9,32 @@ from typing import Optional, Any, Dict
 #
 
 
+from flask import Flask, send_from_directory
+import os
+
+
 class SimpleGUIServer:
-    def __init__(self):
-        pass
+    def __init__(self, static_folder='build'):
+        # Set the folder where 'index.html' and other static files are located
+        self.static_folder = static_folder
+        # Initialize the Flask application
+        self.app = Flask(__name__, static_folder=self.static_folder, static_url_path='')
+
+        # Add a route to serve 'index.html'
+        @self.app.route('/')
+        def index():
+            # Attempt to serve 'index.html' from the static folder
+            try:
+                return send_from_directory(self.static_folder, 'index.html')
+            except FileNotFoundError:
+                # Log the error if 'index.html' is not found
+                print(f"Error: 'index.html' not found in '{self.static_folder}'.")
+                return "Error: 'index.html' not found.", 404
+
+    def start(self, host='localhost', port=8765, debug=True):
+        # Start the Flask application
+        print(f"Starting server at http://{host}:{port}")
+        self.app.run(host=host, port=port, debug=debug)
 
 
 class GUIServer:
@@ -188,7 +211,7 @@ class GUIServer:
 
 
 if __name__ == '__main__':
-    server = GUIServer(verbose=True, dev_mode=False)
+    server = SimpleGUIServer()
 
     server.start(host='localhost', port=8765)
 
