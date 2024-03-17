@@ -20,7 +20,7 @@ import {
     MdArrowDownward,
     MdLockOpen, MdSkipPrevious, MdPause, MdPlayArrow, MdSkipNext
 } from 'react-icons/md';
-import {useData} from "../DataProvider";
+import {useData} from "../../DataProvider";
 import { useNavigate } from 'react-router-dom';
 import { MdPanTool } from 'react-icons/md'; // Or any other appropriate icon
 import {MdVisibility} from "react-icons/md";
@@ -30,7 +30,7 @@ import {MdLock} from "react-icons/md";
 import InfoPanel from "./InfoPanel";
 import Grid from "./GridPlane";
 import AgentLayer from "./AgentLayer";
-import useFetchWithInterval from "../useFetchWithInterval";
+import useWebSocketListener from "../../sockets/useWebSocketListener";
 
 const DEFAULT_GRID_SIZE = 10;
 
@@ -44,7 +44,7 @@ interface DataItem {
 }
 
 const World: React.FC<worldProps> = ({ sidebarWidth }) => {
-    const { data, error } = useFetchWithInterval<DataItem[]>('http://localhost:8000/tables/cxmetadata', 3000);
+    const { data, error } = useWebSocketListener<DataItem[]>('cxmetadata');
 
     const containerRef: RefObject<HTMLDivElement> = useRef(null);
     const mainContentRef: RefObject<HTMLDivElement> = useRef(null); // New ref for main content

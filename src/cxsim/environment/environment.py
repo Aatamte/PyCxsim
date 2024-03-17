@@ -27,7 +27,7 @@ from cxsim.utilities.names import get_first_name
 from cxsim.agents.actions.standard import STANDARD_ACTIONS
 
 # GUI
-from cxsim.environment.client.socketio_client import GUIServerConnection
+from cxsim.environment.backend.cx_socketio import CxSocket
 
 # database
 from cxsim.environment.database.cx_database import CxDatabase
@@ -82,13 +82,15 @@ class Environment:
         self.name = name
         self.verbose = verbose
         self.seed = seed
+
         self.use_client = use_client
         self.use_database = use_database
+
         self.use_api = use_api
         self._start_time = None
 
         # gridworld
-        self.starting_block_size = 15
+        self.starting_block_size = 10
 
         # logger
         self.logger = logging.getLogger(__name__)
@@ -139,8 +141,6 @@ class Environment:
         self.calender = Calender()
         self.item_handler = ItemHandler(self)
 
-        self.server_connection = GUIServerConnection(self)
-
         self._current_time = time.perf_counter()
         self._past_time = time.perf_counter()
 
@@ -152,12 +152,12 @@ class Environment:
         self.x_size = None
         self.y_size = None
 
-        if self.use_client:
-            self.server_connection.connect()
-
         if self.use_database:
             self.database = CxDatabase()
             self.database.connect()
+
+            self.event_stream = CxSocket(self, db=self.database)
+            self.event_stream.run()
 
         if self.use_api:
             if not self.use_database:
@@ -307,8 +307,6 @@ class Environment:
         self.n_artifacts = len(self.action_handler.artifacts)
         self._is_prepared = True
 
-        self.server_connection.full_refresh()
-
         if self.use_database:
             self._sync_to_cx_metadata()
 
@@ -327,6 +325,7 @@ class Environment:
         # Check if agent_queue is not empty before accessing the first element
         next_agent_name = self.agent_queue[0].name if self.agent_queue else "None"
         CxMetadata().upsert(key="next_agent", value=next_agent_name)
+        CxMetadata().emit(self.event_stream.socketio)
 
     def _sync_agent(self, agent: Agent):
         CxAgents().upsert(
@@ -335,8 +334,10 @@ class Environment:
             y_pos=agent.y_pos,
             parameters=agent.params,
             inventory=agent.inventory.inventory,
-            messages=agent.io.text.full_messages
+            messages=agent.io.text.full_messages,
+            past_actions=agent.action_history
         )
+        CxAgents().emit(self.event_stream.socketio)
 
     def reset(self, reset_agents: bool = True, reset_artifacts: bool = True, create_new_agent_queue: bool = True) -> None:
         """
@@ -434,6 +435,10 @@ class Environment:
             # Convert the action_params dict to a dataclass instance if it isn't already
             try:
                 observation = self.action_handler.process_action(agent, _action)
+                if self.use_database:
+                    #self.database[""]
+                    pass
+
             except TypeError:
                 observation = "Action failed because the arguments were not correct"
         elif self.strict:
@@ -456,9 +461,6 @@ class Environment:
 
         if self.use_database:
             self._sync_agent(agent=agent)
-
-        if self.use_client:
-            self.server_connection.full_refresh()
 
     def step(self):
         self._current_time = time.perf_counter()
@@ -555,14 +557,13 @@ class Environment:
         else:
             raise KeyError("Artifact not in environment")
 
-    def load(self, filepath):
-        pass
-
-    def handle_gui_event(self, action: str):
-        print("environment", action)
+    def handle_button_event(self, action: str):
         if action == "next":
             self.STATUS = 2
-
+        if action == "pause":
+            self.STATUS = 0
+        if action == "play":
+            self.STATUS = 1
 
     @property
     def agent_queue_length(self):
@@ -599,6 +600,8 @@ class Environment:
                 level=level,
                 msg=msg
             )
+
+            CxLogs().emit(self.event_stream.socketio)
 
     def __repr__(self):
         newline = '\n'

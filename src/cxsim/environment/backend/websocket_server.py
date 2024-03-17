@@ -2,9 +2,6 @@ import asyncio
 import websockets
 import threading
 import json
-import socketio
-
-from cxsim.environment.backend.environment_manager import EnvironmentManager
 
 
 def serialize(data):

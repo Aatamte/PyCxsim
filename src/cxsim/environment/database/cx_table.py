@@ -1,3 +1,5 @@
+import json
+
 from cxsim.environment.database.cx_data_types import CxDataType
 
 
@@ -170,3 +172,16 @@ class CxTable:
 
         return deserialized_rows
 
+    def emit(self, socket):
+        """
+        Emit the contents of the table to the specified socket.
+        :param socket: The socket to emit the data to.
+        """
+        # Retrieve all entries from the table
+        data = self.get()
+
+        # Emit the serialized data to the specified socket
+        socket.emit('data_update', {
+            'table_name': self.table_name,
+            'content': data
+        })

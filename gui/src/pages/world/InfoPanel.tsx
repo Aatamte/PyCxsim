@@ -1,8 +1,8 @@
 import React from "react";
-import { useData } from "../DataProvider";
 import { CircularProgress, CircularProgressLabel, Divider, Flex, HStack, IconButton, VStack, Text as CText } from "@chakra-ui/react";
 import { MdPause, MdPlayArrow, MdSkipNext, MdSkipPrevious } from "react-icons/md";
-import useFetchWithInterval from "../useFetchWithInterval";
+import useWebSocketListener from "../../sockets/useWebSocketListener";
+import useSocketSender from "../../sockets/useSocketSender";
 
 interface DataItem {
     key: string;
@@ -14,11 +14,18 @@ type InfoPanelProps = {
 };
 
 const InfoPanel: React.FC<InfoPanelProps> = ({ sidebarWidth }) => {
-    const { sendData } = useData();
-    const { data, error } = useFetchWithInterval<DataItem[]>('http://localhost:8000/tables/cxmetadata', 3000);
+    const { data, error } = useWebSocketListener<DataItem[]>('cxmetadata');
+    const sendData = useSocketSender<DataItem>();
 
     const sendButtonAction = (action: string) => {
-        sendData("action", action);
+        const payload = {
+          table_name: 'my_table',
+          content: {
+              key: "button",
+              value: action
+          },
+        };
+        sendData(payload)
     };
 
     const findValueByKey = (key: string): string => {
@@ -60,7 +67,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ sidebarWidth }) => {
             <HStack spacing={2}>
                 <IconButton icon={<MdSkipPrevious />} size="lg" aria-label="Last Step" onClick={() => sendButtonAction('back')} isDisabled={true}/>
                 <IconButton icon={<MdPause />} size="lg" aria-label="Pause" onClick={() => sendButtonAction('pause')} />
-                <IconButton icon={<MdPlayArrow />} size="lg" aria-label="Play" onClick={() => sendButtonAction('play')} isDisabled={true}/>
+                <IconButton icon={<MdPlayArrow />} size="lg" aria-label="Play" onClick={() => sendButtonAction('play')} isDisabled={false}/>
                 <IconButton icon={<MdSkipNext />} size="lg" aria-label="Next Step" onClick={() => sendButtonAction('next')} />
             </HStack>
 

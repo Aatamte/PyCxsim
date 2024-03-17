@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, VStack, HStack, Text, Button, Tag } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns'; // For formatting timestamps
-import useFetchWithInterval from "../useFetchWithInterval";
+import useWebSocketListener from "../sockets/useWebSocketListener";
 
 // LogLevel enum
 export enum LogLevel {
@@ -23,7 +23,7 @@ export interface LogEntry {
 
 const LogsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { data, error } = useFetchWithInterval<LogEntry[]>('http://localhost:8000/tables/cxlogs', 3000);
+  const { data, error } = useWebSocketListener<LogEntry[]>('cxlogs');
 
   // Helper function to determine color based on log level
   const getTagColor = (level: string) => {

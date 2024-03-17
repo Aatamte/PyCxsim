@@ -39,6 +39,18 @@ class CxAPI:
                 # Handle other exceptions, such as potential errors in the get() method
                 return jsonify({"error": str(e)}), 500
 
+        @self.app.route('/simulation/<key>/<value>', methods=['POST'])
+        def post_key_value(key, value):
+            try:
+                self.database["cxsimulationstate"].upsert(key=key, value=value)
+                return jsonify({"key": key, "value": value}), 200
+            except KeyError:
+                # If the specified table is not found in the database
+                return jsonify({"error": f"Table"}), 404
+            except Exception as e:
+                # Handle other exceptions
+                return jsonify({"error": str(e)}), 500
+
     def setup_teardown(self):
         @self.app.teardown_appcontext
         def teardown_db(exception=None):

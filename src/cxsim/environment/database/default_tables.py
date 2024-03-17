@@ -18,6 +18,7 @@ class CxAgents(CxTable):
     parameters = CxDataType(dict)
     inventory = CxDataType(dict)
     messages = CxDataType(list)
+    past_actions = CxDataType(list)
 
 
 class CxLogs(CxTable):
@@ -26,8 +27,24 @@ class CxLogs(CxTable):
     msg = CxDataType(str)
 
 
+class CxActions(CxTable):
+    step: CxDataType(int)
+    agent_name: CxDataType(str)
+    action_name: CxDataType(str)
+    action_parameters = CxDataType(dict)
+
+
+# keys
+# running_state: 0
+class CxSimulationState(CxTable):
+    key = CxDataType(str, primary_key=True)
+    value = CxDataType(str)
+
+
 DEFAULT_TABLES = [
     CxMetadata,
     CxAgents,
     CxLogs,
+    CxActions,
+    CxSimulationState
 ]

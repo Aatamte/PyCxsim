@@ -1,6 +1,5 @@
-import os
 import logging
-from flask import Flask, send_from_directory, request
+from flask import Flask, send_from_directory, request, Response
 from flask_socketio import SocketIO
 from typing import Optional, Any, Dict
 
@@ -12,29 +11,34 @@ from typing import Optional, Any, Dict
 from flask import Flask, send_from_directory
 import os
 
+class GUI(Flask):
+    def __init__(self, build_path=None):
+        super(GUI, self).__init__(__name__, static_folder=build_path, static_url_path='')
+        if build_path:
+            self.build_dir = build_path
+        else:
+            self.build_dir = os.path.join(os.path.dirname(__file__), 'build')
+        self.static_folder = self.build_dir
 
-class SimpleGUIServer:
-    def __init__(self, static_folder='build'):
-        # Set the folder where 'index.html' and other static files are located
-        self.static_folder = static_folder
-        # Initialize the Flask application
-        self.app = Flask(__name__, static_folder=self.static_folder, static_url_path='')
+    def serve(self, host='localhost', port=8100):
+        print(f"Serving from {self.build_dir}")
 
-        # Add a route to serve 'index.html'
-        @self.app.route('/')
-        def index():
-            # Attempt to serve 'index.html' from the static folder
-            try:
-                return send_from_directory(self.static_folder, 'index.html')
-            except FileNotFoundError:
-                # Log the error if 'index.html' is not found
-                print(f"Error: 'index.html' not found in '{self.static_folder}'.")
-                return "Error: 'index.html' not found.", 404
+        # Route to serve the index.html
+        @self.route('/')
+        def serve_index():
+            return send_from_directory(self.static_folder, 'index.html')
 
-    def start(self, host='localhost', port=8765, debug=True):
-        # Start the Flask application
-        print(f"Starting server at http://{host}:{port}")
-        self.app.run(host=host, port=port, debug=debug)
+        # Generic route to serve all static files and assets
+        @self.route('/<path:path>')
+        def serve_static(path):
+            # Attempt to serve the file if it exists
+            if os.path.exists(os.path.join(self.static_folder, path)):
+                return send_from_directory(self.static_folder, path)
+            # Fallback to index.html, which allows SPA routing to work
+            else:
+                return serve_index()
+
+        self.run(host=host, port=port, threaded=True)
 
 
 class GUIServer:

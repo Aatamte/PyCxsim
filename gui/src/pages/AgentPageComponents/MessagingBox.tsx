@@ -14,7 +14,7 @@ interface MessagingBoxProps {
   isSystemMessageCollapsed?: boolean; // Optional prop to control the visibility of the first message
 }
 
-const MessagingBox: React.FC<MessagingBoxProps> = ({ messages, isSystemMessageCollapsed = false }) => {
+const MessagingBox: React.FC<MessagingBoxProps> = ({ messages = [], isSystemMessageCollapsed = false }) => {
     // Function to check if an object is a valid message
     const isValidMessage = (obj: any): obj is MessageProps => {
         return obj && obj.role && typeof obj.content === 'string';

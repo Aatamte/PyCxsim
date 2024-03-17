@@ -56,8 +56,8 @@ class CxDataType:
         if self.data_type in (dict, list, tuple):
             return json.loads(value)
         elif self.data_type == datetime.datetime:
-            return datetime.datetime.fromisoformat(value)
+            return str(datetime.datetime.fromisoformat(value))
         elif self.data_type == datetime.date:
-            return datetime.date.fromisoformat(value)
+            return  str(datetime.date.fromisoformat(value))
         else:
             return value

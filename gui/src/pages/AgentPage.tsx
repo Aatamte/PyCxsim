@@ -3,13 +3,15 @@ import { Tabs, TabList, TabPanels, Tab, TabPanel, Box, Select, Flex, Text} from 
 import MessagingBox from "./AgentPageComponents/MessagingBox";
 import { useSearchParams } from 'react-router-dom';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@chakra-ui/react';
-import useFetchWithInterval from "../useFetchWithInterval";
+import useWebSocketListener from "../sockets/useWebSocketListener";
+import TableUI from "../TableUI";
 
 interface MessageProps {
   role: string;
   content: string;
   timestamp?: string; // Optional timestamp property
 }
+
 
 interface AgentItem {
     name: string;
@@ -18,6 +20,7 @@ interface AgentItem {
     parameters: Record<string, string>;
     inventory: Record<string, number>;
     messages: MessageProps[];
+    past_actions: Array<[number, string, Record<any, any>]>;
 }
 
 const InventoryTable = ({ inventory }: { inventory: Record<string, number> }) => {
@@ -49,17 +52,16 @@ const InventoryTable = ({ inventory }: { inventory: Record<string, number> }) =>
 
 const AgentsTab: React.FC = () => {
     const [selectedAgent, setSelectedAgent] = useState<string>('');
-    const { data, error } = useFetchWithInterval<AgentItem[]>('http://localhost:8000/tables/cxagents', 3000);
+    const { data, error } = useWebSocketListener<AgentItem[]>('cxagents');
 
     const handleSelectAgent = (agentName: string) => {
         setSelectedAgent(agentName);
     };
 
-
     const selectedAgentData = data?.find(data => data.name === selectedAgent);
 
     return (
-        <Box p={0}>
+        <Box p={0} overflow={"hidden"}>
             <Flex align="center" mb={4}>
                 <Text mr={2}>Agent:</Text>
                 <Select
@@ -92,9 +94,13 @@ const AgentsTab: React.FC = () => {
                                 <Text>No agent selected or agent not found.</Text>
                             )}
                         </TabPanel>
-                        <TabPanel>
-                            <Text>Actions content goes here...</Text>
-                        </TabPanel>
+                            <TabPanel>
+                              {selectedAgentData ? (
+                                  <TableUI data={selectedAgentData.past_actions}></TableUI>
+                              ) : (
+                                <Text>No agent selected or agent not found.</Text>
+                              )}
+                            </TabPanel>
                         <TabPanel>
                             {selectedAgentData ? (
                                 // Assuming you want to display the parameters the same way as the inventory

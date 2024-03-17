@@ -5,11 +5,6 @@ from cxsim.environment.database.cx_table import CxTable  # Ensure CxTable is cor
 from cxsim.environment.database.default_tables import DEFAULT_TABLES
 
 
-DBMS = [
-    "",
-]
-
-
 class CxDatabase:
     def __init__(self, db_name: str = "CxDatabase", extension: str = ".db", directory: str = ""):
         self.db_name = db_name + extension
@@ -24,14 +19,6 @@ class CxDatabase:
         CxTable.db = self
         self.close()
 
-    def manage_table(self, table: CxTable):
-        """
-        Helper function to drop and recreate tables.
-        This can be adjusted or removed based on your actual application needs.
-        """
-        table.drop()
-        table.create()
-
     def connect(self):
         self.conn = sqlite3.connect(self.db_name, check_same_thread=False)
         self.cursor = self.conn.cursor()
@@ -42,7 +29,8 @@ class CxDatabase:
         for table_cls in DEFAULT_TABLES:
             t = table_cls()
             t.db = self
-            self.manage_table(t)
+            t.drop()
+            t.create()
             self.tables[t.table_name] = t
 
     def __getitem__(self, table_name: str):

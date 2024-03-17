@@ -65,7 +65,12 @@ class ActionHandler:
             return f"Action processing failed: {e}"
 
         action_log[1] = artifact_name
-        agent.action_history.append((self.environment.current_step, artifact_name, asdict(action)))
+        agent.action_history.append({
+                "step": self.environment.current_step,
+                "artifact_name": artifact_name,
+                "action": asdict(action)
+            }
+        )
         self.action_logs.append((agent.name, *action_log))
 
         return f"Action processed successfully: {result}" if result else "Action processed successfully."

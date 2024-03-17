@@ -43,7 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarWidth, setSidebarWidth }) => {
     };
 
     return (
-        <Box h="93vh" bg="#444" color="white" p="20px">
+        <Box h="93vh" bg="#444" color="white" p="20px" overflow={"hidden"}>
             <Tabs
                 variant="enclosed"
                 isFitted

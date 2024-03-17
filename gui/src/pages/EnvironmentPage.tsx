@@ -1,4 +1,4 @@
-import React, { useEffect, useState, memo } from 'react';
+import React, { memo } from 'react';
 import {
     Divider,
     Text,
@@ -12,7 +12,7 @@ import {
     Heading
 } from "@chakra-ui/react";
 
-import useFetchWithInterval from "../useFetchWithInterval";
+import useWebSocketListener from "../sockets/useWebSocketListener";
 
 interface DataItem {
     key: string;
@@ -20,7 +20,7 @@ interface DataItem {
 }
 
 const EnvironmentDisplay: React.FC = memo(() => {
-    const { data, error } = useFetchWithInterval<DataItem[]>('http://localhost:8000/tables/cxmetadata', 3000);
+  const { data, error } = useWebSocketListener<DataItem[]>('cxmetadata');
 
     const findValueByKey = (key: string): string => {
       if (!data) return 'Not available'; // Early return if data is not available

@@ -1,6 +1,6 @@
 import React from "react";
 import { Circle, Text } from "react-konva";
-import useFetchWithInterval from "../useFetchWithInterval";
+import useWebSocketListener from "../../sockets/useWebSocketListener";
 
 
 interface MessageProps {
@@ -25,10 +25,7 @@ type AgentProps = {
 };
 
 const AgentLayer: React.FC<AgentProps> = ({ cellSize, navigate }) => {
-  const { data, error } = useFetchWithInterval<AgentItem[]>(
-    "http://localhost:8000/tables/cxagents",
-    3000
-  );
+  const { data, error } = useWebSocketListener<AgentItem[]>('cxagents');
 
   const indexBoxSize = 20;
 

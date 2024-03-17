@@ -1,12 +1,12 @@
 // App.tsx
 import React, {useState, useEffect} from 'react';
-import { Grid, Box, Flex } from '@chakra-ui/react';
+import { Grid, Box } from '@chakra-ui/react';
 import TopBar from "./Topbar";
 import Sidebar from "./Sidebar";
-import World from "./world/World";
+import World from "./pages/world/World";
 import {DataProvider} from "./DataProvider";
 import { Provider } from 'react-redux';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import SettingsPage from "./pages/SettingsPage";
 import LogsPage from "./pages/LogsPage";
 import { ChakraProvider } from "@chakra-ui/react";
@@ -48,11 +48,6 @@ const HomePage = () => {
 
 
 const App = () => {
-      useEffect(() => {
-    // Log the full app (window) dimensions
-    console.log('App Dimensions:', { width: window.innerWidth, height: window.innerHeight });
-  }, []);
-
   return (
       <ChakraProvider theme={customTheme}>
       <DataProvider>
