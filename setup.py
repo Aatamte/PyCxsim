@@ -27,7 +27,9 @@ setup(
    include_package_data=True,
     package_data={
         'cxsim': [
-            'prompts/*.txt',
+            'io/text/prompts/*.txt',
+            'utilities/names/*.last',
+            'utilities/names/*.first'
 #            'gui/build/*',
  #           'gui/build/static/css/*'
   #          'gui/build/static/js/*'
