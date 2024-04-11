@@ -1,6 +1,7 @@
 from cxsim.artifacts.artifact import Artifact
 from typing import Union, Tuple, Any, Type, List
 from dataclasses import is_dataclass, asdict
+from cxsim.agents.actions.action import Action
 
 
 class ActionHandler:
@@ -43,12 +44,12 @@ class ActionHandler:
                 return True, e
         return False, None
 
-    def process_action(self, agent, action: Any) -> str:
-        if not is_dataclass(action):
+    def process_action(self, agent, action: Action) -> str:
+        if not isinstance(action, Action):
             return "Invalid input: Action must be a dataclass."
 
         action_type = type(action)
-        action_log = [self.environment.current_step, None, asdict(action)]
+        action_log = [self.environment.current_step, None, action.to_dict()]
 
         if action_type not in self.map_action_to_artifact:
             return f"Invalid action: {action_type.__name__} is not in the list of available actions."
@@ -68,10 +69,18 @@ class ActionHandler:
         agent.action_history.append({
                 "step": self.environment.current_step,
                 "artifact_name": artifact_name,
-                "action": asdict(action)
+                "action": action.to_dict()
             }
         )
         self.action_logs.append((agent.name, *action_log))
+
+        if self.environment.use_database:
+            self.environment.database["cxactions"].add(
+                step=self.environment.current_step,
+                agent_name=agent.name,
+                action_name=action_type.__name__,
+                action_parameters=action.to_dict()
+            )
 
         return f"Action processed successfully: {result}" if result else "Action processed successfully."
 

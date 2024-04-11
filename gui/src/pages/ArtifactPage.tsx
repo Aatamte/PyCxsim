@@ -2,19 +2,16 @@
 
 import React, { useState } from 'react';
 import {Tabs, TabList, TabPanels, Tab, TabPanel, Box, Select, Flex, Text} from '@chakra-ui/react';
-import {useData} from "../DataProvider";
+
 import {  Table, Thead, Tr, Th, Tbody, Td } from '@chakra-ui/react';
 
 
 const ArtifactPage: React.FC = () => {
-    const { environment } = useData();
-    const [selectedArtifact, setSelectedArtifact] = useState(environment.artifactNames[0]);
+    const artifactNames = ["Marketplace"];
+    const [selectedArtifact, setSelectedArtifact] = useState(artifactNames[0]);
 
     const getArtifactProperties = () => {
-        console.log(environment.agents)
-        console.log(environment.artifacts)
-        const artifact = environment.artifacts[selectedArtifact];
-        return artifact ? Object.entries(artifact) : [];
+        return [];
     };
 
     return (
@@ -27,7 +24,7 @@ const ArtifactPage: React.FC = () => {
                     onChange={(e) => setSelectedArtifact(e.target.value)}
                     style={{ color: 'black' }} // Inline style for black text
                 >
-                    {environment.artifactNames.map((agent, index) => (
+                    {artifactNames.map((agent, index) => (
                         <option key={index} value={agent}>{agent}</option>
                     ))}
                 </Select>

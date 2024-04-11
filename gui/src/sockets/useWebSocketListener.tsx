@@ -8,9 +8,10 @@ type Response<T> = {
 
 const useSocketListener = <T,>(
   room: string | null = null
-): { data: T | null; error: Error | null } => {
+): { data: T | null; error: Error | null; connectionStatus: 'connected' | 'disconnected' } => {
   const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<Error | null>(null);
+  const [error] = useState<Error | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('disconnected');
 
   useEffect(() => {
     // Listen for data updates specific to the joined room
@@ -20,9 +21,21 @@ const useSocketListener = <T,>(
       }
     };
 
+    const handleConnect = () => {
+      setConnectionStatus('connected');
+    };
+
+    const handleDisconnect = () => {
+      setConnectionStatus('disconnected');
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
     socket.on('data_update', handleDataUpdate);
 
     return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
       socket.off('data_update', handleDataUpdate); // Remove the specific event listener
       if (room) {
         // If a room was joined, leave the room before disconnecting
@@ -31,7 +44,7 @@ const useSocketListener = <T,>(
     };
   }, [room]); // Re-run the effect if the room changes
 
-  return { data, error };
+  return { data, error, connectionStatus };
 };
 
 export default useSocketListener;

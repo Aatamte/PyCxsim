@@ -4,7 +4,6 @@ import { Grid, Box } from '@chakra-ui/react';
 import TopBar from "./Topbar";
 import Sidebar from "./Sidebar";
 import World from "./pages/world/World";
-import {DataProvider} from "./DataProvider";
 import { Provider } from 'react-redux';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import SettingsPage from "./pages/SettingsPage";
@@ -19,11 +18,11 @@ import {store} from "./store";
 
 const HomePage = () => {
     const initialSidebarPercentage = 50;
-    const [sidebarWidth, setSidebarWidth] = useState(0); // Initialize with a default value
+    const [sidebarWidth, setSidebarWidth] = useState(0);
 
     // Handler for when the sidebar width changes
     const handleSidebarSizeChange = (newWidth: number) => {
-        setSidebarWidth(newWidth);
+        setSidebarWidth(Number(newWidth.toFixed(3))); // Round the newWidth value to one decimal place and convert it to a number
     };
 
     return (
@@ -37,7 +36,7 @@ const HomePage = () => {
                 onSecondaryPaneSizeChange={handleSidebarSizeChange}
             >
                 <World sidebarWidth={sidebarWidth} />
-                <Sidebar sidebarWidth={sidebarWidth} setSidebarWidth={setSidebarWidth} />
+                <Sidebar sidebarWidth={sidebarWidth} setSidebarWidth={handleSidebarSizeChange} />
             </SplitterLayout>
             </Box>
         </Grid>
@@ -50,7 +49,6 @@ const HomePage = () => {
 const App = () => {
   return (
       <ChakraProvider theme={customTheme}>
-      <DataProvider>
           <Provider store={store}>
         <BrowserRouter>
           <div>
@@ -62,7 +60,6 @@ const App = () => {
           </div>
         </BrowserRouter>
           </Provider>
-      </DataProvider>
       </ChakraProvider>
 
   );

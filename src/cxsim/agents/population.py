@@ -1,5 +1,6 @@
 import random
 from typing import List, Dict, Type
+from collections import defaultdict
 from cxsim.io.text.prompts.prompt import PromptTemplate
 import copy
 
@@ -24,11 +25,11 @@ class Population:
         self.action_restrictions = action_restrictions
         self.query_restrictions = query_restrictions
         self.prompt_arguments = prompt_arguments
-        self.agent_inventory = agent_inventory
+        self.agent_inventory = agent_inventory if agent_inventory else {}
         self.resample = resample if resample else {}
         self.pre_calculated_values = {}
 
-        if self.number_of_agents != 0:
+        if self.number_of_agents != 0 and self.agent_inventory:
             for item, value in self.agent_inventory.items():
                 if item in self.resample and not self.resample[item]:
                     if hasattr(value, 'rvs'):  # Check if it has an 'rvs' method

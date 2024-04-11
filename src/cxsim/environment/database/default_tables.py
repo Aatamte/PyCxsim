@@ -28,9 +28,9 @@ class CxLogs(CxTable):
 
 
 class CxActions(CxTable):
-    step: CxDataType(int)
-    agent_name: CxDataType(str)
-    action_name: CxDataType(str)
+    step = CxDataType(int)
+    agent_name = CxDataType(str)
+    action_name = CxDataType(str)
     action_parameters = CxDataType(dict)
 
 
@@ -41,10 +41,34 @@ class CxSimulationState(CxTable):
     value = CxDataType(str)
 
 
-DEFAULT_TABLES = [
+class CxArtifacts(CxTable):
+    name = CxDataType(str, primary_key=True)
+    parameters = CxDataType(dict)
+
+
+class CxGridWorld(CxTable):
+    position = CxDataType(str, primary_key=True)
+    color = CxDataType(str)
+    content = CxDataType(str)
+    can_occupy = CxDataType(bool)
+    is_goal = CxDataType(bool)
+
+
+class Sqlite_Master(CxTable):
+    __protected__ = True
+    name = CxDataType(str, primary_key=True)
+    type = CxDataType(str)
+    tbl_name = CxDataType(str)
+    rootpage = CxDataType(int)
+
+
+DEFAULT_TABLES = {
+    Sqlite_Master,
     CxMetadata,
     CxAgents,
     CxLogs,
     CxActions,
-    CxSimulationState
-]
+    CxSimulationState,
+    CxArtifacts,
+    CxGridWorld
+}

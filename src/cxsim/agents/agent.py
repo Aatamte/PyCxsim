@@ -48,8 +48,6 @@ class Agent:
         """
         self.name = name
         self.id = None  # None, initialized before the first episode by the environment class
-        self.x_pos = None
-        self.y_pos = None
         self.color: tuple = (0, 0, 0)
         self.role = None
 
@@ -197,6 +195,20 @@ class Agent:
 
         return action_space
 
+    @property
+    def y_pos(self):
+        if self.environment is None:
+            return None
+        else:
+            return self.environment.gridworld.get_agent_position(self.name)[1]
+
+    @property
+    def x_pos(self):
+        if self.environment is None:
+            return None
+        else:
+            return self.environment.gridworld.get_agent_position(self.name)[0]
+
     def __iadd__(self, other: Item):
         if not isinstance(other, Item):
             raise Warning("Can only add an Item class to the Agent")
@@ -252,3 +264,6 @@ class Agent:
 Agent: {self.name} 
 capital {self.get_inventory("capital")}
 -----------------------------"""
+
+    def __str__(self):
+        return self.name

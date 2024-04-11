@@ -8,19 +8,37 @@ def do_action(action: str, parameters: List[str]):
 
 
 class Action:
-    def __init__(
-            self,
-            name: str,
-            parameters: dict
-    ):
-        pass
+    """Base class for actions. Utilizes class introspection to provide common functionality."""
 
-    def from_dict(self):
-        pass
+    def __init__(self, **kwargs):
+        # Store original parameters for use in to_dict, __repr__, and __str__
+        # Made truly private to prevent accidental external access
+        self.__params = kwargs
+        for attr_name, attr_value in kwargs.items():
+            # Only set an attribute if it's already defined in the class
+            if hasattr(self, attr_name):
+                setattr(self, attr_name, attr_value)
+            else:
+                raise AttributeError(f"'{attr_name}' is not a valid attribute of '{self.__class__.__name__}'")
 
-    def from_dataclass(self):
-        pass
+    def _get_params(self):
+        # Safely access the stored parameters
+        return self.__params
 
+    def to_dict(self):
+        # Exclude '__params' and other built-in or callable attributes from the output
+        parameters = {attr_name: getattr(self, attr_name) for attr_name in dir(self)
+                      if not attr_name.startswith("__") and not callable(getattr(self, attr_name))
+                      and attr_name not in ['__dict__', '__weakref__', '_Action__params']}
+        return {'name': self.__class__.__name__, 'parameters': parameters}
+
+    def __repr__(self):
+        params_repr = ', '.join(f"{key}={repr(value)}" for key, value in self._get_params().items())
+        return f"{self.__class__.__name__}({params_repr})"
+
+    def __str__(self):
+        params_str = ', '.join(f"{key}={value}" for key, value in self._get_params().items())
+        return f"{self.__class__.__name__}({params_str})"
 
 class ActionRestriction:
     def __init__(

@@ -1,16 +1,16 @@
 {
   "files": {
     "main.css": "/static/css/main.d60ccc9d.css",
-    "main.js": "/static/js/main.ccfc0ab3.js",
+    "main.js": "/static/js/main.92592393.js",
     "static/js/787.2f89a70c.chunk.js": "/static/js/787.2f89a70c.chunk.js",
     "static/media/pycxsim_full_logo_no_background.png": "/static/media/pycxsim_full_logo_no_background.098723121b6a46c11fd1.png",
     "index.html": "/index.html",
     "main.d60ccc9d.css.map": "/static/css/main.d60ccc9d.css.map",
-    "main.ccfc0ab3.js.map": "/static/js/main.ccfc0ab3.js.map",
+    "main.92592393.js.map": "/static/js/main.92592393.js.map",
     "787.2f89a70c.chunk.js.map": "/static/js/787.2f89a70c.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.d60ccc9d.css",
-    "static/js/main.ccfc0ab3.js"
+    "static/js/main.92592393.js"
   ]
 }

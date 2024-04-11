@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Tabs, TabList, TabPanels, Tab, TabPanel, Box, Select, Flex, Text} from '@chakra-ui/react';
 import MessagingBox from "./AgentPageComponents/MessagingBox";
-import { useSearchParams } from 'react-router-dom';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@chakra-ui/react';
 import useWebSocketListener from "../sockets/useWebSocketListener";
 import TableUI from "../TableUI";

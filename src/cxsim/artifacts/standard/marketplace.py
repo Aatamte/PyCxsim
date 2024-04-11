@@ -404,7 +404,7 @@ class Marketplace(Artifact):
         for name, market in self.markets.items():
             market.step()
 
-    def set_up(self, environment):
+    def compile(self, environment):
         if self.infer_goods_from_agents:
             for agent in environment.agents:
                 for good in agent.inventory.keys():

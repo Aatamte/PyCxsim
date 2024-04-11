@@ -1,18 +1,13 @@
 [decision prompt]
-CURRENT STEP: {current_step}
-
-INVENTORY:
-{inventory}
-
-Last Action: {history}
-
-RESULT OF ACTION: {observation}
+Current Step: {current_step}
 
 Goal: {goal}
 
-Expected price: {price}
+Last Action: {history}
 
-Marketplace: {marketplace}
+Observation: {observation}
 
 Take a moment and think about which action gets you closer to your goal
 What action do you take?
+
+Action:

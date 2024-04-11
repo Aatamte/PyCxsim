@@ -73,3 +73,7 @@ class Format:
             [f"{idx}: {artifact.get_description()}" for idx, artifact in enumerate(self.environment.artifacts)])
         return formatted_descriptions
 
+    def action_descriptions(self, actions: List):
+        descriptions = ""
+
+        return descriptions

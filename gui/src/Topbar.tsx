@@ -22,14 +22,9 @@ import { MdMoreVert } from 'react-icons/md'; // This icon represents the nine-do
 import { useNavigate } from 'react-router-dom';
 import useWebSocketListener from "./sockets/useWebSocketListener";
 
-type WebSocketStatus = "connecting" | "open" | "closing" | "closed" | "unknown";
-
 const webSocketIndicatorColor = {
-    open: 'green.400',
-    connecting: 'orange.400',
-    closed: 'red.400',
-    closing: 'orange.400',
-    unknown: 'orange.400',
+    connected: 'green.400',
+    disconnected: 'red.400',
 };
 
 interface DataItem {
@@ -39,7 +34,7 @@ interface DataItem {
 
 const TopBar: React.FC = () => {
     const navigate = useNavigate();
-    const { data, error } = useWebSocketListener<DataItem[]>('cxmetadata');
+    const { data, connectionStatus } = useWebSocketListener<DataItem[]>('cxmetadata');
 
     const { colorMode } = useColorMode();
     const color = { light: 'black', dark: 'white' };
@@ -77,16 +72,9 @@ const TopBar: React.FC = () => {
 
              {/* Server Connection Menu */}
             <Menu>
-                <MenuButton as={Button} colorScheme="blue" mx={2} rightIcon={<Circle size="10px" bg={webSocketIndicatorColor["unknown"]} />} >
+                <MenuButton as={Button} colorScheme="blue" mx={2} rightIcon={<Circle size="10px" bg={webSocketIndicatorColor[connectionStatus]} />} >
                     Connection
                 </MenuButton>
-                <MenuList>
-                    <Box px={4} py={2}>
-                        <Text color={color[colorMode]}>Status: {"unknown"}</Text>
-                    </Box>
-                    <MenuItem onClick={reconnectServer} color={color[colorMode]}>Reconnect Server</MenuItem>
-                    <MenuItem onClick={disconnectServer} color={color[colorMode]}>Disconnect Server</MenuItem>
-                </MenuList>
             </Menu>
 
             <Divider orientation="vertical" height="5vh" mx={4} />

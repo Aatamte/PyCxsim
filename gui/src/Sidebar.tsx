@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import AgentsTab from "./pages/AgentPage";
 import EnvironmentDisplay from "./pages/EnvironmentPage";
 import ArtifactPage from "./pages/ArtifactPage";
-
+import TablePage from "./pages/TablePage";
 
 type SidebarProps = {
     sidebarWidth: number;
@@ -18,7 +18,8 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarWidth, setSidebarWidth }) => {
     const tabIndexMap: { [key: string]: number } = {
             'environment': 0,
             'agents': 1,
-            'artifacts': 2
+            'artifacts': 2,
+            'tables': 3
         };
 
     useEffect(() => {
@@ -55,6 +56,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarWidth, setSidebarWidth }) => {
                     <Tab>Environment</Tab>
                     <Tab>Agents</Tab>
                     <Tab>Artifacts</Tab>
+                    <Tab>Tables</Tab>
                 </TabList>
                 <TabPanels overflowY="hidden">
                     <TabPanel>
@@ -65,6 +67,9 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarWidth, setSidebarWidth }) => {
                     </TabPanel>
                     <TabPanel>
                         <ArtifactPage />
+                    </TabPanel>
+                    <TabPanel>
+                        <TablePage />
                     </TabPanel>
                 </TabPanels>
             </Tabs>

@@ -58,6 +58,6 @@ class CxDataType:
         elif self.data_type == datetime.datetime:
             return str(datetime.datetime.fromisoformat(value))
         elif self.data_type == datetime.date:
-            return  str(datetime.date.fromisoformat(value))
+            return str(datetime.date.fromisoformat(value))
         else:
             return value

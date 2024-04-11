@@ -16,25 +16,24 @@ from cxsim.artifacts.artifact import Artifact
 from cxsim.environment.action_handler import ActionHandler
 from cxsim.utilities.background_jobs.background_task import BackgroundTask
 from cxsim.environment.utilities import EnvironmentUtilities
+from cxsim.artifacts.standard.gridworld import Gridworld
 
 # misc
-from cxsim.environment.calander import Calender
 from cxsim.agents.item import ItemHandler
 from cxsim.environment.event import Event, EventHandler
 from cxsim.utilities.names import get_first_name
 
 # actions
 from cxsim.agents.actions.standard import STANDARD_ACTIONS
+from cxsim.agents.actions.action import Action
 
 # GUI
-from cxsim.environment.backend.cx_socketio import CxSocket
+from cxsim.environment.cx_socketio import CxSocket
 
 # database
 from cxsim.environment.database.cx_database import CxDatabase
+from cxsim.environment.database.cx_table import CxTable
 from cxsim.environment.database.default_tables import CxMetadata, CxAgents, CxLogs
-
-# api
-from cxsim.environment.api.cx_api import CxAPI
 
 
 class UnsupportedItemType(Exception):
@@ -42,9 +41,9 @@ class UnsupportedItemType(Exception):
 
 
 ENV_STATUS = {
-    0: "Not Running",
-    1: "Initialized, not running",
-    2: "Running"
+    0: "Stopped",
+    1: "Running",
+    2: "Running next step"
 }
 
 
@@ -66,9 +65,8 @@ class Environment:
             step_delay: int = 2,
             verbose: int = 0,
             seed: int = None,
-            use_client: bool = True,
-            use_database: Union[bool, CxDatabase] = False,
-            use_api: Union[bool, CxAPI] = False,
+            use_gui: bool = True,
+            use_database: Union[bool, CxDatabase] = True,
     ):
         """
         Initialize the environment.
@@ -83,14 +81,10 @@ class Environment:
         self.verbose = verbose
         self.seed = seed
 
-        self.use_client = use_client
+        self.use_gui = use_gui
         self.use_database = use_database
 
-        self.use_api = use_api
         self._start_time = None
-
-        # gridworld
-        self.starting_block_size = 10
 
         # logger
         self.logger = logging.getLogger(__name__)
@@ -99,7 +93,7 @@ class Environment:
         self._should_stop_simulation = False
 
         self._is_first_step = True
-        self._is_prepared = False
+        self._is_compiled = False
 
         self.step_delay = step_delay
 
@@ -128,6 +122,9 @@ class Environment:
         self.artifact_names = []
         self.artifact_lookup = {}
 
+        # required artifacts
+        self.gridworld: Gridworld = None
+
         # handlers
         self.action_handler = ActionHandler(self)
         self.event_handler = EventHandler(self)
@@ -137,8 +134,7 @@ class Environment:
 
         # agent queue
         self.agent_queue = deque()
-
-        self.calender = Calender()
+        
         self.item_handler = ItemHandler(self)
 
         self._current_time = time.perf_counter()
@@ -149,22 +145,17 @@ class Environment:
 
         # other variables
         self.STATUS = 0
-        self.x_size = None
-        self.y_size = None
+
+        self.database: CxDatabase = None
 
         if self.use_database:
             self.database = CxDatabase()
             self.database.connect()
+            self.database.reset()
 
-            self.event_stream = CxSocket(self, db=self.database)
-            self.event_stream.run()
-
-        if self.use_api:
-            if not self.use_database:
-                raise Warning("Must set use_database=True for use_api=True")
-            else:
-                self.api = CxAPI(self.database)
-                self.api.run()
+        if self.use_gui:
+            self.cx_socket = CxSocket(self, db=self.database)
+            self.cx_socket.run()
 
     def add_agent(self, agent: Agent):
         """
@@ -175,9 +166,8 @@ class Environment:
         agent.id = self.agent_idx
         self.agent_idx += 1
         agent.name = get_first_name()
-        if self.agents:
-            while agent.name in [a.name for a in self.agents]:
-                agent.name = get_first_name()
+        while agent.name in self.agent_names or agent.name == "" or len(agent.name) >= 5:
+            agent.name = get_first_name()
         self.agent_names.append(agent.name)
         self.agents.append(agent)
         self.agent_name_lookup[agent.name] = agent
@@ -194,6 +184,9 @@ class Environment:
         self.artifacts.append(artifact)
         self.artifact_names.append(artifact.name)
         self.artifact_lookup[artifact.name] = artifact
+
+        if artifact.name == "Gridworld":
+            self.gridworld = artifact
 
     def add_event(self, event: Event):
         self.event_handler.add_event(event)
@@ -223,7 +216,6 @@ class Environment:
                 method(item)
                 break
         else:
-            print(type(item))
             raise UnsupportedItemType()
 
     def add_population(self, item):
@@ -243,58 +235,24 @@ class Environment:
             assert artifact.reset.__code__ != Artifact.reset.__code__, "process_query method must be implemented by subclass"
             assert artifact.process_action.__code__ != Artifact.process_action.__code__, "process_action method must be implemented by subclass"
 
-    def _assign_agent_positions(self, spacing=1):
-        # Generate all possible positions
-        all_positions = [(x, y) for x in range(self.x_size) for y in range(self.y_size)]
-
-        # Shuffle the list of positions
-        random.shuffle(all_positions)
-
-        for agent in self.agents:
-            while all_positions:
-                # Pop a position from the list
-                x_pos, y_pos = all_positions.pop()
-
-                # Check if positions within 'spacing' are already occupied
-                neighbors = [(x_pos + dx, y_pos + dy)
-                             for dx in range(-spacing, spacing + 1)
-                             for dy in range(-spacing, spacing + 1)
-                             if (dx, dy) != (0, 0)]
-
-                if not any(neighbor in [(a.x_pos, a.y_pos) for a in self.agents] for neighbor in neighbors):
-                    # Assign the position to the agent if neighbors are not occupied
-                    agent.x_pos = x_pos
-                    agent.y_pos = y_pos
-                    break
-
-            if agent.x_pos is None or agent.y_pos is None:
-                raise ValueError("Unable to assign a valid position for all agents")
-
-        if len(all_positions) < len(self.agents):
-            raise ValueError(f"Insufficient unique positions available for all agents. Size of grid: {self.x_size, self.y_size}")
-
     def compile(self):
         self._start_time = time.perf_counter()
+
         # assert that all agents have necessary functionality
         self.validate_agents()
+
+        if not self.gridworld:
+            gridworld = Gridworld()
+            self.add(gridworld)
+            self.gridworld = self["Gridworld"]
 
         # assert that all artifacts have necessary functionality
         self.validate_artifacts()
 
-        size_factor = 5
-
-        if self.x_size is None:
-            self.x_size = min(self.n_agents * size_factor, 15)
-
-        if self.y_size is None:
-            self.y_size = min(self.n_agents * size_factor, 15)
-
         # go through the artifacts and set them up
         for name, artifact in self.action_handler.artifacts.items():
-            artifact.set_up(self)
-
+            artifact.compile(self)
             self.action_space[artifact.name] = artifact.action_space
-
             artifact.agents = self.agent_id_lookup
 
         for agent in self.agents:
@@ -302,42 +260,12 @@ class Environment:
             agent.environment = self
             agent.compile()
 
-        self._assign_agent_positions()
-
         self.n_artifacts = len(self.action_handler.artifacts)
-        self._is_prepared = True
 
-        if self.use_database:
-            self._sync_to_cx_metadata()
+        self._is_compiled = True
 
-    def _sync_to_cx_metadata(self):
-        CxMetadata().upsert(key="name", value=self.name)
-        CxMetadata().upsert(key="max_steps", value=self.max_steps)
-        CxMetadata().upsert(key="max_episodes", value=self.max_episodes)
-        CxMetadata().upsert(key="n_artifacts", value=self.n_artifacts)
-        CxMetadata().upsert(key="n_agents", value=self.n_agents)
-        CxMetadata().upsert(key="x_size", value=self.x_size)
-        CxMetadata().upsert(key="y_size", value=self.y_size)
-        CxMetadata().upsert(key="current_episode", value=self.current_episode)
-        CxMetadata().upsert(key="current_step", value=self.current_step)
-        CxMetadata().upsert(key="current_status", value=ENV_STATUS.get(self.STATUS, "Unknown"))
-
-        # Check if agent_queue is not empty before accessing the first element
-        next_agent_name = self.agent_queue[0].name if self.agent_queue else "None"
-        CxMetadata().upsert(key="next_agent", value=next_agent_name)
-        CxMetadata().emit(self.event_stream.socketio)
-
-    def _sync_agent(self, agent: Agent):
-        CxAgents().upsert(
-            name=agent.name,
-            x_pos=agent.x_pos,
-            y_pos=agent.y_pos,
-            parameters=agent.params,
-            inventory=agent.inventory.inventory,
-            messages=agent.io.text.full_messages,
-            past_actions=agent.action_history
-        )
-        CxAgents().emit(self.event_stream.socketio)
+        if self.database:
+            self.cx_socket.sync_environment()
 
     def reset(self, reset_agents: bool = True, reset_artifacts: bool = True, create_new_agent_queue: bool = True) -> None:
         """
@@ -348,7 +276,7 @@ class Environment:
             raise ValueError("agents must be added to the environment before  "
                              "the first step is run")
 
-        if not self._is_prepared:
+        if not self._is_compiled:
             self.compile()
 
         self.current_step = 0
@@ -368,7 +296,9 @@ class Environment:
             for artifact in self.artifacts:
                 artifact.reset(self)
 
-        if self.use_client:
+        self.gridworld.display()
+
+        if self.use_gui:
             self._backend_while_loop()
 
         return None
@@ -382,7 +312,7 @@ class Environment:
             self._should_stop_simulation = True
 
         if self.use_database:
-            self._sync_to_cx_metadata()
+            self.cx_socket.sync_environment()
 
     def _match_action_arguments(self, valid_actions, action):
         action_name, action_params = list(action.items())[0]
@@ -422,6 +352,11 @@ class Environment:
         if is_dataclass(action):
             action_name = action.__class__.__name__.lower()
             action_params = asdict(action)
+        elif isinstance(action, Action):
+            # Convert the action to its dictionary representation
+            action_dict = action.to_dict()
+            action_name = action_dict['name'].lower()  # Convert class name to lowercase
+            action_params = action_dict['parameters']
         elif isinstance(action, dict):
             # Extract the action name and parameters
             action_name, action_params = self._match_action_arguments(action_names, action)
@@ -430,17 +365,14 @@ class Environment:
 
         # Check if the action exists in the action space
         if action_name in action_names:
+            print(action_name, action_params)
             _action = action_names[action_name](**action_params)
-
+            print(_action)
             # Convert the action_params dict to a dataclass instance if it isn't already
             try:
                 observation = self.action_handler.process_action(agent, _action)
-                if self.use_database:
-                    #self.database[""]
-                    pass
-
             except TypeError:
-                observation = "Action failed because the arguments were not correct"
+                observation = "Action failed because of error in processing the action in the artifact"
         elif self.strict:
             raise ValueError("")
 
@@ -460,7 +392,7 @@ class Environment:
             func()
 
         if self.use_database:
-            self._sync_agent(agent=agent)
+            self.cx_socket.sync_agent(agent=agent)
 
     def step(self):
         self._current_time = time.perf_counter()
@@ -479,10 +411,11 @@ class Environment:
 
         self.update_simulation_state()
 
-        if self.use_client:
+        if self.use_gui:
             self._backend_while_loop()
 
     def _backend_while_loop(self):
+        self.cx_socket.sync_environment()
         while self.STATUS == 0:
             time.sleep(0.1)
 
@@ -491,13 +424,18 @@ class Environment:
             self.STATUS = 0
 
     @property
+    def get_status(self):
+        sts = self.STATUS
+        return ENV_STATUS.get(sts, "Unknown")
+
+    @property
     def metadata(self):
         # Basic attributes
         env_dict = {
             "name": self.name,
             "verbose": self.verbose,
             "seed": self.seed,
-            "use_client": self.use_client,
+            "use_gui": self.use_gui,
             "currentStep": self.current_step,
             "maxSteps": self.max_steps,
             "currentEpisode": self.current_episode,
@@ -564,6 +502,7 @@ class Environment:
             self.STATUS = 0
         if action == "play":
             self.STATUS = 1
+        self.cx_socket.sync_environment()
 
     @property
     def agent_queue_length(self):
@@ -601,7 +540,7 @@ class Environment:
                 msg=msg
             )
 
-            CxLogs().emit(self.event_stream.socketio)
+            CxLogs().emit(self.cx_socket.socketio)
 
     def __repr__(self):
         newline = '\n'

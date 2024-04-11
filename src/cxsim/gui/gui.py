@@ -103,11 +103,9 @@ class GUIServer:
 
     def _setup_app_and_socketio(self):
         build_dir = os.path.join(os.path.dirname(__file__), 'build')
-        print(build_dir)
         app = Flask(__name__, static_folder=build_dir if not self.dev_mode else None, static_url_path='')
         socketio = SocketIO(app, cors_allowed_origins="*")
         logging.getLogger('werkzeug').setLevel(logging.WARNING)
-        print(f"Static files are being served from: {build_dir}")  # Print statement added
         return app, socketio
 
     def add_socketio_events(self):
@@ -213,11 +211,6 @@ class GUIServer:
             threading.Thread(target=lambda: webbrowser.open(url)).start()
         self.app.run(host=host, port=port, debug=debug, load_dotenv=load_dotenv, **options)
 
-
-if __name__ == '__main__':
-    server = SimpleGUIServer()
-
-    server.start(host='localhost', port=8765)
 
 
 

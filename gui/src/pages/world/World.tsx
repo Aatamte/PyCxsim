@@ -1,5 +1,5 @@
-// World.jsx
-import React, { useState, useRef, useEffect, RefObject, useLayoutEffect } from 'react';
+// World.tsx
+import React, { useState, useRef, useEffect, RefObject, useLayoutEffect, useCallback } from 'react';
 import {
     Box,
     IconButton,
@@ -20,7 +20,6 @@ import {
     MdArrowDownward,
     MdLockOpen, MdSkipPrevious, MdPause, MdPlayArrow, MdSkipNext
 } from 'react-icons/md';
-import {useData} from "../../DataProvider";
 import { useNavigate } from 'react-router-dom';
 import { MdPanTool } from 'react-icons/md'; // Or any other appropriate icon
 import {MdVisibility} from "react-icons/md";
@@ -31,8 +30,6 @@ import InfoPanel from "./InfoPanel";
 import Grid from "./GridPlane";
 import AgentLayer from "./AgentLayer";
 import useWebSocketListener from "../../sockets/useWebSocketListener";
-
-const DEFAULT_GRID_SIZE = 10;
 
 type worldProps = {
     sidebarWidth: number;
@@ -67,40 +64,41 @@ const World: React.FC<worldProps> = ({ sidebarWidth }) => {
     };
 
     const gridSize = findValueByKey('x_size')
+    const ySize = findValueByKey("y_size")
     const indexBoxSize = 20; // Size of the boxes for indices
     const extraRows = 2; // Extra rows for spacing
     const effectiveGridSize = gridSize + extraRows;
 
 
-    const updateCellSize = (containerWidth: number, containerHeight: number) => {
+      const updateCellSize = useCallback((containerWidth: number, containerHeight: number) => {
         if (!isLocked) {
-            const newCellSize = Math.min(containerWidth / effectiveGridSize, containerHeight / effectiveGridSize);
-            setCellSize(newCellSize);
+          const newCellSize = Math.min(containerWidth / effectiveGridSize, containerHeight / effectiveGridSize);
+          setCellSize(newCellSize);
 
-            // Update position to center the grid with extra spacing
-            setPosition({
-                x: (containerWidth - newCellSize * gridSize) / 2,
-                y: (containerHeight - newCellSize * gridSize) / 2,
-            });
+          // Update position to center the grid with extra spacing
+          setPosition({
+            x: (containerWidth - newCellSize * gridSize) / 2,
+            y: (containerHeight - newCellSize * gridSize) / 2,
+          });
         }
-    };
+      }, [isLocked, effectiveGridSize, gridSize]);
 
-    const updateDimensions = () => {
+      const updateDimensions = useCallback(() => {
         if (mainContentRef.current) {
-            // Adjust the height calculation for the main content area
-            const offsetWidth = mainContentRef.current.offsetWidth;
-            const offsetHeight = mainContentRef.current.offsetHeight
-            const newDimensions = { width: offsetWidth, height: offsetHeight };
-            setDimensions(newDimensions);
-            updateCellSize(offsetWidth, offsetHeight);
+          // Adjust the height calculation for the main content area
+          const offsetWidth = mainContentRef.current.offsetWidth;
+          const offsetHeight = mainContentRef.current.offsetHeight;
+          const newDimensions = { width: offsetWidth, height: offsetHeight };
+          setDimensions(newDimensions);
+          updateCellSize(offsetWidth, offsetHeight);
         }
-    };
+      }, [updateCellSize]);
 
     useLayoutEffect(() => {
         updateDimensions();
         window.addEventListener('resize', updateDimensions);
         return () => window.removeEventListener('resize', updateDimensions);
-    }, [sidebarWidth]); // Depend on sidebarWidth if its size impacts the component
+    }, [sidebarWidth, updateDimensions]); // Depend on sidebarWidth if its size impacts the component
 
 
     const handleWheel = (e: any) => {
@@ -139,15 +137,18 @@ const World: React.FC<worldProps> = ({ sidebarWidth }) => {
             <Stage
                 width={dimensions.width}
                 height={dimensions.height}
-                scaleX={scale}
-                scaleY={scale}
-                x={position.x}
-                y={position.y}
+                scale={{
+                    x: Number(scale.toFixed(1)),
+                    y: Number(scale.toFixed(1)),
+                }}
+                x={Math.round(position.x)}
+                y={Math.round(position.y)}
                 draggable={isPanning}
+                perfectDrawEnabled={true}
             >
                <Layer>
-                    <Grid gridSize={gridSize} cellSize={cellSize} indexBoxSize={indexBoxSize}/>
-                   <AgentLayer cellSize={cellSize} navigate={navigate} />
+                    <Grid xSize={gridSize} ySize={ySize} cellSize={cellSize} indexBoxSize={indexBoxSize}/>
+                   <AgentLayer cellSize={cellSize} navigate={navigate} ySize={ySize}/>
                 </Layer>
             </Stage>
             <IconButton
@@ -210,7 +211,6 @@ const World: React.FC<worldProps> = ({ sidebarWidth }) => {
         >
             {mainContent()}
             <InfoPanel sidebarWidth={sidebarWidth} />
-
         </Box>
     );
 };

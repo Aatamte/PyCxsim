@@ -11,6 +11,8 @@ class CxTable:
         self.columns = {}
         self.primary_keys = []
 
+        self.protected = getattr(self.__class__, '__protected__', False)
+
         # Extract column definitions and primary key info
         for attr, attr_def in vars(self.__class__).items():
             if isinstance(attr_def, CxDataType):
@@ -78,9 +80,7 @@ class CxTable:
         values = tuple(serialized_data.values())
 
         query = f"INSERT INTO {self.table_name} ({columns}) VALUES ({placeholders})"
-        cursor = self.db.conn.cursor()
-        cursor.execute(query, values)
-        self.db.conn.commit()
+        self.execute(query, values)
 
     def upsert(self, **kwargs):
         """
@@ -105,44 +105,107 @@ class CxTable:
         VALUES ({placeholders})
         ON CONFLICT({conflict_columns}) DO UPDATE SET {update_assignments}
         """
-        cursor = self.db.conn.cursor()
-        cursor.execute(query, values)
-        self.db.conn.commit()
+        self.execute(query, values)
+
+    def upsert_many(self, entries):
+        """
+        Insert multiple entries into the table, or update existing entries if the records already exist,
+        based on the primary key columns.
+        :param entries: A list of dictionaries representing the entries to be inserted or updated.
+        """
+        if not entries:
+            return
+
+        serialized_entries = [self.serialize(**entry) for entry in entries]
+        columns = ', '.join(serialized_entries[0].keys())
+        placeholders = ', '.join(['?' for _ in serialized_entries[0]])
+        update_assignments = ', '.join([f"{col}=excluded.{col}" for col in serialized_entries[0].keys()])
+
+        if not self.primary_keys:
+            raise ValueError("No primary keys defined for upsert_many operation.")
+
+        conflict_columns = ', '.join(self.primary_keys)
+
+        query = f"""
+        INSERT INTO {self.table_name} ({columns})
+        VALUES ({placeholders})
+        ON CONFLICT({conflict_columns}) DO UPDATE SET {update_assignments}
+        """
+
+        values = [tuple(entry.values()) for entry in serialized_entries]
+
+        self.execute(query, values, execute_many=True)
 
     def reset(self):
         """
         Reset the table by deleting all entries.
         """
-        query = f"DELETE FROM {self.table_name}"
-        cursor = self.db.conn.cursor()
-        cursor.execute(query)
-        self.db.conn.commit()
+        if not self.protected:
+            query = f"DELETE FROM {self.table_name}"
+            self.execute(query)
 
     def create(self):
         """
         Create the table in the database using the schema defined in the class.
         """
-        query = self.create_table_query()  # Use the class method to generate the SQL statement
-        cursor = self.db.conn.cursor()
-        cursor.execute(query)
-        self.db.conn.commit()
+        if not self.protected:
+            query = self.create_table_query()  # Use the class method to generate the SQL statement
+            self.execute(query)
 
     def drop(self):
         """
         Drop the table from the database.
         """
-        query = f"DROP TABLE IF EXISTS {self.table_name}"
-        cursor = self.db.conn.cursor()
-        cursor.execute(query)
-        self.db.conn.commit()
+        if not self.protected:
+            query = f"DROP TABLE IF EXISTS {self.table_name}"
+            self.execute(query)
 
-    def execute(self, query_str: str):
+    def execute(self, query, values=None, commit=True, execute_many: bool = False, fetch_result=False):
         """
-        Execute a query in the database
+        Execute a query with optional value parameters and transaction handling.
+        :param query: The SQL query to execute.
+        :param values: Optional; a tuple of values to be used with the query.
+        :param commit: Optional; a boolean indicating whether to commit the transaction (default: True).
+        :param fetch_result: Optional; a boolean indicating whether to fetch the result of the query (default: False).
+        :return: The result of the query if fetch_result is True, otherwise None.
         """
         cursor = self.db.conn.cursor()
-        cursor.execute(query_str)
-        self.db.conn.commit()
+        result = None
+        try:
+            # Check if there's an active transaction
+            active_transaction = self.db.conn.in_transaction
+
+            # Start a new transaction only if there's no active transaction
+            if not active_transaction:
+                cursor.execute("BEGIN")
+
+            if values:
+                if execute_many:
+                    cursor.executemany(query, values)
+                else:
+                    cursor.execute(query, values)
+            else:
+                cursor.execute(query)
+
+            if fetch_result:
+                rows = cursor.fetchall()
+                result = [
+                    self.deserialize(**dict(zip([col[0] for col in cursor.description], row)))
+                    for row in rows
+                ]
+
+            if commit and not active_transaction:
+                # Check if there's an active transaction before committing
+                if self.db.conn.in_transaction:
+                    self.db.conn.commit()
+        except Exception as e:
+            if not active_transaction:
+                self.db.conn.rollback()
+            raise e
+        finally:
+            cursor.close()
+
+        return result
 
     def get(self, **kwargs):
         """
@@ -160,17 +223,14 @@ class CxTable:
             values = ()
 
         # Execute the query
-        cursor = self.db.conn.cursor()
-        cursor.execute(query, values)
-        rows = cursor.fetchall()
 
-        # Deserialize the results
-        deserialized_rows = [
-            self.deserialize(**dict(zip([col[0] for col in cursor.description], row)))
-            for row in rows
-        ]
+        result = self.execute(
+            query,
+            values,
+            fetch_result=True
+        )
 
-        return deserialized_rows
+        return result
 
     def emit(self, socket):
         """
@@ -185,3 +245,5 @@ class CxTable:
             'table_name': self.table_name,
             'content': data
         })
+
+
