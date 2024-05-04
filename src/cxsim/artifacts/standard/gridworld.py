@@ -11,6 +11,9 @@ class Move(Action):
     - down: decrease y position by 1 Example: (0, 1) -> (0, 0)
     - right: increase x position by 1 Example: (0, 1) -> (1, 1)
     - left: decrease x position by 1 Example: (1, 1) -> (0, 1)
+
+    for example, use
+    Move(direction="up")
     """
     direction: str = None
 
@@ -205,13 +208,13 @@ class Gridworld(Artifact):
             print(f"New position attempt: ({new_x_pos}, {new_y_pos})")
 
         # Check if the new position is within grid bounds
-        if not (0 <= new_x_pos < self.x_size and 0 <= new_y_pos < self.y_size):
+        if not (0 < new_x_pos <= self.x_size and 0 < new_y_pos <= self.y_size):
             if verbose:
                 print("Move out of grid bounds.")
             return "Move out of grid bounds."
 
         # Check for collisions with other agents using the Block's content
-        if self.grid[new_x_pos][new_y_pos].content:
+        if self.grid[new_x_pos][new_y_pos].content is not None:
             if verbose:
                 print("Move interferes with another agent!")
             return "Move interferes with another agent!"
